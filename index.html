@@ -1,0 +1,1356 @@
+<meta charset="utf-8">
+<title>Drip Coffee Timer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<style>
+  :root {
+    --bg: #F6F2EC;
+    --surface: #FFFFFF;
+    --ink: #2A211A;
+    --muted: #8A7A6A;
+    --line: rgba(42, 33, 26, 0.12);
+    --track: rgba(42, 33, 26, 0.08);
+    --hot: #B06A2C;
+    --iced: #2E7EA6;
+    --accent: var(--hot);
+    --accent-ink: #FFFFFF;
+    --done: #4C8A5C;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16110D;
+      --surface: #211A14;
+      --ink: #F2E9DF;
+      --muted: #A08D7A;
+      --line: rgba(242, 233, 223, 0.12);
+      --track: rgba(242, 233, 223, 0.09);
+      --hot: #D98E4A;
+      --iced: #7FB8D6;
+      --accent-ink: #16110D;
+      --done: #7DB98D;
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #F6F2EC;
+    --surface: #FFFFFF;
+    --ink: #2A211A;
+    --muted: #8A7A6A;
+    --line: rgba(42, 33, 26, 0.12);
+    --track: rgba(42, 33, 26, 0.08);
+    --hot: #B06A2C;
+    --iced: #2E7EA6;
+    --accent-ink: #FFFFFF;
+    --done: #4C8A5C;
+  }
+  :root[data-theme="dark"] {
+    --bg: #16110D;
+    --surface: #211A14;
+    --ink: #F2E9DF;
+    --muted: #A08D7A;
+    --line: rgba(242, 233, 223, 0.12);
+    --track: rgba(242, 233, 223, 0.09);
+    --hot: #D98E4A;
+    --iced: #7FB8D6;
+    --accent-ink: #16110D;
+    --done: #7DB98D;
+  }
+  :root.iced { --accent: var(--iced); }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, "SF Pro Text", "Apple SD Gothic Neo", "Helvetica Neue", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+  .app {
+    max-width: 420px;
+    margin: 0 auto;
+    padding: max(14px, env(safe-area-inset-top)) 18px calc(24px + env(safe-area-inset-bottom));
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+    min-height: 100dvh;
+  }
+
+  header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  h1 {
+    font-family: ui-rounded, -apple-system, system-ui, sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    margin: 0;
+    flex: 1;
+  }
+  h1 small { display: block; font-size: 11px; font-weight: 500; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; margin-top: 2px; }
+
+  .langbtn {
+    appearance: none;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    font: 700 12px/1 ui-rounded, -apple-system, system-ui, sans-serif;
+    padding: 9px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .seg {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: var(--track);
+    border-radius: 999px;
+    padding: 3px;
+    min-width: 132px;
+  }
+  .seg button {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    font: 600 13px/1 ui-rounded, -apple-system, system-ui, sans-serif;
+    letter-spacing: 0.08em;
+    padding: 9px 0;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .seg button.on { background: var(--accent); color: var(--accent-ink); }
+
+  .chiprow {
+    display: flex;
+    gap: 7px;
+    overflow-x: auto;
+    margin: 0 -18px;
+    padding: 2px 18px 4px;
+    scrollbar-width: none;
+  }
+  .chiprow::-webkit-scrollbar { display: none; }
+  .chip {
+    appearance: none;
+    flex: 0 0 auto;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    font: 600 13px/1 ui-rounded, -apple-system, system-ui, sans-serif;
+    padding: 10px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .chip.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .chiprow.methods { margin-top: -6px; }
+  .chiprow.methods .chip { font-size: 12px; padding: 8px 12px; }
+  .rowlabel {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin: -4px 0 -8px 2px;
+  }
+
+  .beaninfo {
+    text-align: center;
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-top: -4px;
+    line-height: 1.45;
+  }
+  .beaninfo b { color: var(--ink); font-weight: 600; }
+
+  .custom-cfg { display: flex; flex-direction: column; gap: 8px; margin-top: -2px; }
+  .custom-cfg[hidden] { display: none; }
+  .cfg-row { display: grid; grid-template-columns: 66px 1fr; align-items: center; gap: 10px; }
+  .cfg-row > span {
+    font-size: 10.5px;
+    color: var(--muted);
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .cfg-seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: var(--track); border-radius: 999px; padding: 3px; }
+  .cfg-seg button {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    font: 600 12px/1 ui-rounded, -apple-system, system-ui, sans-serif;
+    padding: 8px 0;
+    border-radius: 999px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .cfg-seg button.on { background: var(--accent); color: var(--accent-ink); }
+
+  .method {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .method-head {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 12px 14px;
+    font: 600 13px/1.3 ui-rounded, -apple-system, system-ui, sans-serif;
+    cursor: pointer;
+    text-align: left;
+  }
+  .method-head .sum { color: var(--muted); font-weight: 500; font-variant-numeric: tabular-nums; }
+  .method-head .chev { color: var(--accent); flex: 0 0 auto; transition: transform 0.2s; }
+  .method.open .chev { transform: rotate(180deg); }
+  .method-body { display: none; padding: 0 14px 13px; }
+  .method.open .method-body { display: block; }
+  .method dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 6px 14px;
+    margin: 0 0 10px;
+    font-size: 13px;
+  }
+  .method dt {
+    color: var(--muted);
+    font-size: 10.5px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    font-weight: 600;
+    padding-top: 2px;
+  }
+  .method dd { margin: 0; font-variant-numeric: tabular-nums; }
+  .method .why {
+    margin: 0;
+    font-size: 12.5px;
+    color: var(--muted);
+    border-top: 1px solid var(--line);
+    padding-top: 10px;
+    line-height: 1.45;
+  }
+
+  .recipe {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 9px 6px 8px;
+    text-align: center;
+  }
+  .stat b {
+    display: block;
+    font-size: 16px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat span {
+    display: block;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-top: 3px;
+  }
+
+  .ringwrap { position: relative; margin: 2px auto 0; width: min(72vw, 280px); }
+  .ringwrap svg { display: block; width: 100%; height: auto; transform: rotate(-90deg); }
+  .ring-track { stroke: var(--track); }
+  .ring-fill {
+    stroke: var(--accent);
+    transition: stroke 0.3s;
+    stroke-linecap: round;
+  }
+  .ring-tick { stroke: var(--bg); }
+  .center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 2px;
+    padding: 0 30px;
+  }
+  .phase-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .clock {
+    font-family: ui-rounded, -apple-system, system-ui, sans-serif;
+    font-size: 54px;
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+  .subclock {
+    font-size: 12.5px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .target {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 13px 16px;
+    text-align: center;
+  }
+  .target .big {
+    font-family: ui-rounded, -apple-system, system-ui, sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .target .big em { font-style: normal; color: var(--accent); }
+  .target .hint { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+  .steps { display: flex; flex-direction: column; gap: 6px; }
+  .step {
+    display: grid;
+    grid-template-columns: 8px 1fr auto;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 11px 14px;
+    font-size: 14px;
+    opacity: 0.62;
+    transition: opacity 0.25s, border-color 0.25s;
+  }
+  .step .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--track); }
+  .step .name { font-weight: 600; }
+  .step .name small { display: block; font-weight: 400; font-size: 12px; color: var(--muted); margin-top: 1px; }
+  .step .time { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .step.active { opacity: 1; border-color: var(--accent); }
+  .step.active .dot { background: var(--accent); }
+  .step.done { opacity: 0.62; }
+  .step.done .dot { background: var(--done); }
+
+  .controls { display: grid; grid-template-columns: 1fr 96px; gap: 10px; margin-top: auto; }
+  .btn {
+    appearance: none;
+    border: 0;
+    border-radius: 18px;
+    font: 700 17px/1 ui-rounded, -apple-system, system-ui, sans-serif;
+    letter-spacing: 0.02em;
+    padding: 18px 0;
+    cursor: pointer;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .btn.ghost { background: var(--surface); color: var(--ink); border: 1px solid var(--line); font-size: 14px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+
+<div class="app">
+  <header>
+    <h1 id="title">Brew Timer<small id="subtitle">Pour-over drip</small></h1>
+    <button class="langbtn" id="btnLang">한국어</button>
+    <div class="seg" role="tablist" aria-label="Brew mode">
+      <button id="btnHot" class="on" role="tab" aria-selected="true">HOT</button>
+      <button id="btnIced" role="tab" aria-selected="false">ICED</button>
+    </div>
+  </header>
+
+  <div class="rowlabel" id="lblBean">Bean</div>
+  <div class="chiprow" id="beans" role="tablist" aria-label="Bean"></div>
+  <div class="rowlabel" id="lblMethod">Method</div>
+  <div class="chiprow methods" id="methods" role="tablist" aria-label="Method"></div>
+  <div class="beaninfo" id="methodinfo"></div>
+  <div class="beaninfo" id="beaninfo"></div>
+
+  <div class="custom-cfg" id="customCfg" hidden>
+    <div class="cfg-row">
+      <span id="lblRoast">Roast</span>
+      <div class="cfg-seg" id="cfgRoast">
+        <button data-v="light">Light</button>
+        <button data-v="medium">Medium</button>
+        <button data-v="dark">Dark</button>
+      </div>
+    </div>
+    <div class="cfg-row">
+      <span id="lblProcess">Process</span>
+      <div class="cfg-seg" id="cfgProcess">
+        <button data-v="washed">Washed</button>
+        <button data-v="natural">Natural</button>
+        <button data-v="anaerobic">Anaerobic</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="method" id="method">
+    <button class="method-head" id="methodToggle" aria-expanded="false">
+      <span><span id="methodHeadLabel">Best method</span>&nbsp;<span class="sum" id="methodSummary"></span></span>
+      <span class="chev">▾</span>
+    </button>
+    <div class="method-body">
+      <dl id="methodRows"></dl>
+      <p class="why" id="methodWhy"></p>
+    </div>
+  </div>
+
+  <div class="recipe" id="recipe"></div>
+
+  <div class="ringwrap">
+    <svg viewBox="0 0 280 280" aria-hidden="true">
+      <circle class="ring-track" cx="140" cy="140" r="124" fill="none" stroke-width="14"></circle>
+      <circle class="ring-fill" id="ringFill" cx="140" cy="140" r="124" fill="none" stroke-width="14"></circle>
+      <g id="ticks"></g>
+    </svg>
+    <div class="center">
+      <div class="phase-label" id="phaseLabel">Ready</div>
+      <div class="clock" id="clock">0:00</div>
+      <div class="subclock" id="subclock">&nbsp;</div>
+    </div>
+  </div>
+
+  <div class="target">
+    <div class="big" id="targetBig"></div>
+    <div class="hint" id="targetHint"></div>
+  </div>
+
+  <div class="steps" id="steps"></div>
+
+  <div class="controls">
+    <button class="btn primary" id="btnMain">Start</button>
+    <button class="btn ghost" id="btnReset">Reset</button>
+  </div>
+</div>
+
+<script>
+  // i18n: every translatable string is a [english, korean] pair, resolved
+  // through tx() at render time. lang persists in localStorage.
+  let lang = "en";
+
+  function tx(v) { return Array.isArray(v) ? v[lang === "ko" ? 1 : 0] : v; }
+
+  const UI = {
+    subtitle: ["Pour-over drip", "푸어오버 드립"],
+    lblBean: ["Bean", "원두"],
+    lblMethod: ["Method", "추출법"],
+    lblRoast: ["Roast", "로스팅"],
+    lblProcess: ["Process", "가공"],
+    bestMethod: ["Best method", "추출 레시피"],
+    start: ["Start", "시작"],
+    pause: ["Pause", "일시정지"],
+    resume: ["Resume", "계속"],
+    reset: ["Reset", "리셋"],
+    ready: ["Ready", "준비"],
+    finished: ["Finished", "완료"],
+    nextIn: ["next in", "다음까지"],
+    statCoffee: ["Coffee", "커피"],
+    statClicks: ["Clicks", "클릭"],
+    statWater: ["Water", "물 온도"],
+    statWaterWt: ["Water wt", "총 물"],
+    rRatio: ["Ratio", "비율"],
+    rGrind: ["Grind", "분쇄도"],
+    rWater: ["Water", "물 온도"],
+    rBloom: ["Bloom", "뜸"],
+    rPours: ["Pours", "푸어"],
+    rAgitation: ["Agitation", "교반"],
+    rDrawdown: ["Drawdown", "드로우다운"],
+    rIce: ["Ice", "얼음"],
+    rFilter: ["Filter", "필터"],
+    filterRinse: ["Rinse with hot water, discard rinse", "뜨거운 물로 필터 린스 후 린스물 버리기"],
+    cfgOpts: {
+      light: ["Light", "라이트"], medium: ["Medium", "미디엄"], dark: ["Dark", "다크"],
+      washed: ["Washed", "워시드"], natural: ["Natural", "내추럴"], anaerobic: ["Anaerobic", "무산소"],
+    },
+  };
+  function ui(k) { return tx(UI[k]); }
+
+  const PRESETS = [
+    {
+      id: "house", chip: ["House", "하우스"], name: ["House Recipe", "하우스 레시피"], roast: "medium",
+      proc: ["Original method", "오리지널 방식"], notes: ["Your baseline recipe, any bean", "기본 레시피, 어떤 원두든"],
+      temp: 93, clicks: 20,
+      hot: { bloom: 40, p1: 70, total: 120 },
+      iced: { bloom: 40, p1: 70, total: 90 },
+      hintBloom: ["Pour 40g quickly, then let it bloom", "40g를 빠르게 붓고 뜸들이기"],
+      hintP1: ["Steady spiral pour", "일정한 스파이럴 푸어"],
+      hintP2: ["Slow, even pour to the end", "끝까지 천천히 고르게"],
+      agitation: ["Swirl once after bloom", "뜸 후 한 번 스월"],
+      why: ["The baseline: 93°C and a 2:00 drawdown balance sweetness and clarity for most medium roasts.",
+            "기본 레시피: 93°C와 2:00 드로우다운으로 대부분의 미디엄 로스트에서 단맛과 클린함의 균형을 잡습니다."],
+    },
+    {
+      id: "yirg", chip: ["Ethiopia", "에티오피아"], name: ["Ethiopia Yirgacheffe", "에티오피아 예가체프"], roast: "light",
+      proc: ["Washed · light roast", "워시드 · 라이트 로스팅"], notes: ["Jasmine, bergamot, stone fruit", "자스민, 베르가못, 핵과류"],
+      temp: 95, clicks: 19,
+      hot: { bloom: 45, p1: 78, total: 130 },
+      iced: { bloom: 45, p1: 75, total: 95 },
+      hintBloom: ["Pour fast — hot water opens the florals", "빠르게 붓기 — 뜨거운 물이 플로럴을 엽니다"],
+      hintP1: ["Steady spiral — keep the bed agitated", "일정한 스파이럴 — 커피베드를 계속 움직이기"],
+      hintP2: ["Even finish; brightness builds late", "고르게 마무리 — 산미는 후반에 올라옵니다"],
+      agitation: ["Swirl once after bloom", "뜸 후 한 번 스월"],
+      why: ["Light washed Ethiopians are dense and under-extract easily: hotter water, a finer grind, and a wider 1:16.7 ratio pull out the florals without hollowness.",
+            "라이트 워시드 에티오피아는 밀도가 높아 과소추출되기 쉽습니다: 더 뜨거운 물, 더 가는 분쇄, 넉넉한 1:16.7 비율로 플로럴을 끌어냅니다."],
+    },
+    {
+      id: "kenya", chip: ["Kenya AA", "케냐 AA"], name: ["Kenya AA", "케냐 AA"], roast: "light",
+      proc: ["Washed · light roast", "워시드 · 라이트 로스팅"], notes: ["Blackcurrant, grapefruit, brown sugar", "블랙커런트, 자몽, 흑설탕"],
+      temp: 95, clicks: 19,
+      hot: { bloom: 40, p1: 75, total: 125 },
+      iced: { bloom: 40, p1: 72, total: 92 },
+      hintBloom: ["Pour fast — dense beans love heat", "빠르게 붓기 — 밀도 높은 원두는 열을 좋아합니다"],
+      hintP1: ["Confident spiral to full saturation", "자신 있게 스파이럴 — 완전히 적시기"],
+      hintP2: ["Steady pour; juicy acidity needs full extraction", "일정하게 — 주시한 산미는 충분한 추출이 필요합니다"],
+      agitation: ["Swirl once after bloom", "뜸 후 한 번 스월"],
+      why: ["Kenyan AA screens are the densest beans in specialty: full heat and full extraction turn sharp acidity into juicy blackcurrant sweetness.",
+            "케냐 AA는 스페셜티에서 가장 밀도 높은 원두: 충분한 열과 추출이 날카로운 산미를 주시한 블랙커런트 단맛으로 바꿉니다."],
+    },
+    {
+      id: "colombia", chip: ["Colombia", "콜롬비아"], name: ["Colombia Huila", "콜롬비아 우일라"], roast: "medium",
+      proc: ["Washed · medium-light roast", "워시드 · 미디엄라이트 로스팅"], notes: ["Caramel, red apple, panela", "카라멜, 사과, 파넬라"],
+      temp: 92, clicks: 20,
+      hot: { bloom: 40, p1: 72, total: 115 },
+      iced: { bloom: 40, p1: 68, total: 88 },
+      hintBloom: ["Pour 40g, even saturation", "40g를 고르게 적시기"],
+      hintP1: ["Steady spiral — Colombia rewards consistency", "일정한 스파이럴 — 콜롬비아는 일관성에 보답합니다"],
+      hintP2: ["Even pour; balance is the goal", "고르게 붓기 — 밸런스가 목표"],
+      agitation: ["Swirl once after bloom", "뜸 후 한 번 스월"],
+      why: ["Washed Colombians are the most balanced beans in specialty — 92°C and an even three-stage pour bring out caramel sweetness with a clean apple finish.",
+            "워시드 콜롬비아는 스페셜티에서 가장 밸런스 좋은 원두 — 92°C와 고른 3단계 푸어로 카라멜 단맛과 클린한 사과 피니시를 냅니다."],
+    },
+    {
+      id: "honduras", chip: ["Honduras", "온두라스"], name: ["Honduras Marcala", "온두라스 마르칼라"], roast: "medium",
+      proc: ["Washed · medium roast", "워시드 · 미디엄 로스팅"], notes: ["Toffee, orange, milk chocolate", "토피, 오렌지, 밀크초콜릿"],
+      temp: 91, clicks: 21,
+      hot: { bloom: 38, p1: 70, total: 112 },
+      iced: { bloom: 38, p1: 66, total: 86 },
+      hintBloom: ["Pour 40g, short easy bloom", "40g, 짧고 편한 뜸"],
+      hintP1: ["Relaxed spiral pour", "여유로운 스파이럴 푸어"],
+      hintP2: ["Finish steady — sweetness over brightness", "일정하게 마무리 — 산미보다 단맛"],
+      agitation: ["Light swirl after bloom", "뜸 후 가벼운 스월"],
+      why: ["Honduran highland lots are soft and sweet — 91°C and a slightly coarser grind keep the toffee-orange profile round without sharpness.",
+            "온두라스 고지대 랏은 부드럽고 달콤합니다 — 91°C와 약간 굵은 분쇄로 토피-오렌지 프로파일을 각 없이 둥글게 지킵니다."],
+    },
+    {
+      id: "guatemala", chip: ["Guatemala", "과테말라"], name: ["Guatemala Antigua", "과테말라 안티구아"], roast: "medium",
+      proc: ["Washed · medium roast", "워시드 · 미디엄 로스팅"], notes: ["Cocoa, spice, orange zest", "코코아, 스파이스, 오렌지 제스트"],
+      temp: 91, clicks: 20,
+      hot: { bloom: 38, p1: 72, total: 115 },
+      iced: { bloom: 38, p1: 68, total: 88 },
+      hintBloom: ["Pour 40g, let the volcanic density open", "40g — 화산토 원두의 밀도를 열어주기"],
+      hintP1: ["Steady spiral to full saturation", "완전히 적시도록 일정한 스파이럴"],
+      hintP2: ["Even finish for the cocoa-spice base", "코코아-스파이스 베이스를 위해 고르게 마무리"],
+      agitation: ["Swirl once after bloom", "뜸 후 한 번 스월"],
+      why: ["Antigua's volcanic-soil beans carry cocoa and smoky spice — 91°C and full even extraction round the spice into sweetness.",
+            "안티구아의 화산토 원두는 코코아와 스모키한 스파이스를 품습니다 — 91°C와 고른 추출로 스파이스를 단맛으로 둥글립니다."],
+    },
+    {
+      id: "costarica", chip: ["Costa Rica", "코스타리카"], name: ["Costa Rica Honey", "코스타리카 허니"], roast: "medium",
+      proc: ["Honey process · medium-light", "허니 프로세스 · 미디엄라이트"], notes: ["Honey, citrus, brown sugar", "꿀, 시트러스, 흑설탕"],
+      temp: 92, clicks: 20,
+      hot: { bloom: 42, p1: 74, total: 118 },
+      iced: { bloom: 42, p1: 70, total: 90 },
+      hintBloom: ["Slightly longer bloom — honey mucilage degasses slowly", "약간 긴 뜸 — 허니 점액질은 천천히 가스를 냅니다"],
+      hintP1: ["Gentle spiral; keep the bed level", "부드러운 스파이럴 — 커피베드를 평평하게"],
+      hintP2: ["Steady finish for syrupy sweetness", "시럽 같은 단맛을 위해 일정하게 마무리"],
+      agitation: ["Light swirl after bloom", "뜸 후 가벼운 스월"],
+      why: ["Honey-process Costa Ricans keep fruit mucilage on the bean — a slightly longer bloom and gentle pours turn it into syrupy honey sweetness without ferment sourness.",
+            "허니 프로세스 코스타리카는 과육 점액질을 남깁니다 — 약간 긴 뜸과 부드러운 푸어로 발효 신맛 없이 시럽 같은 꿀 단맛을 냅니다."],
+    },
+    {
+      id: "gesha", chip: ["Gesha", "게샤"], name: ["Gesha Lot", "게샤 랏"], roast: "light",
+      proc: ["Washed · light roast", "워시드 · 라이트 로스팅"], notes: ["Tea-like body, intense florals, tropical", "티 같은 바디, 강렬한 플로럴, 트로피컬"],
+      temp: 94, clicks: 20,
+      hot: { bloom: 45, p1: 85, total: 140 },
+      iced: { bloom: 45, p1: 78, total: 100 },
+      hintBloom: ["Gentle pour — no swirl, keep it delicate", "부드럽게 붓기 — 스월 없이 섬세하게"],
+      hintP1: ["Pour low and slow, center-out", "낮고 느리게, 중심에서 바깥으로"],
+      hintP2: ["Minimal agitation; let it drain clean", "교반 최소화 — 깨끗하게 드레인"],
+      agitation: ["None — no swirl, low gentle pours", "없음 — 스월 없이 낮고 부드러운 푸어"],
+      why: ["Gesha's tea-like aromatics bruise with agitation: slightly cooler than other lights, zero swirl, and slow low pours keep the cup clean and floral.",
+            "게샤의 티 같은 향은 교반에 약합니다: 다른 라이트보다 약간 낮은 온도, 스월 없이, 낮고 느린 푸어로 클린하고 플로럴하게."],
+    },
+    {
+      id: "coan", chip: ["Anaerobic", "무산소"], name: ["Colombia Anaerobic", "콜롬비아 무산소"], roast: "light",
+      proc: ["Anaerobic natural", "무산소 내추럴"], notes: ["Berry wine, tropical funk, syrupy", "베리 와인, 트로피컬 펑크, 시럽 같은 바디"],
+      temp: 91, clicks: 20,
+      hot: { bloom: 50, p1: 80, total: 120 },
+      iced: { bloom: 50, p1: 75, total: 90 },
+      hintBloom: ["Long bloom tames the ferment — wait it out", "긴 뜸이 발효취를 정리합니다 — 기다리세요"],
+      hintP1: ["Gentle center pours; cooler water keeps it sweet", "부드러운 센터 푸어 — 낮은 온도가 단맛을 지킵니다"],
+      hintP2: ["Easy finish — don't over-extract the funk", "여유 있게 마무리 — 펑크를 과추출하지 않기"],
+      agitation: ["Gentle — center pours, no swirl", "부드럽게 — 센터 푸어, 스월 없음"],
+      why: ["Anaerobic ferment compounds extract fast and turn harsh when hot: 91°C, an extended bloom, and gentle pours keep the berry-wine funk sweet instead of sour.",
+            "무산소 발효 성분은 빨리 추출되고 뜨거우면 거칠어집니다: 91°C, 긴 뜸, 부드러운 푸어로 베리 와인 펑크를 시큼함이 아닌 단맛으로."],
+    },
+    {
+      id: "brazil", chip: ["Brazil", "브라질"], name: ["Brazil Cerrado", "브라질 세하도"], roast: "medium",
+      proc: ["Natural · medium roast", "내추럴 · 미디엄 로스팅"], notes: ["Chocolate, hazelnut, caramel", "초콜릿, 헤이즐넛, 카라멜"],
+      temp: 90, clicks: 21,
+      hot: { bloom: 35, p1: 70, total: 110 },
+      iced: { bloom: 35, p1: 65, total: 85 },
+      hintBloom: ["Quick bloom — medium roasts open fast", "짧은 뜸 — 미디엄은 빨리 열립니다"],
+      hintP1: ["Relaxed spiral pour", "여유로운 스파이럴 푸어"],
+      hintP2: ["Shorter brew keeps it nutty-sweet", "짧은 추출이 고소한 단맛을 지킵니다"],
+      agitation: ["Light swirl after bloom", "뜸 후 가벼운 스월"],
+      why: ["Medium naturals are porous and extract quickly: 90°C, a coarser grind, a richer 1:15 ratio, and a shorter drawdown land on chocolate-hazelnut sweetness.",
+            "미디엄 내추럴은 다공질이라 빨리 추출됩니다: 90°C, 굵은 분쇄, 진한 1:15 비율, 짧은 드로우다운으로 초콜릿-헤이즐넛 단맛에 안착합니다."],
+    },
+    {
+      id: "blend", chip: ["Choc-Nut Blend", "초코넛 블렌드"], name: ["Chocolate-Nut Blend", "초콜릿-넛 블렌드"], roast: "medium",
+      proc: ["Colombia + Brazil · medium", "콜롬비아+브라질 · 미디엄"], notes: ["Milk chocolate, caramel, roasted nuts", "밀크초콜릿, 카라멜, 구운 견과"],
+      temp: 89, clicks: 21,
+      hot: { bloom: 32, p1: 65, total: 105 },
+      iced: { bloom: 32, p1: 62, total: 82 },
+      hintBloom: ["Short bloom — blends are roasted to open easily", "짧은 뜸 — 블렌드는 쉽게 열리도록 로스팅됩니다"],
+      hintP1: ["Steady spiral, nothing fancy", "일정한 스파이럴, 특별할 것 없이"],
+      hintP2: ["Finish early; bitterness comes last", "일찍 마무리 — 쓴맛은 마지막에 나옵니다"],
+      agitation: ["Light swirl after bloom", "뜸 후 가벼운 스월"],
+      why: ["Blends are built for balance, not clarity — a richer 1:15 ratio, slightly cool water, and an early finish keep them in the milk-chocolate zone every time.",
+            "블렌드는 클린함보다 밸런스가 목적입니다 — 진한 1:15 비율, 약간 낮은 온도, 이른 마무리로 항상 밀크초콜릿 존에 머뭅니다."],
+    },
+    {
+      id: "sumatra", chip: ["Sumatra", "수마트라"], name: ["Sumatra Mandheling", "수마트라 만델링"], roast: "dark",
+      proc: ["Wet-hulled · dark roast", "웻헐드 · 다크 로스팅"], notes: ["Earthy, cedar, dark cocoa", "흙내음, 시더, 다크 코코아"],
+      temp: 88, clicks: 22,
+      hot: { bloom: 30, p1: 62, total: 100 },
+      iced: { bloom: 30, p1: 60, total: 80 },
+      hintBloom: ["Brief bloom — dark roasts extract fast", "짧은 뜸 — 다크는 빨리 추출됩니다"],
+      hintP1: ["Coarse grind, cool water, easy pour", "굵은 분쇄, 낮은 온도, 편한 푸어"],
+      hintP2: ["Stop on time — heavy body, keep it smooth", "시간 맞춰 종료 — 묵직하되 부드럽게"],
+      agitation: ["None — pour gently", "없음 — 부드럽게 붓기"],
+      why: ["Dark wet-hulled beans are brittle and extract almost instantly: the coolest water, coarsest grind, and a short rich brew keep the body heavy but never ashy.",
+            "다크 웻헐드 원두는 잘 부서지고 즉시 추출됩니다: 가장 낮은 온도, 가장 굵은 분쇄, 짧고 진한 추출로 묵직하되 재맛 없이."],
+    },
+  ];
+
+  const ROAST_LABEL = { light: ["Light", "라이트"], medium: ["Medium", "미디엄"], dark: ["Dark", "다크"] };
+  const PROC_LABEL = { washed: ["washed", "워시드"], natural: ["natural", "내추럴"], anaerobic: ["anaerobic", "무산소"] };
+
+  function engineBean(attrs) {
+    const { roast, process } = attrs;
+    let temp = { light: 95, medium: 90, dark: 88 }[roast];
+    if (process === "natural") temp -= 1;
+    if (process === "anaerobic") temp = Math.min(temp - 3, 91);
+    temp = Math.max(temp, 87);
+
+    const clicks = { light: 19, medium: 21, dark: 22 }[roast];
+
+    let bloom = { light: 45, medium: 35, dark: 30 }[roast];
+    if (process === "natural") bloom += 5;
+    if (process === "anaerobic") bloom += 8;
+    bloom = Math.min(bloom, 55);
+
+    let hotTotal = { light: 130, medium: 108, dark: 100 }[roast];
+    if (process === "natural") hotTotal -= 4;
+    if (process === "anaerobic") hotTotal -= 8;
+    hotTotal = Math.max(hotTotal, Math.round(bloom + 50));
+
+    let icedTotal = Math.max(Math.round(hotTotal * 0.73), bloom + 35);
+    const hotP1 = Math.min(bloom + 34, hotTotal - 15);
+    const icedP1 = Math.min(bloom + 28, icedTotal - 12);
+
+    const gentle = process === "anaerobic" || process === "natural" || roast === "dark";
+    const agitation = process === "anaerobic" ? ["Gentle — center pours, no swirl", "부드럽게 — 센터 푸어, 스월 없음"]
+      : roast === "dark" ? ["None — pour gently", "없음 — 부드럽게 붓기"]
+      : process === "natural" ? ["Light swirl after bloom", "뜸 후 가벼운 스월"]
+      : ["Swirl once after bloom", "뜸 후 한 번 스월"];
+
+    const whyRoast = {
+      light: [`light roasts are dense, so ${temp}°C and a finer grind drive full extraction`,
+              `라이트 로스트는 밀도가 높아 ${temp}°C와 가는 분쇄로 충분히 추출해야 합니다`],
+      medium: [`medium roasts open quickly, so ${temp}°C and a moderate grind keep them in the sweet zone`,
+               `미디엄 로스트는 빨리 열리므로 ${temp}°C와 중간 분쇄로 단맛 존을 지킵니다`],
+      dark: [`dark roasts extract almost instantly, so cool ${temp}°C water and a coarse grind avoid bitterness`,
+             `다크 로스트는 즉시 추출되므로 낮은 ${temp}°C와 굵은 분쇄로 쓴맛을 피합니다`],
+    }[roast];
+    const whyProc = {
+      washed: ["the clean washed process rewards full, even saturation", "클린한 워시드 가공은 고르고 충분한 적심에 보답합니다"],
+      natural: [`a ${bloom}s bloom lets fruit-forward natural ferment gases escape before the pours`,
+                `${bloom}초 뜸으로 내추럴의 발효 가스를 먼저 내보냅니다`],
+      anaerobic: [`an extended ${bloom}s bloom and gentle pours keep ferment funk sweet instead of sour`,
+                  `${bloom}초의 긴 뜸과 부드러운 푸어가 발효 펑크를 시큼함이 아닌 단맛으로 지킵니다`],
+    }[process];
+
+    return {
+      id: "custom", chip: ["Custom ⚙", "커스텀 ⚙"], name: ["Custom Bean", "커스텀 원두"], roast,
+      proc: [`${ROAST_LABEL[roast][0]} roast · ${PROC_LABEL[process][0]}`,
+             `${ROAST_LABEL[roast][1]} 로스팅 · ${PROC_LABEL[process][1]}`],
+      notes: ["Method derived from roast + process", "로스팅+가공 기반 자동 생성"],
+      temp, clicks,
+      hot: { bloom, p1: hotP1, total: hotTotal },
+      iced: { bloom, p1: icedP1, total: icedTotal },
+      hintBloom: process === "anaerobic" ? ["Long bloom — wait out the ferment gases", "긴 뜸 — 발효 가스를 내보내며 기다리기"]
+        : roast === "light" ? ["Pour fast — let dense beans open up", "빠르게 붓기 — 밀도 높은 원두 열기"]
+        : ["Pour the bloom, brief rest", "뜸물 붓고 잠시 휴지"],
+      hintP1: gentle ? ["Gentle center pours, minimal agitation", "부드러운 센터 푸어, 교반 최소화"] : ["Steady spiral pour", "일정한 스파이럴 푸어"],
+      hintP2: roast === "dark" ? ["Stop on time — keep it smooth", "시간 맞춰 종료 — 부드럽게"] : ["Even pour to the finish", "끝까지 고르게 붓기"],
+      agitation,
+      why: [`Rule engine: ${whyRoast[0]}; ${whyProc[0]}.`, `자동 튜닝: ${whyRoast[1]}, ${whyProc[1]}.`],
+    };
+  }
+
+  function tunedDose(b, m) {
+    if (b.id === "house") {
+      return m === "hot" ? { dose: 15, water: 260, ice: 0 } : { dose: 17, water: 200, ice: 120, iceSplit: true };
+    }
+    const hot = { light: { dose: 15, water: 250 }, medium: { dose: 16, water: 240 }, dark: { dose: 15, water: 225 } }[b.roast];
+    if (m === "hot") return { dose: hot.dose, water: hot.water, ice: 0 };
+    return { dose: hot.dose + 2, water: Math.round(hot.water * 0.77 / 5) * 5, ice: 120, iceSplit: true };
+  }
+
+  const METHODS = [
+    {
+      id: "tuned", chip: ["Bean-tuned", "원두 맞춤"],
+      who: ["This app's default — profiles matched to each bean's roast & process",
+            "이 앱의 기본 — 원두의 로스팅·가공에 맞춘 프로파일"],
+      pick: ["Pick when you just want the best cup for your bean, no thinking required",
+             "고민 없이 내 원두에 맞는 최적의 한 잔을 원할 때"],
+    },
+    {
+      id: "kasuya46", chip: ["4:6 Kasuya", "4:6 카스야"],
+      who: ["Tetsu Kasuya, 2016 World Brewers Cup champion (Japan)",
+            "테츠 카스야, 2016 월드 브루어스컵 챔피언 (일본)"],
+      pick: ["Pick for a sweet, forgiving brew at a relaxed pace — 5 small pours, coarse grind, easy to repeat",
+             "달콤하고 실패 없는 여유로운 추출 — 5번의 작은 푸어, 굵은 분쇄, 따라 하기 쉬움"],
+    },
+    {
+      id: "hoffmann", chip: ["Hoffmann", "호프만"],
+      who: ["James Hoffmann, 2007 World Barista Champion (UK)",
+            "제임스 호프만, 2007 월드 바리스타 챔피언 (영국)"],
+      pick: ["Pick for maximum clarity and body from light roasts — one continuous pour, more hands-on",
+             "라이트 로스트의 클린함과 바디를 극대화 — 하나의 연속 푸어, 조금 더 손이 감"],
+    },
+    {
+      id: "jeomdrip", chip: ["Jeom-drip", "점드립"],
+      who: ["Style of Park Yi-chu, Korea's 1st-generation hand-drip master (Bohemian, Gangneung)",
+            "박이추 스타일 — 한국 1세대 핸드드립 명인 (보헤미안, 강릉)"],
+      pick: ["Pick for a thick, sweet, old-school Korean cup — cool water in drops & thin threads, small strong serving",
+             "진하고 달콤한 옛날식 한 잔 — 낮은 온도의 물을 물방울과 가는 물줄기로, 소량 진하게"],
+    },
+    {
+      id: "momos", chip: ["Momos 전주연", "모모스 전주연"],
+      who: ["Momos Coffee's official store recipe — the Busan café of Jooyeon Jeon, 2019 World Barista Champion",
+            "모모스커피 공식 매장 레시피 — 전주연 (2019 월드 바리스타 챔피언)의 부산 카페"],
+      pick: ["Pick for Korean-champion-café standard: coarse grind, hot water, a stirred bloom, four easy 30s pours",
+             "한국 챔피언 카페의 스탠다드 — 굵은 분쇄, 뜨거운 물, 교반 뜸, 30초 간격 4번의 편한 푸어"],
+    },
+  ];
+
+  function buildTuned(b, m) {
+    const dw = tunedDose(b, m);
+    const t = b[m];
+    const g1 = 40;
+    const g2 = m === "hot"
+      ? Math.round(dw.water * 0.615 / 10) * 10
+      : Math.round(dw.water * 0.75 / 5) * 5;
+    return {
+      dose: dw.dose, water: dw.water, ice: dw.ice, iceSplit: dw.iceSplit,
+      temp: b.temp, clicks: b.clicks,
+      grindNote: ["", ""],
+      total: t.total,
+      phases: [
+        { name: ["Bloom", "뜸"], from: 0, to: t.bloom, g0: 0, g1, hint: b.hintBloom },
+        { name: ["1st Pour", "1차 푸어"], from: t.bloom, to: t.p1, g0: g1, g1: g2, hint: b.hintP1 },
+        { name: ["2nd Pour", "2차 푸어"], from: t.p1, to: t.total, g0: g2, g1: dw.water, hint: b.hintP2 },
+      ],
+      agitation: b.agitation,
+      why: b.why,
+    };
+  }
+
+  function buildKasuya(b, m) {
+    const temp = Math.max(88, Math.min(b.temp, 93));
+    const clicks = b.clicks + 3;
+    const grindNote = [" (coarse — +3 from normal)", " (굵게 — 평소보다 +3클릭)"];
+    if (m === "hot") {
+      return {
+        dose: 20, water: 300, ice: 0,
+        temp, clicks, grindNote,
+        total: 210,
+        phases: [
+          { name: ["Pour 1", "푸어 1"], from: 0, to: 45, g0: 0, g1: 60, pulse: true, hint: ["60g spiral center-out, then rest — acts as bloom", "60g를 중심에서 바깥으로, 휴지 — 뜸 역할"] },
+          { name: ["Pour 2", "푸어 2"], from: 45, to: 90, g0: 60, g1: 120, pulse: true, hint: ["60g — pours 1+2 set sweetness & acidity", "60g — 푸어 1+2가 단맛·산미를 결정"] },
+          { name: ["Pour 3", "푸어 3"], from: 90, to: 135, g0: 120, g1: 180, pulse: true, hint: ["60g — pours 3–5 set strength", "60g — 푸어 3–5가 농도를 결정"] },
+          { name: ["Pour 4", "푸어 4"], from: 135, to: 165, g0: 180, g1: 240, pulse: true, hint: ["60g — keep each pour quick and even", "60g — 빠르고 고르게"] },
+          { name: ["Pour 5", "푸어 5"], from: 165, to: 195, g0: 240, g1: 300, pulse: true, hint: ["Final 60g", "마지막 60g"] },
+          { name: ["Drawdown", "드로우다운"], from: 195, to: 210, g0: 300, g1: 300, drain: true, hint: ["Hands off — bed should go flat", "손 떼기 — 커피베드가 평평해져야 합니다"] },
+        ],
+        agitation: ["None — the coarse grind and full drains do the work", "없음 — 굵은 분쇄와 완전한 드레인이 대신합니다"],
+        why: ["4:6 method (Tetsu Kasuya, 2016 World Brewers Cup champion): the first 40% of water sets sweetness/acidity, the last 60% sets strength. Coarse grind, five 60g pours, let each drain fully. Smaller first pour = sweeter; larger = brighter.",
+              "4:6 메소드(테츠 카스야, 2016 월드 브루어스컵 챔피언): 앞 40%의 물이 단맛·산미를, 뒤 60%가 농도를 결정합니다. 굵은 분쇄로 60g씩 5회, 매번 완전히 드레인. 첫 푸어를 줄이면 더 달고, 늘리면 더 산뜻해집니다."],
+      };
+    }
+    return {
+      dose: 20, water: 200, ice: 100,
+      temp, clicks, grindNote,
+      total: 170,
+      phases: [
+        { name: ["Pour 1", "푸어 1"], from: 0, to: 40, g0: 0, g1: 50, pulse: true, hint: ["50g spiral, then rest — acts as bloom", "50g 스파이럴, 휴지 — 뜸 역할"] },
+        { name: ["Pour 2", "푸어 2"], from: 40, to: 80, g0: 50, g1: 100, pulse: true, hint: ["50g — sets sweetness & acidity", "50g — 단맛·산미 결정"] },
+        { name: ["Pour 3", "푸어 3"], from: 80, to: 120, g0: 100, g1: 150, pulse: true, hint: ["50g — sets strength", "50g — 농도 결정"] },
+        { name: ["Pour 4", "푸어 4"], from: 120, to: 150, g0: 150, g1: 200, pulse: true, hint: ["Final 50g", "마지막 50g"] },
+        { name: ["Drawdown", "드로우다운"], from: 150, to: 170, g0: 200, g1: 200, drain: true, hint: ["Hands off — let it drain onto the ice", "손 떼기 — 얼음 위로 드레인"] },
+      ],
+      agitation: ["None", "없음"],
+      why: ["Iced 4:6: same 40/60 logic with water reduced and 100g ice in the server — the concentrated brew chills instantly and locks in aromatics.",
+            "아이스 4:6: 같은 40/60 로직에 물을 줄이고 서버에 얼음 100g — 진하게 추출된 커피가 급냉되며 향이 보존됩니다."],
+    };
+  }
+
+  function buildHoffmann(b, m) {
+    const temp = b.roast === "light" ? Math.max(b.temp, 95) : b.temp;
+    const grindNote = [" (medium-fine)", " (중간-가늘게)"];
+    if (m === "hot") {
+      return {
+        dose: 15, water: 250, ice: 0,
+        temp, clicks: b.clicks, grindNote,
+        total: 180,
+        phases: [
+          { name: ["Bloom", "뜸"], from: 0, to: 45, g0: 0, g1: 30, hint: ["30g bloom, grab the brewer and swirl gently", "30g 뜸, 드리퍼를 잡고 부드럽게 스월"] },
+          { name: ["Main Pour", "메인 푸어"], from: 45, to: 75, g0: 30, g1: 150, hint: ["One steady spiral to 150g", "150g까지 하나의 일정한 스파이럴"] },
+          { name: ["Top-up", "탑업"], from: 75, to: 105, g0: 150, g1: 250, hint: ["To 250g, stir once each way, then swirl", "250g까지, 양방향 한 번씩 저은 뒤 스월"] },
+          { name: ["Drawdown", "드로우다운"], from: 105, to: 180, g0: 250, g1: 250, drain: true, hint: ["Hands off — flat bed by 3:00 means even extraction", "손 떼기 — 3:00까지 평평한 베드면 균일 추출"] },
+        ],
+        agitation: ["Swirl after bloom · stir + swirl after final pour", "뜸 후 스월 · 마지막 푸어 후 저어주고 스월"],
+        why: ["Hoffmann's V60: one continuous extraction instead of pulses — bloom with a swirl, two steady pours, a gentle stir to knock grounds off the walls, then a long undisturbed drawdown for maximum even extraction. Light roasts: water just off the boil.",
+              "호프만 V60: 펄스 대신 하나의 연속 추출 — 스월과 함께 뜸, 두 번의 일정한 푸어, 벽에 붙은 가루를 떨어뜨리는 가벼운 저음, 그리고 길고 방해 없는 드로우다운으로 최대한 균일하게 추출합니다. 라이트 로스트는 끓기 직전의 물로."],
+      };
+    }
+    return {
+      dose: 15, water: 160, ice: 90,
+      temp, clicks: b.clicks, grindNote,
+      total: 160,
+      phases: [
+        { name: ["Bloom", "뜸"], from: 0, to: 45, g0: 0, g1: 30, hint: ["30g bloom, swirl gently", "30g 뜸, 부드럽게 스월"] },
+        { name: ["Main Pour", "메인 푸어"], from: 45, to: 70, g0: 30, g1: 100, hint: ["Steady spiral to 100g", "100g까지 일정한 스파이럴"] },
+        { name: ["Top-up", "탑업"], from: 70, to: 95, g0: 100, g1: 160, hint: ["To 160g, then one gentle swirl", "160g까지, 부드럽게 한 번 스월"] },
+        { name: ["Drawdown", "드로우다운"], from: 95, to: 160, g0: 160, g1: 160, drain: true, hint: ["Hands off — drains onto the ice", "손 떼기 — 얼음 위로 드레인"] },
+      ],
+      agitation: ["Swirl after bloom and after final pour", "뜸 후와 마지막 푸어 후 스월"],
+      why: ["Japanese-style iced Hoffmann: brew strong onto 90g of ice — flash-chilling locks in aromatics that slow cooling would lose.",
+            "재패니즈 스타일 아이스 호프만: 얼음 90g 위로 진하게 추출 — 급냉이 천천히 식힐 때 잃는 향을 지킵니다."],
+    };
+  }
+
+  function buildJeomdrip(b, m) {
+    // Low-temperature drop-drip in the Korean first-generation tradition:
+    // concentrated ~1:10, water well below normal brewing temp.
+    const temp = Math.max(80, Math.min(b.temp - 6, 85));
+    const clicks = Math.max(b.clicks - 1, 1);
+    const grindNote = [" (medium-fine)", " (중간-가늘게)"];
+    const why = ["Jeom-drip (drop pouring): Korea's first-generation masters, best known through Park Yi-chu of Bohemian, brew with ~85°C water dripped in drops and thin threads over a long, gentle extraction — a thick, sweet, espresso-like cup with no bitterness. Shines with medium-dark roasts; serve small and strong.",
+                 "점드립: 보헤미안 박이추 명인으로 대표되는 한국 1세대 방식. 85°C 안팎의 낮은 온도 물을 물방울과 가는 물줄기로 길고 부드럽게 추출해, 쓴맛 없이 진하고 달콤한 에스프레소 같은 한 잔을 냅니다. 미디엄다크 이상에서 빛나며, 소량으로 진하게 즐기세요."];
+    const agitation = ["None — nothing touches the bed but the thin stream", "없음 — 가는 물줄기 외에는 커피베드를 건드리지 않기"];
+    if (m === "hot") {
+      return {
+        dose: 24, water: 240, ice: 0,
+        temp, clicks, grindNote,
+        total: 210,
+        phases: [
+          { name: ["Drop Bloom", "점드립 뜸"], from: 0, to: 60, g0: 0, g1: 30, hint: ["Drip water drop by drop to 30g — let the coffee dome rise", "물방울을 한 방울씩 30g까지 — 커피빵이 부풀어 오르게"] },
+          { name: ["1st Thread", "1차 물줄기"], from: 60, to: 150, g0: 30, g1: 120, hint: ["Thinnest possible stream, slow spiral from center", "최대한 가는 물줄기로 중심부터 천천히 나선형"] },
+          { name: ["2nd Thread", "2차 물줄기"], from: 150, to: 210, g0: 120, g1: 240, hint: ["Keep the thread thin and steady — never rush", "가늘고 일정하게 — 절대 서두르지 않기"] },
+        ],
+        agitation, why,
+      };
+    }
+    return {
+      dose: 24, water: 160, ice: 100,
+      temp, clicks, grindNote,
+      total: 180,
+      phases: [
+        { name: ["Drop Bloom", "점드립 뜸"], from: 0, to: 60, g0: 0, g1: 30, hint: ["Drip water drop by drop to 30g", "물방울을 한 방울씩 30g까지"] },
+        { name: ["1st Thread", "1차 물줄기"], from: 60, to: 130, g0: 30, g1: 100, hint: ["Thin slow stream from the center", "가는 물줄기로 중심부터 천천히"] },
+        { name: ["2nd Thread", "2차 물줄기"], from: 130, to: 180, g0: 100, g1: 160, hint: ["Thin and steady onto the ice-chilled server", "가늘고 일정하게 — 얼음 서버 위로"] },
+      ],
+      agitation, why,
+    };
+  }
+
+  function buildMomos(b, m) {
+    // Momos Coffee's published store recipes (momos.co.kr 추출 가이드):
+    // hot = their standard 1:17 for light roasts, iced = their 1:10.
+    if (m === "hot") {
+      // 15g dose → pours of dose×3 / ×6 / ×5 / ×3 at 30s marks.
+      return {
+        dose: 15, water: 255, ice: 0,
+        temp: Math.min(Math.max(b.temp, 94), 97), clicks: b.clicks + 3,
+        grindNote: [" (coarse ~1,000μm)", " (굵게 ~1,000μm)"],
+        total: 140,
+        phases: [
+          { name: ["Pour 1 + Stir", "푸어 1 + 교반"], from: 0, to: 30, g0: 0, g1: 45, pulse: true, hint: ["45g, then stir the bed well — Momos' signature stirred bloom", "45g 붓고 드리퍼 내부를 잘 저어주기 — 모모스의 시그니처 교반 뜸"] },
+          { name: ["Pour 2", "푸어 2"], from: 30, to: 60, g0: 45, g1: 135, pulse: true, hint: ["+90g, easy circles", "+90g, 편하게 원을 그리며"] },
+          { name: ["Pour 3", "푸어 3"], from: 60, to: 90, g0: 135, g1: 210, pulse: true, hint: ["+75g, keep the cadence", "+75g, 같은 리듬으로"] },
+          { name: ["Pour 4", "푸어 4"], from: 90, to: 120, g0: 210, g1: 255, pulse: true, hint: ["Final +45g — pouring done at 2:00", "마지막 +45g — 2:00에 붓기 종료"] },
+          { name: ["Drawdown", "드로우다운"], from: 120, to: 140, g0: 255, g1: 255, drain: true, hint: ["Hands off — finished around 2:20", "손 떼기 — 2:20 내외 완료"] },
+        ],
+        agitation: ["Stir well during the first pour — nothing after", "첫 푸어에서 잘 저어주기 — 이후에는 없음"],
+        why: ["Momos Coffee's standard 1:17 recipe for light-roast single origins, published for all their stores (Momos is led by 2019 World Barista Champion Jooyeon Jeon): very coarse grind, 94–97°C water, a stirred bloom, then three relaxed 30-second pours — balanced, stable, endlessly repeatable.",
+              "모모스커피 전 매장 표준 1:17 레시피 (싱글 오리진 라이트 로스팅용, 모모스는 2019 월드 바리스타 챔피언 전주연이 이끕니다): 아주 굵은 분쇄, 94–97°C, 교반 뜸, 그리고 30초 간격의 여유로운 푸어 3번 — 밸런스 있고 안정적이며 반복하기 쉽습니다."],
+      };
+    }
+    return {
+      dose: 22, water: 220, ice: 110,
+      temp: 98, clicks: b.clicks + 6,
+      grindNote: [" (very coarse ~1,100μm)", " (아주 굵게 ~1,100μm)"],
+      total: 150,
+      phases: [
+        { name: ["Pour 1 + Stir", "푸어 1 + 교반"], from: 0, to: 30, g0: 0, g1: 40, pulse: true, hint: ["40g, then stir the bed well", "40g 붓고 드리퍼 내부를 잘 저어주기"] },
+        { name: ["Pour 2", "푸어 2"], from: 30, to: 60, g0: 40, g1: 110, pulse: true, hint: ["To 110g, easy circles", "110g까지 편하게"] },
+        { name: ["Pour 3", "푸어 3"], from: 60, to: 90, g0: 110, g1: 180, pulse: true, hint: ["To 180g, keep the cadence", "180g까지 같은 리듬으로"] },
+        { name: ["Pour 4", "푸어 4"], from: 90, to: 120, g0: 180, g1: 220, pulse: true, hint: ["To 220g — pouring done at 2:00", "220g까지 — 2:00에 붓기 종료"] },
+        { name: ["Drawdown", "드로우다운"], from: 120, to: 150, g0: 220, g1: 220, drain: true, hint: ["Drains onto the ice — chill and serve", "얼음 위로 드레인 — 칠링 후 서빙"] },
+      ],
+      agitation: ["Stir well during the first pour — nothing after", "첫 푸어에서 잘 저어주기 — 이후에는 없음"],
+      why: ["Momos' published 1:10 iced recipe: concentrated brew with near-boiling 97–100°C water and a very coarse grind, poured in four 30-second steps straight onto ice — the champion café's take on Korean-style 아이스 드립.",
+            "모모스 공식 1:10 아이스 레시피: 97–100°C의 거의 끓는 물과 아주 굵은 분쇄로 진하게 추출해 30초 간격 4번의 푸어로 얼음 위에 바로 내립니다 — 챔피언 카페의 아이스 드립."],
+    };
+  }
+
+  const BUILDERS = { tuned: buildTuned, kasuya46: buildKasuya, hoffmann: buildHoffmann, jeomdrip: buildJeomdrip, momos: buildMomos };
+
+  let mode = "hot";
+  let beanId = "house";
+  let methodId = "tuned";
+  let customAttrs = { roast: "light", process: "washed" };
+  try {
+    mode = localStorage.getItem("brew.mode") || "hot";
+    beanId = localStorage.getItem("brew.bean") || "house";
+    methodId = localStorage.getItem("brew.method") || "tuned";
+    lang = localStorage.getItem("brew.lang") || "en";
+    const ca = JSON.parse(localStorage.getItem("brew.custom") || "null");
+    if (ca && ROAST_LABEL[ca.roast] && PROC_LABEL[ca.process]) customAttrs = ca;
+    if (mode !== "hot" && mode !== "iced") mode = "hot";
+    if (!BUILDERS[methodId]) methodId = "tuned";
+    if (lang !== "en" && lang !== "ko") lang = "en";
+  } catch (e) {}
+
+  function allBeans() { return PRESETS.concat([engineBean(customAttrs)]); }
+  function bean() { return allBeans().find(b => b.id === beanId) || PRESETS[0]; }
+  if (!allBeans().some(b => b.id === beanId)) beanId = "house";
+
+  let running = false;
+  let finished = false;
+  let baseElapsed = 0;
+  let startStamp = null;
+  let timerId = null;
+  let lastWholeSecond = -1;
+  let wakeLock = null;
+  let audioCtx = null;
+  let methodOpen = false;
+
+  function elapsedNow() {
+    return baseElapsed + (running && startStamp !== null ? (Date.now() - startStamp) / 1000 : 0);
+  }
+
+  function recipe() {
+    const b = bean();
+    const r = BUILDERS[methodId](b, mode);
+    const clicks = mode === "iced" && methodId === "tuned" ? r.clicks - 1 : r.clicks;
+    const serverIce = r.ice ? (r.iceSplit ? r.ice / 2 : r.ice) : 0;
+    const icePrep = serverIce
+      ? (lang === "ko" ? `얼음 ${serverIce}g 서버에 먼저` : `${serverIce}g ice in server first`)
+      : "";
+    const prep = lang === "ko"
+      ? [`커피 ${r.dose}g`, `분쇄 ${clicks}클릭`, `물 ${r.temp}°C`, icePrep].filter(Boolean).join(" · ")
+      : [`${r.dose}g coffee`, `${clicks} clicks`, `${r.temp}°C`, icePrep].filter(Boolean).join(" · ");
+    return {
+      total: r.total,
+      dose: r.dose, water: r.water, ice: r.ice, iceSplit: r.iceSplit,
+      temp: r.temp, clicks, grindNote: tx(r.grindNote),
+      agitation: tx(r.agitation), why: tx(r.why),
+      stats: [
+        { v: r.dose + "g", l: ui("statCoffee") },
+        { v: String(clicks), l: ui("statClicks") },
+        { v: r.temp + "°", l: ui("statWater") },
+        { v: r.water + "g", l: ui("statWaterWt") },
+      ],
+      prep,
+      phases: r.phases.map(p => ({ ...p, name: tx(p.name), hint: tx(p.hint) })),
+      finish: mode === "iced"
+        ? (r.iceSplit
+          ? (lang === "ko" ? `완료 — 얼음 ${r.ice / 2}g 추가 후 저어주기 🧊` : `Done — add ${r.ice / 2}g ice and stir 🧊`)
+          : (lang === "ko" ? "완료 — 저은 뒤 새 얼음 위에 서빙 🧊" : "Done — stir and serve over fresh ice 🧊"))
+        : (lang === "ko" ? "완료 — 스월 후 서빙 ☕" : "Done — swirl and serve ☕"),
+    };
+  }
+
+  const R = 124, CIRC = 2 * Math.PI * R;
+  const $ = (id) => document.getElementById(id);
+  const ringFill = $("ringFill");
+  ringFill.style.strokeDasharray = CIRC;
+  ringFill.style.strokeDashoffset = CIRC;
+
+  function fmt(s) {
+    s = Math.max(0, Math.round(s));
+    return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+  }
+
+  function beep(freq, dur, when, gainV) {
+    if (!audioCtx) return;
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = "sine";
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.linearRampToValueAtTime(gainV, when + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+    o.connect(g).connect(audioCtx.destination);
+    o.start(when);
+    o.stop(when + dur + 0.05);
+  }
+  function chimePhase() {
+    if (!audioCtx) return;
+    const t = audioCtx.currentTime;
+    beep(880, 0.18, t, 0.25);
+    beep(1174.66, 0.28, t + 0.16, 0.25);
+  }
+  function tickWarn() {
+    if (!audioCtx) return;
+    beep(660, 0.09, audioCtx.currentTime, 0.15);
+  }
+  function chimeStart() {
+    if (!audioCtx) return;
+    const t = audioCtx.currentTime;
+    beep(523.25, 0.15, t, 0.22);
+    beep(659.25, 0.15, t + 0.12, 0.22);
+    beep(783.99, 0.25, t + 0.24, 0.25);
+  }
+  function chimeResume() {
+    if (!audioCtx) return;
+    beep(880, 0.12, audioCtx.currentTime, 0.2);
+  }
+  function chimeDone() {
+    if (!audioCtx) return;
+    const t = audioCtx.currentTime;
+    [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => beep(f, 0.35, t + i * 0.14, 0.22));
+  }
+
+  function phaseAt(rec, sec) {
+    for (let i = 0; i < rec.phases.length; i++) if (sec < rec.phases[i].to) return i;
+    return rec.phases.length - 1;
+  }
+
+  function buildMethod() {
+    const rec = recipe();
+    const ratio = "1:" + (rec.water / rec.dose).toFixed(1).replace(/\.0$/, "");
+    $("methodSummary").textContent = `· ${ratio} · ${rec.temp}° · ${fmt(rec.total)}`;
+
+    const ko = lang === "ko";
+    const ratioCell = mode === "iced" && rec.ice
+      ? (ko ? `${ratio} 브루 기준 (${rec.dose}g → ${rec.water}g) · 얼음 녹으면 ≈1:${((rec.water + rec.ice) / rec.dose).toFixed(1)}`
+            : `${ratio} brew (${rec.dose}g → ${rec.water}g) · ≈1:${((rec.water + rec.ice) / rec.dose).toFixed(1)} after ice melts`)
+      : (ko ? `${ratio} (${rec.dose}g → 물 ${rec.water}g)` : `${ratio} (${rec.dose}g → ${rec.water}g water)`);
+
+    const bloomPhase = rec.phases[0];
+    const pourPhases = rec.phases.filter(p => p.g1 > p.g0 && p !== bloomPhase);
+    const drainPhase = rec.phases.find(p => p.drain);
+
+    const bloomCell = bloomPhase.pulse
+      ? (ko ? `첫 푸어가 뜸 역할 (${bloomPhase.to}초 휴지)` : `First pour doubles as bloom (${bloomPhase.to}s rest)`)
+      : (ko ? `${bloomPhase.to}초 · ${bloomPhase.g1}g (도징의 ${(bloomPhase.g1 / rec.dose).toFixed(1)}배)`
+            : `${bloomPhase.to}s · ${bloomPhase.g1}g (${(bloomPhase.g1 / rec.dose).toFixed(1)}× dose)`);
+    const poursCell = pourPhases
+      .map(p => ko ? `${fmt(p.to)}까지 ${p.g1}g` : `${p.g1}g by ${fmt(p.to)}`).join(" · ");
+    const drawdownCell = ko
+      ? `${fmt(drainPhase ? drainPhase.to : rec.total)}까지 완료`
+      : `Finished by ${fmt(drainPhase ? drainPhase.to : rec.total)}`;
+
+    const rows = [
+      [ui("rRatio"), ratioCell],
+      [ui("rGrind"), (ko ? `${rec.clicks}클릭` : `${rec.clicks} clicks`) + rec.grindNote],
+      [ui("rWater"), `${rec.temp}°C`],
+      [ui("rBloom"), bloomCell],
+      [ui("rPours"), poursCell],
+      [ui("rAgitation"), rec.agitation],
+      [ui("rDrawdown"), drawdownCell],
+    ];
+    if (mode === "iced" && rec.ice) {
+      rows.push([ui("rIce"), rec.iceSplit
+        ? (ko ? `추출 전 서버에 ${rec.ice / 2}g · 추출 후 ${rec.ice / 2}g 추가` : `${rec.ice / 2}g in server before · ${rec.ice / 2}g added after`)
+        : (ko ? `추출 전 서버에 ${rec.ice}g` : `${rec.ice}g in server before brewing`)]);
+    }
+    rows.push([ui("rFilter"), ui("filterRinse")]);
+
+    $("methodRows").innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
+    $("methodWhy").textContent = rec.why;
+  }
+
+  function applyChrome() {
+    $("subtitle").textContent = ui("subtitle");
+    $("btnLang").textContent = lang === "ko" ? "English" : "한국어";
+    $("lblBean").textContent = ui("lblBean");
+    $("lblMethod").textContent = ui("lblMethod");
+    $("lblRoast").textContent = ui("lblRoast");
+    $("lblProcess").textContent = ui("lblProcess");
+    $("methodHeadLabel").textContent = ui("bestMethod");
+    $("btnReset").textContent = ui("reset");
+    $("btnMain").textContent = running ? ui("pause") : (baseElapsed > 0 && !finished ? ui("resume") : ui("start"));
+    document.querySelectorAll(".cfg-seg button").forEach(el => {
+      el.textContent = tx(UI.cfgOpts[el.dataset.v]);
+    });
+    document.documentElement.lang = lang;
+  }
+
+  function buildStatics() {
+    const rec = recipe();
+    const b = bean();
+    document.documentElement.classList.toggle("iced", mode === "iced");
+
+    $("beans").innerHTML = allBeans()
+      .map(x => `<button class="chip${x.id === beanId ? " on" : ""}" data-bean="${x.id}" role="tab" aria-selected="${x.id === beanId}">${tx(x.chip)}</button>`).join("");
+    $("methods").innerHTML = METHODS
+      .map(x => `<button class="chip${x.id === methodId ? " on" : ""}" data-method="${x.id}" role="tab" aria-selected="${x.id === methodId}">${tx(x.chip)}</button>`).join("");
+    $("beaninfo").innerHTML = `<b>${tx(b.name)}</b> · ${tx(b.proc)} — ${tx(b.notes)}`;
+    const mi = METHODS.find(x => x.id === methodId);
+    $("methodinfo").innerHTML = `<b>${tx(mi.chip)}</b> · ${tx(mi.who)}.<br>${tx(mi.pick)}.`;
+
+    $("customCfg").hidden = beanId !== "custom";
+    if (beanId === "custom") {
+      document.querySelectorAll("#cfgRoast button").forEach(el =>
+        el.classList.toggle("on", el.dataset.v === customAttrs.roast));
+      document.querySelectorAll("#cfgProcess button").forEach(el =>
+        el.classList.toggle("on", el.dataset.v === customAttrs.process));
+    }
+
+    buildMethod();
+
+    $("recipe").innerHTML = rec.stats
+      .map(s => `<div class="stat"><b>${s.v}</b><span>${s.l}</span></div>`).join("");
+    $("steps").innerHTML = rec.phases
+      .map((p, i) => `<div class="step" id="step${i}">
+        <div class="dot"></div>
+        <div class="name">${p.name}${p.g1 > p.g0 ? ` · ${p.g0}g → ${p.g1}g` : ""}<small>${p.hint}</small></div>
+        <div class="time">${fmt(p.from)}–${fmt(p.to)}</div>
+      </div>`).join("");
+    $("ticks").innerHTML = rec.phases.slice(1).map(p => {
+      const a = (p.from / rec.total) * 2 * Math.PI - Math.PI / 2;
+      const x1 = 140 + Math.cos(a) * (R - 9), y1 = 140 + Math.sin(a) * (R - 9);
+      const x2 = 140 + Math.cos(a) * (R + 9), y2 = 140 + Math.sin(a) * (R + 9);
+      return `<line class="ring-tick" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke-width="4" transform="rotate(90 140 140)"></line>`;
+    }).join("");
+
+    document.querySelectorAll("#beans .chip").forEach(el =>
+      el.addEventListener("click", () => setBean(el.dataset.bean)));
+    document.querySelectorAll("#methods .chip").forEach(el =>
+      el.addEventListener("click", () => setMethod(el.dataset.method)));
+
+    applyChrome();
+  }
+
+  function render() {
+    const rec = recipe();
+    const elapsed = elapsedNow();
+    const sec = Math.min(elapsed, rec.total);
+    const ko = lang === "ko";
+    $("clock").textContent = fmt(Math.floor(sec));
+    ringFill.style.strokeDashoffset = CIRC * (1 - sec / rec.total);
+
+    if (finished) {
+      $("phaseLabel").textContent = ui("finished");
+      $("subclock").innerHTML = "&nbsp;";
+      $("targetBig").innerHTML = ko ? `총 <em>${rec.water}g</em>` : `<em>${rec.water}g</em> total`;
+      $("targetHint").textContent = rec.finish;
+      rec.phases.forEach((_, j) => { const el = $("step" + j); if (el) { el.classList.remove("active"); el.classList.add("done"); } });
+      return;
+    }
+
+    const i = phaseAt(rec, sec);
+    const p = rec.phases[i];
+    const active = running || elapsed > 0;
+    $("phaseLabel").textContent = active ? p.name : ui("ready");
+    $("subclock").textContent = active
+      ? (ko ? `다음까지 ${fmt(Math.ceil(p.to - sec))}` : `next in ${fmt(Math.ceil(p.to - sec))}`)
+      : rec.prep;
+
+    if (active) {
+      if (p.drain) {
+        $("targetBig").innerHTML = ko ? `<em>드로우다운</em> · 손 떼기` : `<em>Drawdown</em> · hands off`;
+      } else if (p.pulse) {
+        $("targetBig").innerHTML = ko
+          ? `지금 <em>${p.g1}g</em>까지 붓고 휴지`
+          : `Pour to <em>${p.g1}g</em> now, then rest`;
+      } else {
+        const frac = Math.min(1, (sec - p.from) / (p.to - p.from));
+        const pace = Math.round(p.g0 + (p.g1 - p.g0) * frac);
+        $("targetBig").innerHTML = ko
+          ? `<em>${p.g1}g</em>까지 붓기 · 페이스 ~${pace}g`
+          : `Pour to <em>${p.g1}g</em> · pace ~${pace}g`;
+      }
+      $("targetHint").textContent = p.hint;
+    } else {
+      $("targetBig").innerHTML = ko
+        ? `<em>${rec.phases[0].g1}g</em>까지 붓기`
+        : `Pour to <em>${rec.phases[0].g1}g</em>`;
+      $("targetHint").textContent = rec.prep;
+    }
+
+    rec.phases.forEach((_, j) => {
+      const el = $("step" + j);
+      if (!el) return;
+      el.classList.toggle("active", j === i && active);
+      el.classList.toggle("done", j < i);
+    });
+  }
+
+  function onSecond(s) {
+    const rec = recipe();
+    if (s >= rec.total || s === 0) return;
+    if (rec.phases.some(p => p.from === s)) chimePhase();
+    else {
+      const nearPhase = rec.phases.some(p => p.to !== rec.total && p.to - s <= 5 && p.to - s >= 1);
+      const nearEnd = rec.total - s <= 5 && rec.total - s >= 1;
+      if (nearPhase || nearEnd) tickWarn();
+    }
+  }
+
+  function tick() {
+    if (!running) return;
+    const el = elapsedNow();
+    const whole = Math.floor(el);
+    if (whole !== lastWholeSecond) { lastWholeSecond = whole; onSecond(whole); }
+    if (el >= recipe().total) {
+      baseElapsed = recipe().total;
+      startStamp = null;
+      running = false;
+      finished = true;
+      clearInterval(timerId);
+      chimeDone();
+      releaseWake();
+      $("btnMain").textContent = ui("start");
+    }
+    render();
+  }
+
+  async function grabWake() {
+    try { wakeLock = await navigator.wakeLock?.request("screen"); } catch (e) {}
+  }
+  function releaseWake() {
+    try { wakeLock?.release(); } catch (e) {}
+    wakeLock = null;
+  }
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && running) grabWake();
+  });
+
+  $("btnMain").addEventListener("click", () => {
+    if (finished) { reset(); }
+    if (!audioCtx) {
+      try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
+    }
+    audioCtx?.resume();
+    const frozen = elapsedNow();
+    running = !running;
+    $("btnMain").textContent = running ? ui("pause") : ui("resume");
+    if (running) {
+      if (baseElapsed === 0) chimeStart(); else chimeResume();
+      startStamp = Date.now();
+      grabWake();
+      timerId = setInterval(tick, 100);
+      setMethodOpen(false);
+    } else {
+      baseElapsed = Math.min(frozen, recipe().total);
+      startStamp = null;
+      clearInterval(timerId);
+      releaseWake();
+    }
+    render();
+  });
+
+  function reset() {
+    running = false;
+    finished = false;
+    baseElapsed = 0;
+    startStamp = null;
+    lastWholeSecond = -1;
+    clearInterval(timerId);
+    releaseWake();
+    $("btnMain").textContent = ui("start");
+    render();
+  }
+  $("btnReset").addEventListener("click", reset);
+
+  function setMethodOpen(open) {
+    methodOpen = open;
+    $("method").classList.toggle("open", open);
+    $("methodToggle").setAttribute("aria-expanded", String(open));
+  }
+  $("methodToggle").addEventListener("click", () => setMethodOpen(!methodOpen));
+
+  function persist() {
+    try {
+      localStorage.setItem("brew.mode", mode);
+      localStorage.setItem("brew.bean", beanId);
+      localStorage.setItem("brew.method", methodId);
+      localStorage.setItem("brew.lang", lang);
+      localStorage.setItem("brew.custom", JSON.stringify(customAttrs));
+    } catch (e) {}
+  }
+
+  function refresh(openPanel) {
+    persist();
+    buildStatics();
+    reset();
+    if (openPanel) setMethodOpen(true);
+  }
+
+  function setMode(m) {
+    if (mode === m) return;
+    mode = m;
+    $("btnHot").classList.toggle("on", m === "hot");
+    $("btnIced").classList.toggle("on", m === "iced");
+    $("btnHot").setAttribute("aria-selected", m === "hot");
+    $("btnIced").setAttribute("aria-selected", m === "iced");
+    refresh(false);
+  }
+  function setBean(id) {
+    if (beanId === id) {
+      if (id === "custom") setMethodOpen(true);
+      return;
+    }
+    beanId = id;
+    refresh(true);
+  }
+  function setMethod(id) {
+    if (methodId === id) return;
+    methodId = id;
+    refresh(true);
+  }
+  $("btnHot").addEventListener("click", () => setMode("hot"));
+  $("btnIced").addEventListener("click", () => setMode("iced"));
+
+  $("btnLang").addEventListener("click", () => {
+    lang = lang === "ko" ? "en" : "ko";
+    persist();
+    // Language switch must not reset a running brew — rebuild text only.
+    buildStatics();
+    render();
+  });
+
+  document.querySelectorAll("#cfgRoast button").forEach(el =>
+    el.addEventListener("click", () => { customAttrs.roast = el.dataset.v; refresh(true); }));
+  document.querySelectorAll("#cfgProcess button").forEach(el =>
+    el.addEventListener("click", () => { customAttrs.process = el.dataset.v; refresh(true); }));
+
+  $("btnHot").classList.toggle("on", mode === "hot");
+  $("btnIced").classList.toggle("on", mode === "iced");
+  buildStatics();
+  render();
+</script>
