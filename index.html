@@ -367,6 +367,16 @@
   .btn.primary { background: var(--accent); color: var(--accent-ink); }
   .btn.ghost { background: var(--surface); color: var(--ink); border: 1px solid var(--line); font-size: 14px; }
 
+  /* Focus mode: while brewing, hide everything that isn't the brew */
+  .app.brewing .rowlabel,
+  .app.brewing .chiprow,
+  .app.brewing .beaninfo,
+  .app.brewing .custom-cfg,
+  .app.brewing .method,
+  .app.brewing .recipe { display: none; }
+  .app.brewing .ringwrap { width: min(84vw, 320px); margin-top: 8px; }
+  .app.brewing .clock { font-size: 62px; }
+
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; }
   }
@@ -1243,6 +1253,7 @@
       chimeDone();
       releaseWake();
       $("btnMain").textContent = ui("start");
+      document.querySelector(".app").classList.remove("brewing");
     }
     render();
   }
@@ -1273,6 +1284,8 @@
       grabWake();
       timerId = setInterval(tick, 100);
       setMethodOpen(false);
+      document.querySelector(".app").classList.add("brewing");
+      window.scrollTo({ top: 0 });
     } else {
       baseElapsed = Math.min(frozen, recipe().total);
       startStamp = null;
@@ -1291,6 +1304,7 @@
     clearInterval(timerId);
     releaseWake();
     $("btnMain").textContent = ui("start");
+    document.querySelector(".app").classList.remove("brewing");
     render();
   }
   $("btnReset").addEventListener("click", reset);
