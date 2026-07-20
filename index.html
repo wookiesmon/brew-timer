@@ -367,6 +367,31 @@
   .btn.primary { background: var(--accent); color: var(--accent-ink); }
   .btn.ghost { background: var(--surface); color: var(--ink); border: 1px solid var(--line); font-size: 14px; }
 
+  .dialin-row { display: flex; gap: 7px; margin-top: 11px; }
+  .dialin-row button {
+    appearance: none;
+    flex: 1;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--ink);
+    font: 600 12px/1.3 ui-rounded, -apple-system, system-ui, sans-serif;
+    padding: 10px 4px;
+    border-radius: 12px;
+    cursor: pointer;
+  }
+  .dialin-row button:active { transform: scale(0.97); }
+  .dialin-row button b { display: block; font-size: 18px; margin-bottom: 3px; }
+  .dialin-note {
+    margin-top: 10px;
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: var(--muted);
+    border-top: 1px solid var(--line);
+    padding-top: 9px;
+  }
+  .dialin-note em { font-style: normal; color: var(--accent); font-weight: 600; }
+  #dialin:empty { display: none; }
+
   /* Focus mode: while brewing, hide everything that isn't the brew */
   .app.brewing .rowlabel,
   .app.brewing .chiprow,
@@ -447,6 +472,7 @@
   <div class="target">
     <div class="big" id="targetBig"></div>
     <div class="hint" id="targetHint"></div>
+    <div id="dialin"></div>
   </div>
 
   <div class="steps" id="steps"></div>
@@ -496,6 +522,12 @@
       light: ["Light", "라이트"], medium: ["Medium", "미디엄"], dark: ["Dark", "다크"],
       washed: ["Washed", "워시드"], natural: ["Natural", "내추럴"], anaerobic: ["Anaerobic", "무산소"],
     },
+    fbPrompt: ["How did it taste?", "맛이 어땠나요?"],
+    fbSour: ["Sour / weak", "시큼·밍밍"],
+    fbGood: ["Perfect", "딱 좋아요"],
+    fbBitter: ["Bitter / harsh", "쓰고 떫음"],
+    fbSaved: ["Saved — I'll remind you next brew.", "저장했어요 — 다음 추출 때 알려드릴게요."],
+    lastBrew: ["Last brew", "지난 추출"],
   };
   function ui(k) { return tx(UI[k]); }
 
@@ -973,6 +1005,39 @@
   let wakeLock = null;
   let audioCtx = null;
   let methodOpen = false;
+  let feedbackGiven = false; // answered for the current finished brew
+
+  // ---- Dial-in feedback: taste verdict → concrete advice ----
+  function fbKey() { return `${beanId}|${methodId}|${mode}`; }
+  function fbLoad() {
+    try { return JSON.parse(localStorage.getItem("brew.feedback") || "{}"); } catch (e) { return {}; }
+  }
+  function fbSave(verdict) {
+    try {
+      const all = fbLoad();
+      all[fbKey()] = { v: verdict, t: Date.now() };
+      localStorage.setItem("brew.feedback", JSON.stringify(all));
+    } catch (e) {}
+  }
+  function fbAdvice(verdict, clicks) {
+    const ko = lang === "ko";
+    if (verdict === "sour") {
+      return ko
+        ? `다음엔 <em>${clicks - 1}클릭</em>(1 더 가늘게) 또는 물 <em>+2°C</em> — 신맛·밍밍함은 과소추출 신호입니다.`
+        : `Next time try <em>${clicks - 1} clicks</em> (1 finer) or <em>+2°C</em> water — sour or weak means under-extraction.`;
+    }
+    if (verdict === "bitter") {
+      return ko
+        ? `다음엔 <em>${clicks + 1}클릭</em>(1 더 굵게) 또는 물 <em>−2°C</em> — 쓴맛·떫음은 과다추출 신호입니다.`
+        : `Next time try <em>${clicks + 1} clicks</em> (1 coarser) or <em>−2°C</em> water — bitter or harsh means over-extraction.`;
+    }
+    return ko
+      ? `잘 맞았어요 — 다음에도 <em>같은 세팅</em>으로 내리세요.`
+      : `Dialed in — brew with <em>the same settings</em> next time.`;
+  }
+  function fbVerdictLabel(v) {
+    return v === "sour" ? ui("fbSour") : v === "bitter" ? ui("fbBitter") : ui("fbGood");
+  }
 
   function elapsedNow() {
     return baseElapsed + (running && startStamp !== null ? (Date.now() - startStamp) / 1000 : 0);
@@ -1186,6 +1251,17 @@
       $("subclock").innerHTML = "&nbsp;";
       $("targetBig").innerHTML = ko ? `총 <em>${rec.water}g</em>` : `<em>${rec.water}g</em> total`;
       $("targetHint").textContent = rec.finish;
+      if (!feedbackGiven) {
+        $("dialin").innerHTML = `<div class="dialin-note" style="border-top:0;padding-top:2px">${ui("fbPrompt")}</div>
+          <div class="dialin-row">
+            <button data-fb="sour"><b>😖</b>${ui("fbSour")}</button>
+            <button data-fb="good"><b>😋</b>${ui("fbGood")}</button>
+            <button data-fb="bitter"><b>😣</b>${ui("fbBitter")}</button>
+          </div>`;
+      } else {
+        const v = (fbLoad()[fbKey()] || {}).v || "good";
+        $("dialin").innerHTML = `<div class="dialin-note">${fbAdvice(v, rec.clicks)}<br>${ui("fbSaved")}</div>`;
+      }
       rec.phases.forEach((_, j) => { const el = $("step" + j); if (el) { el.classList.remove("active"); el.classList.add("done"); } });
       return;
     }
@@ -1213,11 +1289,16 @@
           : `Pour to <em>${p.g1}g</em> · pace ~${pace}g`;
       }
       $("targetHint").textContent = p.hint;
+      $("dialin").innerHTML = "";
     } else {
       $("targetBig").innerHTML = ko
         ? `<em>${rec.phases[0].g1}g</em>까지 붓기`
         : `Pour to <em>${rec.phases[0].g1}g</em>`;
       $("targetHint").textContent = rec.prep;
+      const last = fbLoad()[fbKey()];
+      $("dialin").innerHTML = last
+        ? `<div class="dialin-note">💡 ${ui("lastBrew")}: ${fbVerdictLabel(last.v)} — ${fbAdvice(last.v, rec.clicks)}</div>`
+        : "";
     }
 
     rec.phases.forEach((_, j) => {
@@ -1298,6 +1379,7 @@
   function reset() {
     running = false;
     finished = false;
+    feedbackGiven = false;
     baseElapsed = 0;
     startStamp = null;
     lastWholeSecond = -1;
@@ -1315,6 +1397,14 @@
     $("methodToggle").setAttribute("aria-expanded", String(open));
   }
   $("methodToggle").addEventListener("click", () => setMethodOpen(!methodOpen));
+
+  $("dialin").addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-fb]");
+    if (!btn || !finished) return;
+    fbSave(btn.dataset.fb);
+    feedbackGiven = true;
+    render();
+  });
 
   function persist() {
     try {
