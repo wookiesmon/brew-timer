@@ -367,6 +367,51 @@
   .btn.primary { background: var(--accent); color: var(--accent-ink); }
   .btn.ghost { background: var(--surface); color: var(--ink); border: 1px solid var(--line); font-size: 14px; }
 
+  .onboard {
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    border-radius: 16px;
+    padding: 13px 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .onboard[hidden] { display: none; }
+  .onboard ol {
+    margin: 0;
+    padding: 0 0 0 2px;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+  .onboard li { display: flex; gap: 9px; align-items: baseline; }
+  .onboard li b {
+    flex: 0 0 auto;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-size: 11.5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transform: translateY(3px);
+  }
+  .onboard button {
+    appearance: none;
+    align-self: flex-end;
+    border: 0;
+    background: var(--track);
+    color: var(--ink);
+    font: 600 12.5px/1 ui-rounded, -apple-system, system-ui, sans-serif;
+    padding: 9px 16px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+
   .dialin-row { display: flex; gap: 7px; margin-top: 11px; }
   .dialin-row button {
     appearance: none;
@@ -416,6 +461,11 @@
       <button id="btnIced" role="tab" aria-selected="false">ICED</button>
     </div>
   </header>
+
+  <div class="onboard" id="onboard" hidden>
+    <ol id="onboardSteps"></ol>
+    <button id="onboardOk"></button>
+  </div>
 
   <div class="rowlabel" id="lblBean">Bean</div>
   <div class="chiprow" id="beans" role="tablist" aria-label="Bean"></div>
@@ -528,6 +578,13 @@
     fbBitter: ["Bitter / harsh", "쓰고 떫음"],
     fbSaved: ["Saved — I'll remind you next brew.", "저장했어요 — 다음 추출 때 알려드릴게요."],
     lastBrew: ["Last brew", "지난 추출"],
+    ob1: ["Pick your <b2>bean</b2> and a <b2>method</b2> — each choice explains itself below the chips.",
+          "<b2>원두</b2>와 <b2>추출법</b2>을 고르세요 — 선택하면 아래에 설명이 나옵니다."],
+    ob2: ["Weigh and grind to the numbers shown, heat your water, rinse the filter.",
+          "표시된 대로 원두를 계량·분쇄하고, 물을 데우고, 필터를 린스하세요."],
+    ob3: ["Press <b2>Start</b2> with your first pour — chimes guide every step, so just follow the big card.",
+          "첫 푸어와 함께 <b2>시작</b2>을 누르세요 — 차임벨이 단계마다 알려주니 큰 카드만 따라가면 됩니다."],
+    obOk: ["Got it", "알겠어요"],
   };
   function ui(k) { return tx(UI[k]); }
 
@@ -1176,7 +1233,19 @@
     $("methodWhy").textContent = rec.why;
   }
 
+  let onboarded = false;
+  try { onboarded = localStorage.getItem("brew.onboarded") === "1"; } catch (e) {}
+  function dismissOnboard() {
+    onboarded = true;
+    try { localStorage.setItem("brew.onboarded", "1"); } catch (e) {}
+    $("onboard").hidden = true;
+  }
+
   function applyChrome() {
+    $("onboard").hidden = onboarded;
+    $("onboardSteps").innerHTML = [ui("ob1"), ui("ob2"), ui("ob3")]
+      .map((s, i) => `<li><b>${i + 1}</b><span>${s.replace(/<b2>/g, "<strong>").replace(/<\/b2>/g, "</strong>")}</span></li>`).join("");
+    $("onboardOk").textContent = ui("obOk");
     $("subtitle").textContent = ui("subtitle");
     $("btnLang").textContent = lang === "ko" ? "English" : "한국어";
     $("lblBean").textContent = ui("lblBean");
@@ -1365,6 +1434,7 @@
       grabWake();
       timerId = setInterval(tick, 100);
       setMethodOpen(false);
+      dismissOnboard();
       document.querySelector(".app").classList.add("brewing");
       window.scrollTo({ top: 0 });
     } else {
@@ -1397,6 +1467,8 @@
     $("methodToggle").setAttribute("aria-expanded", String(open));
   }
   $("methodToggle").addEventListener("click", () => setMethodOpen(!methodOpen));
+
+  $("onboardOk").addEventListener("click", dismissOnboard);
 
   $("dialin").addEventListener("click", (e) => {
     const btn = e.target.closest("button[data-fb]");
