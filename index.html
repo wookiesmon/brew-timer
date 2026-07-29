@@ -569,7 +569,8 @@
   </div>
 </div>
 
-<input type="file" id="scanInput" accept="image/*" capture="environment" hidden>
+<!-- No capture attribute: the OS offers both "Take Photo" and "Photo Library" -->
+<input type="file" id="scanInput" accept="image/*" hidden>
 
 <script>
   // i18n: every translatable string is a [english, korean] pair, resolved
