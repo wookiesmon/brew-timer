@@ -906,6 +906,34 @@
       pick: ["Pick for Korean-champion-café standard: coarse grind, hot water, a stirred bloom, four easy 30s pours",
              "한국 챔피언 카페의 스탠다드 — 굵은 분쇄, 뜨거운 물, 교반 뜸, 30초 간격 4번의 편한 푸어"],
     },
+    {
+      id: "osmotic", chip: ["Osmotic Flow", "오스모틱"],
+      who: ["Kim Ossenblok's technique — a favorite of Korean specialty cafés",
+            "킴 오센블록의 기법 — 한국 스페셜티 카페들의 애용 추출법"],
+      pick: ["Pick for Gesha and delicate florals — one unbroken center thread, near-zero agitation",
+             "게샤·섬세한 플로럴에 — 끊김 없는 센터 물줄기, 교반 최소화"],
+    },
+    {
+      id: "kalita", chip: ["Kalita 3-pour", "칼리타 3푸어"],
+      who: ["The classic Japanese flat-bed method (Kalita Wave)",
+            "일본 클래식 평평한 베드 방식 (칼리타 웨이브)"],
+      pick: ["Pick for dark roasts & blends — round body, very forgiving; needs a flat-bottom dripper",
+             "다크·블렌드에 — 둥근 바디, 매우 관대함; 칼리타류 평바닥 드리퍼 필요"],
+    },
+    {
+      id: "chadwang", chip: ["Chad Wang", "채드 왕"],
+      who: ["Chad Wang, 2017 World Brewers Cup champion (Taiwan)",
+            "채드 왕, 2017 월드 브루어스컵 챔피언 (대만)"],
+      pick: ["Pick for clean light roasts, fast — fine grind, all-center pour, done by 2:00",
+             "클린한 라이트를 빠르게 — 가는 분쇄, 올센터 푸어, 2:00 완성"],
+    },
+    {
+      id: "rao", chip: ["Rao", "라오"],
+      who: ["Scott Rao, coffee scientist & educator (US)",
+            "스콧 라오 — 커피 과학자·교육자 (미국)"],
+      pick: ["Pick for precision light-roast extraction — stirred bloom, one pour, the Rao spin",
+             "정밀한 라이트 추출 — 교반 뜸, 단일 푸어, 라오 스핀"],
+    },
   ];
 
   function buildTuned(b, m) {
@@ -1224,7 +1252,116 @@
     };
   }
 
-  const BUILDERS = { tuned: buildTuned, kasuya46: buildKasuya, hoffmann: buildHoffmann, jeomdrip: buildJeomdrip, momos: buildMomos };
+  function buildOsmotic(b, m) {
+    const temp = Math.max(88, Math.min(b.temp - 2, 92));
+    const x2 = cups === 2;
+    const clicks = b.clicks + (x2 ? 1 : 0);
+    const grindNote = ["", ""];
+    const agitation = ["None at all — the still center thread is the whole technique", "전혀 없음 — 고요한 센터 물줄기 자체가 기법입니다"];
+    const why = ["Osmotic flow, created by Kim Ossenblok and beloved in Korean specialty cafés: after a gentle bloom, one unbroken thread of water poured dead-center — the water migrates outward through the bed on its own, so delicate aromatics never get bruised. Made for Gesha and fragile florals.",
+                 "오스모틱 플로우 — 킴 오센블록이 만들고 한국 스페셜티 카페들이 사랑하는 기법: 부드러운 뜸 후 정중앙에 끊김 없는 한 줄기의 물만 붓습니다. 물이 스스로 커피베드 바깥으로 퍼져 나가 섬세한 향이 전혀 다치지 않습니다. 게샤와 여린 플로럴을 위한 방식입니다."];
+    const cfg = m === "hot"
+      ? (x2 ? { dose: 28, water: 450, ice: 0, bloomG: 60, bloomT: 45, pourT: 200, total: 260 }
+            : { dose: 15, water: 240, ice: 0, bloomG: 35, bloomT: 40, pourT: 150, total: 195 })
+      : (x2 ? { dose: 28, water: 300, ice: 160, bloomG: 60, bloomT: 45, pourT: 180, total: 230 }
+            : { dose: 15, water: 160, ice: 90, bloomG: 35, bloomT: 40, pourT: 130, total: 170 });
+    return {
+      dose: cfg.dose, water: cfg.water, ice: cfg.ice,
+      temp, clicks, grindNote,
+      total: cfg.total,
+      phases: [
+        { name: ["Bloom", "뜸"], from: 0, to: cfg.bloomT, g0: 0, g1: cfg.bloomG, hint: ["Gentle pour, no swirl — keep everything still", "부드럽게 붓기, 스월 없이 — 모든 것을 고요하게"] },
+        { name: ["Osmotic Pour", "오스모틱 푸어"], from: cfg.bloomT, to: cfg.pourT, g0: cfg.bloomG, g1: cfg.water, hint: ["One unbroken thin thread, dead-center — let the water spread itself", "정중앙에 끊김 없는 가는 물줄기 — 물이 스스로 퍼지게"] },
+        { name: ["Drawdown", "드로우다운"], from: cfg.pourT, to: cfg.total, g0: cfg.water, g1: cfg.water, drain: true, hint: [m === "iced" ? "Hands off — drains onto the ice" : "Hands off — let it finish undisturbed", m === "iced" ? "손 떼기 — 얼음 위로 드레인" : "손 떼기 — 방해 없이 마무리"] },
+      ],
+      agitation, why,
+    };
+  }
+
+  function buildKalita(b, m) {
+    const temp = Math.min(b.temp, 92);
+    const x2 = cups === 2;
+    const clicks = b.clicks + (x2 ? 2 : 1);
+    const grindNote = [" (medium — flat-bed dripper)", " (중간 — 평바닥 드리퍼)"];
+    const agitation = ["None — small centered circles only", "없음 — 중앙에 작은 원만 그리기"];
+    const why = ["The Japanese flat-bed classic: three gentle pours over a Kalita Wave's flat bed. The geometry keeps extraction even no matter your technique, rounding out body and sweetness — the most forgiving home for dark roasts and blends. Use a flat-bottom dripper, not a V60.",
+                 "일본 클래식 평바닥 방식: 칼리타 웨이브의 평평한 베드 위에 부드러운 3번의 푸어. 드리퍼 구조가 기술과 무관하게 고른 추출을 만들어 바디와 단맛을 둥글립니다 — 다크 로스트와 블렌드에 가장 관대한 방식입니다. V60이 아닌 평바닥 드리퍼를 사용하세요."];
+    const cfg = m === "hot"
+      ? (x2 ? { dose: 30, water: 450, ice: 0, s: [[45, 60], [100, 260], [150, 450]], total: 225 }
+            : { dose: 20, water: 300, ice: 0, s: [[40, 40], [85, 170], [130, 300]], total: 190 })
+      : (x2 ? { dose: 30, water: 300, ice: 150, s: [[45, 60], [95, 190], [140, 300]], total: 195 }
+            : { dose: 20, water: 200, ice: 110, s: [[40, 40], [80, 130], [115, 200]], total: 160 });
+    const [p1, p2, p3] = cfg.s;
+    return {
+      dose: cfg.dose, water: cfg.water, ice: cfg.ice,
+      temp, clicks, grindNote,
+      total: cfg.total,
+      phases: [
+        { name: ["Bloom", "뜸"], from: 0, to: p1[0], g0: 0, g1: p1[1], hint: ["Wet evenly, brief rest", "고르게 적시고 잠시 휴지"] },
+        { name: ["Pour 2", "푸어 2"], from: p1[0], to: p2[0], g0: p1[1], g1: p2[1], pulse: true, hint: ["Small centered circles, then let it settle", "중앙에 작은 원을 그리고, 가라앉게 두기"] },
+        { name: ["Pour 3", "푸어 3"], from: p2[0], to: p3[0], g0: p2[1], g1: p3[1], pulse: true, hint: ["Final pour, same gentle rhythm", "마지막 푸어 — 같은 부드러운 리듬"] },
+        { name: ["Drawdown", "드로우다운"], from: p3[0], to: cfg.total, g0: cfg.water, g1: cfg.water, drain: true, hint: [m === "iced" ? "Drains onto the ice" : "Hands off — flat bed, even finish", m === "iced" ? "얼음 위로 드레인" : "손 떼기 — 평평한 베드로 고른 마무리"] },
+      ],
+      agitation, why,
+    };
+  }
+
+  function buildChadWang(b, m) {
+    // Chad Wang's published V60 recipe: 15g/250ml, 92–93°C, ~400μm fine,
+    // 30ml bloom then all remaining water straight down the center in 40–45s,
+    // finished by ~2:00 (2:15 limit). 2-cup and iced are scaled adaptations.
+    const temp = Math.max(90, Math.min(b.temp, 93));
+    const x2 = cups === 2;
+    const clicks = b.clicks - (x2 ? 1 : 2);
+    const grindNote = [" (fine ~400μm)", " (가늘게 ~400μm)"];
+    const agitation = ["None — the center stream does everything", "없음 — 센터 물줄기가 전부입니다"];
+    const why = ["Chad Wang's 2017 World Brewers Cup recipe: fine 400μm grind, a 30g bloom, then every remaining gram poured straight down the center in one 40–45 second stream — clean, sweet, and finished inside two minutes. Designed for well-roasted light coffees.",
+                 "채드 왕의 2017 월드 브루어스컵 레시피: 400μm의 가는 분쇄, 30g 뜸, 그리고 나머지 물 전부를 40–45초 동안 정중앙에 하나의 물줄기로 — 클린하고 달콤하게 2분 안에 완성됩니다. 잘 로스팅된 라이트 커피를 위한 설계입니다."];
+    const cfg = m === "hot"
+      ? (x2 ? { dose: 24, water: 400, ice: 0, bloomG: 50, bloomT: 35, pourT: 95, total: 150 }
+            : { dose: 15, water: 250, ice: 0, bloomG: 30, bloomT: 30, pourT: 75, total: 120 })
+      : (x2 ? { dose: 24, water: 265, ice: 150, bloomG: 50, bloomT: 35, pourT: 90, total: 140 }
+            : { dose: 15, water: 165, ice: 90, bloomG: 30, bloomT: 30, pourT: 70, total: 110 });
+    return {
+      dose: cfg.dose, water: cfg.water, ice: cfg.ice,
+      temp, clicks, grindNote,
+      total: cfg.total,
+      phases: [
+        { name: ["Bloom", "뜸"], from: 0, to: cfg.bloomT, g0: 0, g1: cfg.bloomG, hint: ["Even spiral to wet the grounds, let gases escape", "스파이럴로 고르게 적시고 가스 배출"] },
+        { name: ["Center Pour", "센터 푸어"], from: cfg.bloomT, to: cfg.pourT, g0: cfg.bloomG, g1: cfg.water, hint: ["Everything straight down the center, one steady stream", "전부 정중앙에, 하나의 일정한 물줄기로"] },
+        { name: ["Drawdown", "드로우다운"], from: cfg.pourT, to: cfg.total, g0: cfg.water, g1: cfg.water, drain: true, hint: [m === "iced" ? "Drains onto the ice" : "Hands off — done around 2:00", m === "iced" ? "얼음 위로 드레인" : "손 떼기 — 2:00 내외 완료"] },
+      ],
+      agitation, why,
+    };
+  }
+
+  function buildRao(b, m) {
+    const temp = b.roast === "light" ? Math.max(b.temp, 95) : b.temp;
+    const x2 = cups === 2;
+    const clicks = b.clicks + (x2 ? 1 : 0);
+    const grindNote = [" (medium-fine)", " (중간-가늘게)"];
+    const agitation = ["Stir the bloom · gentle Rao spin after the pour", "뜸을 저어주기 · 푸어 후 부드러운 라오 스핀"];
+    const why = ["Scott Rao's V60: fully saturate with a stirred bloom (3× dose), one continuous pour, then the gentle 'Rao spin' to flatten the bed before an undisturbed drawdown — engineered for the most even extraction possible. A precision sibling to Hoffmann for light roasts.",
+                 "스콧 라오의 V60: 도징의 3배로 뜸을 들이며 저어 완전히 적시고, 하나의 연속 푸어, 그리고 부드러운 '라오 스핀'으로 베드를 평평하게 만든 뒤 방해 없는 드로우다운 — 가능한 가장 고른 추출을 위해 설계됐습니다. 라이트 로스트를 위한 호프만의 정밀한 형제 격입니다."];
+    const cfg = m === "hot"
+      ? (x2 ? { dose: 30, water: 500, ice: 0, bloomG: 90, pourT: 85, total: 210 }
+            : { dose: 15, water: 250, ice: 0, bloomG: 45, pourT: 75, total: 180 })
+      : (x2 ? { dose: 30, water: 320, ice: 180, bloomG: 90, pourT: 80, total: 200 }
+            : { dose: 15, water: 160, ice: 90, bloomG: 45, pourT: 70, total: 160 });
+    return {
+      dose: cfg.dose, water: cfg.water, ice: cfg.ice,
+      temp, clicks, grindNote,
+      total: cfg.total,
+      phases: [
+        { name: ["Stirred Bloom", "교반 뜸"], from: 0, to: 45, g0: 0, g1: cfg.bloomG, hint: ["Pour 3× dose, stir gently so every ground is wet", "도징의 3배를 붓고 가볍게 저어 전부 적시기"] },
+        { name: ["Main Pour", "메인 푸어"], from: 45, to: cfg.pourT, g0: cfg.bloomG, g1: cfg.water, hint: ["One continuous medium-height pour", "중간 높이의 하나의 연속 푸어"] },
+        { name: ["Spin + Drawdown", "스핀 + 드로우다운"], from: cfg.pourT, to: cfg.total, g0: cfg.water, g1: cfg.water, drain: true, hint: ["Gentle Rao spin, then hands off — flat bed at the end", "부드러운 라오 스핀 후 손 떼기 — 마지막엔 평평한 베드"] },
+      ],
+      agitation, why,
+    };
+  }
+
+  const BUILDERS = { tuned: buildTuned, kasuya46: buildKasuya, hoffmann: buildHoffmann, jeomdrip: buildJeomdrip, momos: buildMomos, osmotic: buildOsmotic, kalita: buildKalita, chadwang: buildChadWang, rao: buildRao };
 
   let mode = "hot";
   let beanId = "house";
@@ -1837,8 +1974,9 @@
     const beanObj = allBeans().find(x => x.id === bean);
     const effRoast = roast || (beanObj ? beanObj.roast : "medium");
     let method;
-    if (bean === "coan" || process === "anaerobic" || bean === "gesha") method = "tuned";
-    else if (effRoast === "dark" || bean === "blend" || bean === "sumatra") method = "tuned";
+    if (bean === "gesha") method = "osmotic";
+    else if (bean === "coan" || process === "anaerobic") method = "tuned";
+    else if (effRoast === "dark" || bean === "blend" || bean === "sumatra") method = "kalita";
     else if (effRoast === "light") method = "hoffmann";
     else method = "kasuya46";
 
