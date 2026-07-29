@@ -1765,39 +1765,58 @@
   }
 
   async function downscale(file) {
-    const bmp = await createImageBitmap(file);
-    const max = 1600;
-    const k = Math.min(1, max / Math.max(bmp.width, bmp.height));
-    const c = document.createElement("canvas");
-    c.width = Math.round(bmp.width * k);
-    c.height = Math.round(bmp.height * k);
-    c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
-    return c.toDataURL("image/jpeg", 0.85);
+    // Decode via <img> so EXIF orientation is always applied (phone photos
+    // are often stored rotated); grayscale + contrast helps OCR.
+    const url = URL.createObjectURL(file);
+    try {
+      const img = await new Promise((res, rej) => {
+        const i = new Image();
+        i.onload = () => res(i);
+        i.onerror = rej;
+        i.src = url;
+      });
+      const max = 2000;
+      const k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.naturalWidth * k);
+      c.height = Math.round(img.naturalHeight * k);
+      const x = c.getContext("2d");
+      x.filter = "grayscale(1) contrast(1.25)";
+      x.drawImage(img, 0, 0, c.width, c.height);
+      return c.toDataURL("image/jpeg", 0.9);
+    } finally {
+      URL.revokeObjectURL(url);
+    }
   }
 
   function interpretLabel(text) {
-    const t = text.toLowerCase();
-    const has = (...ws) => ws.some(w => t.includes(w));
+    const raw = text.toLowerCase();
+    // Korean OCR often inserts spaces between syllables — match a
+    // whitespace-stripped copy too.
+    const compact = raw.replace(/[\s\-_.·]/g, "");
+    const has = (...ws) => ws.some(w => raw.includes(w) || compact.includes(w.replace(/\s+/g, "")));
     const tags = [];
 
     let origin = null;
-    if (has("gesha", "geisha", "게샤", "게이샤")) { origin = "gesha"; tags.push("Gesha"); }
-    else if (has("yirgacheffe", "예가체프", "이르가체페", "ethiopia", "에티오피아")) { origin = "yirg"; tags.push("Ethiopia"); }
-    else if (has("kenya", "케냐")) { origin = "kenya"; tags.push("Kenya"); }
-    else if (has("sumatra", "수마트라", "mandheling", "만델링")) { origin = "sumatra"; tags.push("Sumatra"); }
-    else if (has("honduras", "온두라스")) { origin = "honduras"; tags.push("Honduras"); }
-    else if (has("guatemala", "과테말라", "antigua", "안티구아")) { origin = "guatemala"; tags.push("Guatemala"); }
-    else if (has("costa rica", "costarica", "코스타리카")) { origin = "costarica"; tags.push("Costa Rica"); }
-    else if (has("colombia", "columbia", "콜롬비아")) { origin = "colombia"; tags.push("Colombia"); }
-    else if (has("brazil", "brasil", "브라질")) { origin = "brazil"; tags.push("Brazil"); }
+    if (has("gesha", "geisha", "게샤", "게이샤", "panama", "파나마")) { origin = "gesha"; tags.push("Gesha"); }
+    else if (has("yirgacheffe", "예가체프", "이르가체페", "ethiopia", "에티오피아", "sidamo", "sidama", "시다모", "시다마", "guji", "구지")) { origin = "yirg"; tags.push("Ethiopia"); }
+    else if (has("kenya", "케냐", "nyeri", "니에리")) { origin = "kenya"; tags.push("Kenya"); }
+    else if (has("sumatra", "수마트라", "mandheling", "만델링", "indonesia", "인도네시아")) { origin = "sumatra"; tags.push("Sumatra"); }
+    else if (has("honduras", "온두라스", "marcala", "마르칼라")) { origin = "honduras"; tags.push("Honduras"); }
+    else if (has("guatemala", "과테말라", "antigua", "안티구아", "huehuetenango", "우에우에")) { origin = "guatemala"; tags.push("Guatemala"); }
+    else if (has("costa rica", "costarica", "코스타리카", "tarrazu", "타라주", "따라주")) { origin = "costarica"; tags.push("Costa Rica"); }
+    else if (has("colombia", "columbia", "콜롬비아", "huila", "우일라", "supremo", "수프리모", "narino", "nariño", "나리뇨")) { origin = "colombia"; tags.push("Colombia"); }
+    else if (has("brazil", "brasil", "브라질", "cerrado", "세하도", "세라도", "santos", "산토스")) { origin = "brazil"; tags.push("Brazil"); }
 
     const blend = has("blend", "블렌드", "블렌딩");
     if (blend) tags.push(lang === "ko" ? "블렌드" : "Blend");
 
-    const process = has("anaerobic", "무산소", "애너로빅") ? "anaerobic"
+    const honey = has("honey", "허니");
+    const process = has("anaerobic", "무산소", "애너로빅", "혐기") ? "anaerobic"
       : has("natural", "내추럴") ? "natural"
-      : has("washed", "워시드", "수세식") ? "washed" : null;
+      : has("washed", "워시드", "수세식", "fully washed") ? "washed" : null;
     if (process) tags.push(tx(PROC_LABEL[process]));
+    if (honey && !process) tags.push(lang === "ko" ? "허니" : "Honey");
 
     const roast = has("dark", "다크", "강배전", "french roast", "프렌치") ? "dark"
       : has("medium", "미디엄", "중배전") ? "medium"
@@ -1807,6 +1826,7 @@
     let bean = null;
     if (process === "anaerobic" && (!origin || origin === "colombia")) bean = "coan";
     else if (origin) bean = origin;
+    else if (honey) bean = "costarica";
     else if (blend) bean = "blend";
     else if (roast || process) {
       bean = "custom";
@@ -1838,7 +1858,11 @@
       if (!hit) {
         beanId = "custom";
         refresh(true);
-        scanNote(ui("scanNoMatch"));
+        const excerpt = (data.text || "").replace(/\s+/g, " ").trim().slice(0, 90)
+          .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        scanNote(ui("scanNoMatch") + (excerpt
+          ? `<br><span style="opacity:.65">${lang === "ko" ? "읽은 내용" : "what I read"}: “${excerpt}…”</span>`
+          : ""));
         return;
       }
       beanId = hit.bean;
