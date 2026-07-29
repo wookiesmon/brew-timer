@@ -1363,6 +1363,28 @@
 
   const BUILDERS = { tuned: buildTuned, kasuya46: buildKasuya, hoffmann: buildHoffmann, jeomdrip: buildJeomdrip, momos: buildMomos, osmotic: buildOsmotic, kalita: buildKalita, chadwang: buildChadWang, rao: buildRao };
 
+  // ---- Method recommendation from the bean's profile ----
+  function recommendFor(b, roastOv, procOv) {
+    const proc = procOv || (b.id === "coan" ? "anaerobic" : b.id === "custom" ? customAttrs.process : null);
+    const roast = roastOv || b.roast;
+    const M = (best, alts, reason) => ({ best, alts, reason });
+    if (b.id === "gesha") return M("osmotic", ["hoffmann", "chadwang"],
+      ["delicate florals want zero agitation", "섬세한 플로럴은 교반 없이 지켜야 합니다"]);
+    if (proc === "anaerobic") return M("tuned", ["kasuya46", "kalita"],
+      ["ferment notes stay sweet with a cool, gentle profile", "발효 노트는 낮은 온도의 부드러운 프로파일에서 달게 유지됩니다"]);
+    if (b.id === "house") return M("tuned", ["kasuya46", "hoffmann"],
+      ["your baseline recipe, as-is", "기본 레시피 그대로"]);
+    if (roast === "dark") return M("kalita", ["jeomdrip", "tuned"],
+      ["the flat bed rounds out dark roasts without bitterness", "평평한 베드가 다크 로스트를 쓴맛 없이 둥글립니다"]);
+    if (b.id === "blend") return M("kalita", ["tuned", "kasuya46"],
+      ["flat-bed evenness suits balance-roasted blends", "평바닥의 고른 추출이 밸런스형 블렌드에 잘 맞습니다"]);
+    if (roast === "light") return M("hoffmann", ["rao", "chadwang"],
+      ["dense light roasts want full, even extraction", "밀도 높은 라이트는 충분하고 고른 추출이 필요합니다"]);
+    return M("kasuya46", ["tuned", "momos"],
+      ["sweet and forgiving — ideal for balanced mediums", "달콤하고 관대함 — 밸런스형 미디엄에 이상적입니다"]);
+  }
+  function methodName(id) { return tx(METHODS.find(x => x.id === id).chip); }
+
   let mode = "hot";
   let beanId = "house";
   let methodId = "tuned";
@@ -1604,11 +1626,17 @@
 
     $("beans").innerHTML = `<button class="chip scan" data-scan="1">${ui("scanChip")}</button>` + allBeans()
       .map(x => `<button class="chip${x.id === beanId ? " on" : ""}" data-bean="${x.id}" role="tab" aria-selected="${x.id === beanId}">${tx(x.chip)}</button>`).join("");
+    const recc = recommendFor(b);
     $("methods").innerHTML = METHODS
-      .map(x => `<button class="chip${x.id === methodId ? " on" : ""}" data-method="${x.id}" role="tab" aria-selected="${x.id === methodId}">${tx(x.chip)}</button>`).join("");
+      .map(x => `<button class="chip${x.id === methodId ? " on" : ""}" data-method="${x.id}" role="tab" aria-selected="${x.id === methodId}">${x.id === recc.best ? "⭐ " : ""}${tx(x.chip)}</button>`).join("");
     $("beaninfo").innerHTML = `<b>${tx(b.name)}</b> · ${tx(b.proc)} — ${tx(b.notes)}`;
     const mi = METHODS.find(x => x.id === methodId);
-    $("methodinfo").innerHTML = `<b>${tx(mi.chip)}</b> · ${tx(mi.who)}.<br>${tx(mi.pick)}.`;
+    const recLine = methodId === recc.best
+      ? (lang === "ko" ? `⭐ ${tx(b.name)}에 추천하는 조합입니다` : `⭐ Recommended pairing for ${tx(b.name)}`)
+      : (lang === "ko"
+        ? `⭐ ${tx(b.name)} 추천: <b>${methodName(recc.best)}</b> — ${tx(recc.reason)}`
+        : `⭐ Best for ${tx(b.name)}: <b>${methodName(recc.best)}</b> — ${tx(recc.reason)}`);
+    $("methodinfo").innerHTML = `<b>${tx(mi.chip)}</b> · ${tx(mi.who)}.<br>${tx(mi.pick)}.<br>${recLine}`;
 
     $("customCfg").hidden = beanId !== "custom";
     if (beanId === "custom") {
@@ -1972,15 +2000,8 @@
     if (!bean) return null;
 
     const beanObj = allBeans().find(x => x.id === bean);
-    const effRoast = roast || (beanObj ? beanObj.roast : "medium");
-    let method;
-    if (bean === "gesha") method = "osmotic";
-    else if (bean === "coan" || process === "anaerobic") method = "tuned";
-    else if (effRoast === "dark" || bean === "blend" || bean === "sumatra") method = "kalita";
-    else if (effRoast === "light") method = "hoffmann";
-    else method = "kasuya46";
-
-    return { bean, method, tags };
+    const recc = recommendFor(beanObj, roast, process);
+    return { bean, method: recc.best, alts: recc.alts, reason: tx(recc.reason), tags };
   }
 
   async function runScan(file) {
@@ -2007,8 +2028,10 @@
       methodId = hit.method;
       refresh(true);
       const b = allBeans().find(x => x.id === hit.bean);
-      const mi = METHODS.find(x => x.id === hit.method);
-      scanNote(`✅ <b>${ui("scanFound")}</b>: ${hit.tags.join(" · ")} → ${ui("scanPicked")}: <b>${tx(b.chip)}</b> + <b>${tx(mi.chip)}</b>`);
+      const altNames = hit.alts.map(methodName).join(", ");
+      scanNote(lang === "ko"
+        ? `✅ <b>${ui("scanFound")}</b>: ${hit.tags.join(" · ")} → <b>${tx(b.chip)}</b><br>⭐ 추천 추출법: <b>${methodName(hit.method)}</b> — ${hit.reason}<br><span style="opacity:.7">대안: ${altNames}</span>`
+        : `✅ <b>${ui("scanFound")}</b>: ${hit.tags.join(" · ")} → <b>${tx(b.chip)}</b><br>⭐ Best method: <b>${methodName(hit.method)}</b> — ${hit.reason}<br><span style="opacity:.7">Also good: ${altNames}</span>`);
     } catch (e) {
       scanNote(ui("scanFailLoad"));
     }
