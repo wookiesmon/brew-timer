@@ -151,6 +151,7 @@
     white-space: nowrap;
   }
   .chip.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .chip.scan { border-style: dashed; }
   .chiprow.methods { margin-top: -6px; }
   .chiprow.methods .chip { font-size: 12px; padding: 8px 12px; }
   .rowlabel {
@@ -161,6 +162,32 @@
     font-weight: 600;
     margin: -4px 0 -8px 2px;
   }
+  .rowhead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: -4px 0 -8px 0;
+  }
+  .rowhead .rowlabel { margin: 0 0 0 2px; }
+  .mini-seg {
+    display: grid;
+    grid-auto-flow: column;
+    background: var(--track);
+    border-radius: 999px;
+    padding: 2px;
+  }
+  .mini-seg button {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    font: 600 11px/1 ui-rounded, -apple-system, system-ui, sans-serif;
+    padding: 7px 11px;
+    border-radius: 999px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .mini-seg button.on { background: var(--accent); color: var(--accent-ink); }
 
   .beaninfo {
     text-align: center;
@@ -439,6 +466,8 @@
 
   /* Focus mode: while brewing, hide everything that isn't the brew */
   .app.brewing .rowlabel,
+  .app.brewing .rowhead,
+  .app.brewing #scanNote,
   .app.brewing .chiprow,
   .app.brewing .beaninfo,
   .app.brewing .custom-cfg,
@@ -467,8 +496,15 @@
     <button id="onboardOk"></button>
   </div>
 
-  <div class="rowlabel" id="lblBean">Bean</div>
+  <div class="rowhead">
+    <div class="rowlabel" id="lblBean">Bean</div>
+    <div class="mini-seg" id="cupsSeg" role="tablist" aria-label="Cups">
+      <button data-c="1" id="cupsBtn1">1 cup</button>
+      <button data-c="2" id="cupsBtn2">2 cups</button>
+    </div>
+  </div>
   <div class="chiprow" id="beans" role="tablist" aria-label="Bean"></div>
+  <div class="beaninfo" id="scanNote" hidden></div>
   <div class="rowlabel" id="lblMethod">Method</div>
   <div class="chiprow methods" id="methods" role="tablist" aria-label="Method"></div>
   <div class="beaninfo" id="methodinfo"></div>
@@ -533,6 +569,8 @@
   </div>
 </div>
 
+<input type="file" id="scanInput" accept="image/*" capture="environment" hidden>
+
 <script>
   // i18n: every translatable string is a [english, korean] pair, resolved
   // through tx() at render time. lang persists in localStorage.
@@ -585,6 +623,15 @@
     ob3: ["Press <b2>Start</b2> with your first pour — chimes guide every step, so just follow the big card.",
           "첫 푸어와 함께 <b2>시작</b2>을 누르세요 — 차임벨이 단계마다 알려주니 큰 카드만 따라가면 됩니다."],
     obOk: ["Got it", "알겠어요"],
+    cups1: ["1 cup", "1잔"],
+    cups2: ["2 cups", "2잔"],
+    scanChip: ["📷 Scan label", "📷 라벨 스캔"],
+    scanLoading: ["Loading scanner (first time only, ~4MB)…", "스캐너 로딩 중 (최초 1회, 약 4MB)…"],
+    scanReading: ["Reading the label…", "라벨을 읽는 중…"],
+    scanFailLoad: ["Scanner couldn't load — check your internet connection and try again.", "스캐너를 불러오지 못했어요 — 인터넷 연결을 확인하고 다시 시도하세요."],
+    scanNoMatch: ["Couldn't read enough from the label — pick roast & process below instead.", "라벨에서 충분히 읽지 못했어요 — 아래에서 로스팅·가공을 직접 선택하세요."],
+    scanFound: ["Label read", "라벨 인식 완료"],
+    scanPicked: ["selected", "선택됨"],
   };
   function ui(k) { return tx(UI[k]); }
 
@@ -863,19 +910,28 @@
   function buildTuned(b, m) {
     const dw = tunedDose(b, m);
     const t = b[m];
-    const g1 = 40;
-    const g2 = m === "hot"
+    const x2 = cups === 2;
+    // 2 cups: double dose/water/targets, stretch pour windows (bigger beds
+    // drain slower), grind one click coarser to compensate.
+    const dose = dw.dose * (x2 ? 2 : 1);
+    const water = dw.water * (x2 ? 2 : 1);
+    const ice = dw.ice * (x2 ? 2 : 1);
+    const g1 = 40 * (x2 ? 2 : 1);
+    const g2 = (m === "hot"
       ? Math.round(dw.water * 0.615 / 10) * 10
-      : Math.round(dw.water * 0.75 / 5) * 5;
+      : Math.round(dw.water * 0.75 / 5) * 5) * (x2 ? 2 : 1);
+    const bloomT = x2 ? t.bloom + 10 : t.bloom;
+    const p1T = x2 ? bloomT + Math.round((t.p1 - t.bloom) * 1.5) : t.p1;
+    const totalT = x2 ? p1T + Math.round((t.total - t.p1) * 1.5) : t.total;
     return {
-      dose: dw.dose, water: dw.water, ice: dw.ice, iceSplit: dw.iceSplit,
-      temp: b.temp, clicks: b.clicks,
-      grindNote: ["", ""],
-      total: t.total,
+      dose, water, ice, iceSplit: dw.iceSplit,
+      temp: b.temp, clicks: b.clicks + (x2 ? 1 : 0),
+      grindNote: x2 ? [" (1 coarser for the bigger bed)", " (큰 배치라 1클릭 굵게)"] : ["", ""],
+      total: totalT,
       phases: [
-        { name: ["Bloom", "뜸"], from: 0, to: t.bloom, g0: 0, g1, hint: b.hintBloom },
-        { name: ["1st Pour", "1차 푸어"], from: t.bloom, to: t.p1, g0: g1, g1: g2, hint: b.hintP1 },
-        { name: ["2nd Pour", "2차 푸어"], from: t.p1, to: t.total, g0: g2, g1: dw.water, hint: b.hintP2 },
+        { name: ["Bloom", "뜸"], from: 0, to: bloomT, g0: 0, g1, hint: b.hintBloom },
+        { name: ["1st Pour", "1차 푸어"], from: bloomT, to: p1T, g0: g1, g1: g2, hint: b.hintP1 },
+        { name: ["2nd Pour", "2차 푸어"], from: p1T, to: totalT, g0: g2, g1: water, hint: b.hintP2 },
       ],
       agitation: b.agitation,
       why: b.why,
@@ -886,6 +942,43 @@
     const temp = Math.max(88, Math.min(b.temp, 93));
     const clicks = b.clicks + 3;
     const grindNote = [" (coarse — +3 from normal)", " (굵게 — 평소보다 +3클릭)"];
+    const x2 = cups === 2;
+    if (m === "hot" && x2) {
+      // Kasuya's cadence is dose-parametric: 30g/450g, five 90g pours.
+      return {
+        dose: 30, water: 450, ice: 0,
+        temp, clicks, grindNote,
+        total: 235,
+        phases: [
+          { name: ["Pour 1", "푸어 1"], from: 0, to: 45, g0: 0, g1: 90, pulse: true, hint: ["90g spiral center-out, then rest — acts as bloom", "90g를 중심에서 바깥으로, 휴지 — 뜸 역할"] },
+          { name: ["Pour 2", "푸어 2"], from: 45, to: 90, g0: 90, g1: 180, pulse: true, hint: ["90g — pours 1+2 set sweetness & acidity", "90g — 푸어 1+2가 단맛·산미를 결정"] },
+          { name: ["Pour 3", "푸어 3"], from: 90, to: 135, g0: 180, g1: 270, pulse: true, hint: ["90g — pours 3–5 set strength", "90g — 푸어 3–5가 농도를 결정"] },
+          { name: ["Pour 4", "푸어 4"], from: 135, to: 170, g0: 270, g1: 360, pulse: true, hint: ["90g — keep each pour quick and even", "90g — 빠르고 고르게"] },
+          { name: ["Pour 5", "푸어 5"], from: 170, to: 205, g0: 360, g1: 450, pulse: true, hint: ["Final 90g", "마지막 90g"] },
+          { name: ["Drawdown", "드로우다운"], from: 205, to: 235, g0: 450, g1: 450, drain: true, hint: ["Hands off — bed should go flat", "손 떼기 — 커피베드가 평평해져야 합니다"] },
+        ],
+        agitation: ["None — the coarse grind and full drains do the work", "없음 — 굵은 분쇄와 완전한 드레인이 대신합니다"],
+        why: ["4:6 method scaled for two cups (30g : 450g, still 1:15): same 40/60 logic with five 90g pours — the cadence is unchanged, only the pour size grows.",
+              "두 잔용 4:6 (30g : 450g, 동일한 1:15): 같은 40/60 로직에 90g씩 5회 — 리듬은 그대로, 푸어 양만 커집니다."],
+      };
+    }
+    if (m === "iced" && x2) {
+      return {
+        dose: 30, water: 300, ice: 150,
+        temp, clicks, grindNote,
+        total: 190,
+        phases: [
+          { name: ["Pour 1", "푸어 1"], from: 0, to: 40, g0: 0, g1: 75, pulse: true, hint: ["75g spiral, then rest — acts as bloom", "75g 스파이럴, 휴지 — 뜸 역할"] },
+          { name: ["Pour 2", "푸어 2"], from: 40, to: 80, g0: 75, g1: 150, pulse: true, hint: ["75g — sets sweetness & acidity", "75g — 단맛·산미 결정"] },
+          { name: ["Pour 3", "푸어 3"], from: 80, to: 120, g0: 150, g1: 225, pulse: true, hint: ["75g — sets strength", "75g — 농도 결정"] },
+          { name: ["Pour 4", "푸어 4"], from: 120, to: 155, g0: 225, g1: 300, pulse: true, hint: ["Final 75g", "마지막 75g"] },
+          { name: ["Drawdown", "드로우다운"], from: 155, to: 190, g0: 300, g1: 300, drain: true, hint: ["Hands off — let it drain onto the ice", "손 떼기 — 얼음 위로 드레인"] },
+        ],
+        agitation: ["None", "없음"],
+        why: ["Iced 4:6 for two: 30g with 300g water in four 75g pours over 150g of ice.",
+              "두 잔용 아이스 4:6: 30g에 물 300g을 75g씩 4회, 얼음 150g 위로."],
+      };
+    }
     if (m === "hot") {
       return {
         dose: 20, water: 300, ice: 0,
@@ -924,6 +1017,40 @@
   function buildHoffmann(b, m) {
     const temp = b.roast === "light" ? Math.max(b.temp, 95) : b.temp;
     const grindNote = [" (medium-fine)", " (중간-가늘게)"];
+    const x2 = cups === 2;
+    if (m === "hot" && x2) {
+      // Two cups IS Hoffmann's canonical "ultimate" recipe: 30g/500g.
+      return {
+        dose: 30, water: 500, ice: 0,
+        temp, clicks: b.clicks, grindNote,
+        total: 210,
+        phases: [
+          { name: ["Bloom", "뜸"], from: 0, to: 45, g0: 0, g1: 60, hint: ["60g bloom, grab the brewer and swirl gently", "60g 뜸, 드리퍼를 잡고 부드럽게 스월"] },
+          { name: ["Main Pour", "메인 푸어"], from: 45, to: 75, g0: 60, g1: 300, hint: ["One steady spiral to 300g", "300g까지 하나의 일정한 스파이럴"] },
+          { name: ["Top-up", "탑업"], from: 75, to: 105, g0: 300, g1: 500, hint: ["To 500g, stir once each way, then swirl", "500g까지, 양방향 한 번씩 저은 뒤 스월"] },
+          { name: ["Drawdown", "드로우다운"], from: 105, to: 210, g0: 500, g1: 500, drain: true, hint: ["Hands off — flat bed by 3:30 means even extraction", "손 떼기 — 3:30까지 평평한 베드면 균일 추출"] },
+        ],
+        agitation: ["Swirl after bloom · stir + swirl after final pour", "뜸 후 스월 · 마지막 푸어 후 저어주고 스월"],
+        why: ["Two cups is Hoffmann's original 'ultimate V60' exactly as published: 30g : 500g, 60g bloom with a swirl, pour to 300g by 1:15 and 500g by 1:45, stir, swirl, drawdown by ~3:30.",
+              "두 잔은 호프만의 오리지널 '얼티밋 V60' 그대로입니다: 30g : 500g, 스월과 함께 60g 뜸, 1:15까지 300g, 1:45까지 500g, 저어주고 스월, 3:30 내외 드로우다운."],
+      };
+    }
+    if (m === "iced" && x2) {
+      return {
+        dose: 30, water: 320, ice: 180,
+        temp, clicks: b.clicks, grindNote,
+        total: 200,
+        phases: [
+          { name: ["Bloom", "뜸"], from: 0, to: 45, g0: 0, g1: 60, hint: ["60g bloom, swirl gently", "60g 뜸, 부드럽게 스월"] },
+          { name: ["Main Pour", "메인 푸어"], from: 45, to: 75, g0: 60, g1: 200, hint: ["Steady spiral to 200g", "200g까지 일정한 스파이럴"] },
+          { name: ["Top-up", "탑업"], from: 75, to: 100, g0: 200, g1: 320, hint: ["To 320g, then one gentle swirl", "320g까지, 부드럽게 한 번 스월"] },
+          { name: ["Drawdown", "드로우다운"], from: 100, to: 200, g0: 320, g1: 320, drain: true, hint: ["Hands off — drains onto the ice", "손 떼기 — 얼음 위로 드레인"] },
+        ],
+        agitation: ["Swirl after bloom and after final pour", "뜸 후와 마지막 푸어 후 스월"],
+        why: ["Japanese-style iced for two: 30g brewed strong with 320g water onto 180g of ice.",
+              "두 잔용 재패니즈 아이스: 30g을 물 320g으로 진하게 추출해 얼음 180g 위로."],
+      };
+    }
     if (m === "hot") {
       return {
         dose: 15, water: 250, ice: 0,
@@ -965,6 +1092,33 @@
     const why = ["Jeom-drip (drop pouring): Korea's first-generation masters, best known through Park Yi-chu of Bohemian, brew with ~85°C water dripped in drops and thin threads over a long, gentle extraction — a thick, sweet, espresso-like cup with no bitterness. Shines with medium-dark roasts; serve small and strong.",
                  "점드립: 보헤미안 박이추 명인으로 대표되는 한국 1세대 방식. 85°C 안팎의 낮은 온도 물을 물방울과 가는 물줄기로 길고 부드럽게 추출해, 쓴맛 없이 진하고 달콤한 에스프레소 같은 한 잔을 냅니다. 미디엄다크 이상에서 빛나며, 소량으로 진하게 즐기세요."];
     const agitation = ["None — nothing touches the bed but the thin stream", "없음 — 가는 물줄기 외에는 커피베드를 건드리지 않기"];
+    const x2 = cups === 2;
+    if (m === "hot" && x2) {
+      return {
+        dose: 40, water: 400, ice: 0,
+        temp, clicks, grindNote,
+        total: 300,
+        phases: [
+          { name: ["Drop Bloom", "점드립 뜸"], from: 0, to: 75, g0: 0, g1: 50, hint: ["Drip water drop by drop to 50g — let the coffee dome rise", "물방울을 한 방울씩 50g까지 — 커피빵이 부풀어 오르게"] },
+          { name: ["1st Thread", "1차 물줄기"], from: 75, to: 190, g0: 50, g1: 200, hint: ["Thinnest possible stream, slow spiral from center", "최대한 가는 물줄기로 중심부터 천천히 나선형"] },
+          { name: ["2nd Thread", "2차 물줄기"], from: 190, to: 300, g0: 200, g1: 400, hint: ["Keep the thread thin and steady — never rush", "가늘고 일정하게 — 절대 서두르지 않기"] },
+        ],
+        agitation, why,
+      };
+    }
+    if (m === "iced" && x2) {
+      return {
+        dose: 40, water: 260, ice: 160,
+        temp, clicks, grindNote,
+        total: 240,
+        phases: [
+          { name: ["Drop Bloom", "점드립 뜸"], from: 0, to: 75, g0: 0, g1: 50, hint: ["Drip water drop by drop to 50g", "물방울을 한 방울씩 50g까지"] },
+          { name: ["1st Thread", "1차 물줄기"], from: 75, to: 170, g0: 50, g1: 170, hint: ["Thin slow stream from the center", "가는 물줄기로 중심부터 천천히"] },
+          { name: ["2nd Thread", "2차 물줄기"], from: 170, to: 240, g0: 170, g1: 260, hint: ["Thin and steady onto the ice-chilled server", "가늘고 일정하게 — 얼음 서버 위로"] },
+        ],
+        agitation, why,
+      };
+    }
     if (m === "hot") {
       return {
         dose: 24, water: 240, ice: 0,
@@ -994,6 +1148,44 @@
   function buildMomos(b, m) {
     // Momos Coffee's published store recipes (momos.co.kr 추출 가이드):
     // hot = their standard 1:17 for light roasts, iced = their 1:10.
+    // 2 cups follows their dose-parametric pour formula (원두×3/×6/×5/×3).
+    const x2 = cups === 2;
+    if (m === "hot" && x2) {
+      return {
+        dose: 30, water: 510, ice: 0,
+        temp: Math.min(Math.max(b.temp, 94), 97), clicks: b.clicks + 3,
+        grindNote: [" (coarse ~1,000μm)", " (굵게 ~1,000μm)"],
+        total: 170,
+        phases: [
+          { name: ["Pour 1 + Stir", "푸어 1 + 교반"], from: 0, to: 35, g0: 0, g1: 90, pulse: true, hint: ["90g, then stir the bed well — Momos' signature stirred bloom", "90g 붓고 드리퍼 내부를 잘 저어주기 — 모모스의 시그니처 교반 뜸"] },
+          { name: ["Pour 2", "푸어 2"], from: 35, to: 70, g0: 90, g1: 270, pulse: true, hint: ["+180g, easy circles", "+180g, 편하게 원을 그리며"] },
+          { name: ["Pour 3", "푸어 3"], from: 70, to: 105, g0: 270, g1: 420, pulse: true, hint: ["+150g, keep the cadence", "+150g, 같은 리듬으로"] },
+          { name: ["Pour 4", "푸어 4"], from: 105, to: 140, g0: 420, g1: 510, pulse: true, hint: ["Final +90g — pouring done", "마지막 +90g — 붓기 종료"] },
+          { name: ["Drawdown", "드로우다운"], from: 140, to: 170, g0: 510, g1: 510, drain: true, hint: ["Hands off — finished around 2:50", "손 떼기 — 2:50 내외 완료"] },
+        ],
+        agitation: ["Stir well during the first pour — nothing after", "첫 푸어에서 잘 저어주기 — 이후에는 없음"],
+        why: ["Momos' 1:17 formula scaled to two cups: their pour schedule is dose-parametric (dose ×3/×6/×5/×3), so 30g gives 90/270/420/510g at a slightly relaxed 35-second cadence.",
+              "모모스 1:17 공식을 두 잔으로: 푸어 스케줄이 도징 비례식(원두×3/×6/×5/×3)이라 30g이면 90/270/420/510g, 35초 간격의 여유로운 리듬입니다."],
+      };
+    }
+    if (m === "iced" && x2) {
+      return {
+        dose: 30, water: 300, ice: 150,
+        temp: 98, clicks: b.clicks + 6,
+        grindNote: [" (very coarse ~1,100μm)", " (아주 굵게 ~1,100μm)"],
+        total: 180,
+        phases: [
+          { name: ["Pour 1 + Stir", "푸어 1 + 교반"], from: 0, to: 35, g0: 0, g1: 55, pulse: true, hint: ["55g, then stir the bed well", "55g 붓고 드리퍼 내부를 잘 저어주기"] },
+          { name: ["Pour 2", "푸어 2"], from: 35, to: 70, g0: 55, g1: 150, pulse: true, hint: ["To 150g, easy circles", "150g까지 편하게"] },
+          { name: ["Pour 3", "푸어 3"], from: 70, to: 105, g0: 150, g1: 245, pulse: true, hint: ["To 245g, keep the cadence", "245g까지 같은 리듬으로"] },
+          { name: ["Pour 4", "푸어 4"], from: 105, to: 140, g0: 245, g1: 300, pulse: true, hint: ["To 300g — pouring done", "300g까지 — 붓기 종료"] },
+          { name: ["Drawdown", "드로우다운"], from: 140, to: 180, g0: 300, g1: 300, drain: true, hint: ["Drains onto the ice — chill and serve", "얼음 위로 드레인 — 칠링 후 서빙"] },
+        ],
+        agitation: ["Stir well during the first pour — nothing after", "첫 푸어에서 잘 저어주기 — 이후에는 없음"],
+        why: ["Momos' 1:10 iced recipe scaled to two cups: 30g with 300g of near-boiling water over 150g of ice, same proportional pour targets.",
+              "모모스 1:10 아이스 레시피를 두 잔으로: 30g에 거의 끓는 물 300g, 얼음 150g, 같은 비례의 푸어 타깃."],
+      };
+    }
     if (m === "hot") {
       // 15g dose → pours of dose×3 / ×6 / ×5 / ×3 at 30s marks.
       return {
@@ -1036,11 +1228,13 @@
   let mode = "hot";
   let beanId = "house";
   let methodId = "tuned";
+  let cups = 1;
   let customAttrs = { roast: "light", process: "washed" };
   try {
     mode = localStorage.getItem("brew.mode") || "hot";
     beanId = localStorage.getItem("brew.bean") || "house";
     methodId = localStorage.getItem("brew.method") || "tuned";
+    cups = localStorage.getItem("brew.cups") === "2" ? 2 : 1;
     lang = localStorage.getItem("brew.lang") || "en";
     const ca = JSON.parse(localStorage.getItem("brew.custom") || "null");
     if (ca && ROAST_LABEL[ca.roast] && PROC_LABEL[ca.process]) customAttrs = ca;
@@ -1065,7 +1259,7 @@
   let feedbackGiven = false; // answered for the current finished brew
 
   // ---- Dial-in feedback: taste verdict → concrete advice ----
-  function fbKey() { return `${beanId}|${methodId}|${mode}`; }
+  function fbKey() { return `${beanId}|${methodId}|${mode}|${cups}`; }
   function fbLoad() {
     try { return JSON.parse(localStorage.getItem("brew.feedback") || "{}"); } catch (e) { return {}; }
   }
@@ -1246,6 +1440,10 @@
     $("onboardSteps").innerHTML = [ui("ob1"), ui("ob2"), ui("ob3")]
       .map((s, i) => `<li><b>${i + 1}</b><span>${s.replace(/<b2>/g, "<strong>").replace(/<\/b2>/g, "</strong>")}</span></li>`).join("");
     $("onboardOk").textContent = ui("obOk");
+    $("cupsBtn1").textContent = ui("cups1");
+    $("cupsBtn2").textContent = ui("cups2");
+    $("cupsBtn1").classList.toggle("on", cups === 1);
+    $("cupsBtn2").classList.toggle("on", cups === 2);
     $("subtitle").textContent = ui("subtitle");
     $("btnLang").textContent = lang === "ko" ? "English" : "한국어";
     $("lblBean").textContent = ui("lblBean");
@@ -1266,7 +1464,7 @@
     const b = bean();
     document.documentElement.classList.toggle("iced", mode === "iced");
 
-    $("beans").innerHTML = allBeans()
+    $("beans").innerHTML = `<button class="chip scan" data-scan="1">${ui("scanChip")}</button>` + allBeans()
       .map(x => `<button class="chip${x.id === beanId ? " on" : ""}" data-bean="${x.id}" role="tab" aria-selected="${x.id === beanId}">${tx(x.chip)}</button>`).join("");
     $("methods").innerHTML = METHODS
       .map(x => `<button class="chip${x.id === methodId ? " on" : ""}" data-method="${x.id}" role="tab" aria-selected="${x.id === methodId}">${tx(x.chip)}</button>`).join("");
@@ -1300,7 +1498,7 @@
     }).join("");
 
     document.querySelectorAll("#beans .chip").forEach(el =>
-      el.addEventListener("click", () => setBean(el.dataset.bean)));
+      el.addEventListener("click", () => el.dataset.scan ? $("scanInput").click() : setBean(el.dataset.bean)));
     document.querySelectorAll("#methods .chip").forEach(el =>
       el.addEventListener("click", () => setMethod(el.dataset.method)));
 
@@ -1483,6 +1681,7 @@
       localStorage.setItem("brew.mode", mode);
       localStorage.setItem("brew.bean", beanId);
       localStorage.setItem("brew.method", methodId);
+      localStorage.setItem("brew.cups", String(cups));
       localStorage.setItem("brew.lang", lang);
       localStorage.setItem("brew.custom", JSON.stringify(customAttrs));
     } catch (e) {}
@@ -1520,6 +1719,14 @@
   $("btnHot").addEventListener("click", () => setMode("hot"));
   $("btnIced").addEventListener("click", () => setMode("iced"));
 
+  function setCups(c) {
+    if (cups === c) return;
+    cups = c;
+    refresh(false);
+  }
+  $("cupsBtn1").addEventListener("click", () => setCups(1));
+  $("cupsBtn2").addEventListener("click", () => setCups(2));
+
   $("btnLang").addEventListener("click", () => {
     lang = lang === "ko" ? "en" : "ko";
     persist();
@@ -1532,6 +1739,123 @@
     el.addEventListener("click", () => { customAttrs.roast = el.dataset.v; refresh(true); }));
   document.querySelectorAll("#cfgProcess button").forEach(el =>
     el.addEventListener("click", () => { customAttrs.process = el.dataset.v; refresh(true); }));
+
+  // ---- Label scanner: photo → on-device OCR → bean + method pick ----
+  let tessLoad = null;
+  function loadTesseract() {
+    if (window.Tesseract) return Promise.resolve();
+    if (!tessLoad) {
+      tessLoad = new Promise((res, rej) => {
+        const s = document.createElement("script");
+        s.src = "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
+        s.onload = res;
+        s.onerror = () => { tessLoad = null; rej(new Error("tesseract-load")); };
+        document.head.appendChild(s);
+      });
+    }
+    return tessLoad;
+  }
+
+  function scanNote(html) {
+    const el = $("scanNote");
+    if (!html) { el.hidden = true; el.innerHTML = ""; return; }
+    el.hidden = false;
+    el.innerHTML = html;
+  }
+
+  async function downscale(file) {
+    const bmp = await createImageBitmap(file);
+    const max = 1600;
+    const k = Math.min(1, max / Math.max(bmp.width, bmp.height));
+    const c = document.createElement("canvas");
+    c.width = Math.round(bmp.width * k);
+    c.height = Math.round(bmp.height * k);
+    c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+    return c.toDataURL("image/jpeg", 0.85);
+  }
+
+  function interpretLabel(text) {
+    const t = text.toLowerCase();
+    const has = (...ws) => ws.some(w => t.includes(w));
+    const tags = [];
+
+    let origin = null;
+    if (has("gesha", "geisha", "게샤", "게이샤")) { origin = "gesha"; tags.push("Gesha"); }
+    else if (has("yirgacheffe", "예가체프", "이르가체페", "ethiopia", "에티오피아")) { origin = "yirg"; tags.push("Ethiopia"); }
+    else if (has("kenya", "케냐")) { origin = "kenya"; tags.push("Kenya"); }
+    else if (has("sumatra", "수마트라", "mandheling", "만델링")) { origin = "sumatra"; tags.push("Sumatra"); }
+    else if (has("honduras", "온두라스")) { origin = "honduras"; tags.push("Honduras"); }
+    else if (has("guatemala", "과테말라", "antigua", "안티구아")) { origin = "guatemala"; tags.push("Guatemala"); }
+    else if (has("costa rica", "costarica", "코스타리카")) { origin = "costarica"; tags.push("Costa Rica"); }
+    else if (has("colombia", "columbia", "콜롬비아")) { origin = "colombia"; tags.push("Colombia"); }
+    else if (has("brazil", "brasil", "브라질")) { origin = "brazil"; tags.push("Brazil"); }
+
+    const blend = has("blend", "블렌드", "블렌딩");
+    if (blend) tags.push(lang === "ko" ? "블렌드" : "Blend");
+
+    const process = has("anaerobic", "무산소", "애너로빅") ? "anaerobic"
+      : has("natural", "내추럴") ? "natural"
+      : has("washed", "워시드", "수세식") ? "washed" : null;
+    if (process) tags.push(tx(PROC_LABEL[process]));
+
+    const roast = has("dark", "다크", "강배전", "french roast", "프렌치") ? "dark"
+      : has("medium", "미디엄", "중배전") ? "medium"
+      : has("light", "라이트", "약배전") ? "light" : null;
+    if (roast) tags.push(tx(ROAST_LABEL[roast]));
+
+    let bean = null;
+    if (process === "anaerobic" && (!origin || origin === "colombia")) bean = "coan";
+    else if (origin) bean = origin;
+    else if (blend) bean = "blend";
+    else if (roast || process) {
+      bean = "custom";
+      customAttrs = { roast: roast || "medium", process: process || "washed" };
+    }
+    if (!bean) return null;
+
+    const beanObj = allBeans().find(x => x.id === bean);
+    const effRoast = roast || (beanObj ? beanObj.roast : "medium");
+    let method;
+    if (bean === "coan" || process === "anaerobic" || bean === "gesha") method = "tuned";
+    else if (effRoast === "dark" || bean === "blend" || bean === "sumatra") method = "tuned";
+    else if (effRoast === "light") method = "hoffmann";
+    else method = "kasuya46";
+
+    return { bean, method, tags };
+  }
+
+  async function runScan(file) {
+    try {
+      scanNote(ui("scanLoading"));
+      await loadTesseract();
+      scanNote(ui("scanReading"));
+      const src = await downscale(file);
+      const worker = await Tesseract.createWorker(["eng", "kor"]);
+      const { data } = await worker.recognize(src);
+      await worker.terminate();
+      const hit = interpretLabel(data.text || "");
+      if (!hit) {
+        beanId = "custom";
+        refresh(true);
+        scanNote(ui("scanNoMatch"));
+        return;
+      }
+      beanId = hit.bean;
+      methodId = hit.method;
+      refresh(true);
+      const b = allBeans().find(x => x.id === hit.bean);
+      const mi = METHODS.find(x => x.id === hit.method);
+      scanNote(`✅ <b>${ui("scanFound")}</b>: ${hit.tags.join(" · ")} → ${ui("scanPicked")}: <b>${tx(b.chip)}</b> + <b>${tx(mi.chip)}</b>`);
+    } catch (e) {
+      scanNote(ui("scanFailLoad"));
+    }
+  }
+
+  $("scanInput").addEventListener("change", () => {
+    const f = $("scanInput").files && $("scanInput").files[0];
+    $("scanInput").value = "";
+    if (f) runScan(f);
+  });
 
   $("btnHot").classList.toggle("on", mode === "hot");
   $("btnIced").classList.toggle("on", mode === "iced");
