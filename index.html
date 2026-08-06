@@ -159,6 +159,16 @@
   .chip.scan { border-style: dashed; }
   .chiprow.methods { margin-top: -6px; }
   .chiprow.methods .chip { font-size: 13px; padding: 0 14px; }
+  /* Beans & Methods live on their own tabs now — show every option in a
+     wrapped grid instead of a horizontal scroller. */
+  #beans, #methods {
+    flex-wrap: wrap;
+    overflow-x: visible;
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
   .rowlabel {
     font-size: 11px;
     color: var(--muted);
