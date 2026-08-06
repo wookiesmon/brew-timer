@@ -503,6 +503,47 @@
   .app.brewing .ringwrap { width: min(84vw, 320px); margin-top: 8px; }
   .app.brewing .clock { font-size: 62px; }
 
+  /* ---- iOS-style bottom tab bar ---- */
+  .tabbar {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    padding: 5px 8px calc(5px + env(safe-area-inset-bottom));
+    z-index: 50;
+  }
+  .tabbar button {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    font: 600 11px/1.2 ui-rounded, -apple-system, system-ui, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 0 4px;
+    min-height: 48px;
+    border-radius: 12px;
+    cursor: pointer;
+  }
+  .tabbar button .ico { font-size: 21px; line-height: 1; }
+  .tabbar button.on { color: var(--accent); }
+  .app.brewing .tabbar { display: none; }
+
+  /* Tab visibility matrix */
+  .app[data-tab="brew"] .sec-beans, .app[data-tab="brew"] .sec-methods, .app[data-tab="brew"] .sec-history,
+  .app[data-tab="beans"] .sec-brew, .app[data-tab="beans"] .sec-methods, .app[data-tab="beans"] .sec-history,
+  .app[data-tab="methods"] .sec-brew, .app[data-tab="methods"] .sec-beans, .app[data-tab="methods"] .sec-history,
+  .app[data-tab="history"] .sec-brew, .app[data-tab="history"] .sec-beans, .app[data-tab="history"] .sec-methods { display: none !important; }
+
+  .app { padding-bottom: calc(78px + env(safe-area-inset-bottom)); }
+  .app.brewing { padding-bottom: 6px; }
+  .app .controls { bottom: calc(59px + env(safe-area-inset-bottom)); }
+  .app.brewing .controls { bottom: 0; }
+
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; }
   }
@@ -518,29 +559,29 @@
     </div>
   </header>
 
-  <div class="onboard" id="onboard" hidden>
+  <div class="onboard sec-brew" id="onboard" hidden>
     <ol id="onboardSteps"></ol>
     <button id="onboardOk"></button>
   </div>
 
-  <div class="rowlabel" id="lblRecent" hidden>Recent brews</div>
-  <div class="chiprow" id="history" hidden></div>
+  <div class="rowlabel sec-history" id="lblRecent">Recent brews</div>
+  <div class="chiprow sec-history" id="history" hidden></div>
+  <div class="beaninfo sec-history" id="histEmpty" hidden></div>
 
-  <div class="rowhead">
+  <div class="rowhead sec-beans">
     <div class="rowlabel" id="lblBean">Bean</div>
     <div class="mini-seg" id="cupsSeg" role="tablist" aria-label="Cups">
       <button data-c="1" id="cupsBtn1">1 cup</button>
       <button data-c="2" id="cupsBtn2">2 cups</button>
     </div>
   </div>
-  <div class="chiprow" id="beans" role="tablist" aria-label="Bean"></div>
-  <div class="beaninfo" id="scanNote" hidden></div>
-  <div class="rowlabel" id="lblMethod">Method</div>
-  <div class="chiprow methods" id="methods" role="tablist" aria-label="Method"></div>
-  <div class="beaninfo" id="methodinfo"></div>
+  <div class="chiprow sec-beans" id="beans" role="tablist" aria-label="Bean"></div>
+  <div class="rowlabel sec-methods" id="lblMethod">Method</div>
+  <div class="chiprow methods sec-methods" id="methods" role="tablist" aria-label="Method"></div>
+  <div class="beaninfo sec-methods" id="methodinfo"></div>
   <div class="beaninfo" id="beaninfo"></div>
 
-  <div class="custom-cfg" id="customCfg" hidden>
+  <div class="custom-cfg sec-beans" id="customCfg" hidden>
     <div class="cfg-row">
       <span id="lblRoast">Roast</span>
       <div class="cfg-seg" id="cfgRoast">
@@ -559,7 +600,7 @@
     </div>
   </div>
 
-  <div class="method" id="method">
+  <div class="method sec-methods" id="method">
     <button class="method-head" id="methodToggle" aria-expanded="false">
       <span><span id="methodHeadLabel">Best method</span>&nbsp;<span class="sum" id="methodSummary"></span></span>
       <span class="chev">▾</span>
@@ -570,9 +611,11 @@
     </div>
   </div>
 
-  <div class="recipe" id="recipe"></div>
+  <div class="chiprow sec-brew" id="setupSummary"></div>
+  <div class="beaninfo sec-brew" id="scanNote" hidden></div>
+  <div class="recipe sec-brew" id="recipe"></div>
 
-  <div class="ringwrap">
+  <div class="ringwrap sec-brew">
     <svg viewBox="0 0 280 280" aria-hidden="true">
       <circle class="ring-track" cx="140" cy="140" r="124" fill="none" stroke-width="14"></circle>
       <circle class="ring-fill" id="ringFill" cx="140" cy="140" r="124" fill="none" stroke-width="14"></circle>
@@ -585,18 +628,25 @@
     </div>
   </div>
 
-  <div class="target">
+  <div class="target sec-brew">
     <div class="big" id="targetBig"></div>
     <div class="hint" id="targetHint"></div>
     <div id="dialin"></div>
   </div>
 
-  <div class="steps" id="steps"></div>
+  <div class="steps sec-brew" id="steps"></div>
 
-  <div class="controls">
+  <div class="controls sec-brew">
     <button class="btn primary" id="btnMain">Start</button>
     <button class="btn ghost" id="btnReset">Reset</button>
   </div>
+
+  <nav class="tabbar" id="tabbar">
+    <button data-tab="brew" class="on"><span class="ico">☕</span><span class="lbl" data-l="tabBrew"></span></button>
+    <button data-tab="beans"><span class="ico">🫘</span><span class="lbl" data-l="tabBeans"></span></button>
+    <button data-tab="methods"><span class="ico">🫖</span><span class="lbl" data-l="tabMethods"></span></button>
+    <button data-tab="history"><span class="ico">🕘</span><span class="lbl" data-l="tabHistory"></span></button>
+  </nav>
 </div>
 
 <!-- No capture attribute: the OS offers both "Take Photo" and "Photo Library" -->
@@ -647,8 +697,8 @@
     fbBitter: ["Bitter / harsh", "쓰고 떫음"],
     fbSaved: ["Saved — I'll remind you next brew.", "저장했어요 — 다음 추출 때 알려드릴게요."],
     lastBrew: ["Last brew", "지난 추출"],
-    ob1: ["Pick your <b2>bean</b2> and a <b2>method</b2> — each choice explains itself below the chips.",
-          "<b2>원두</b2>와 <b2>추출법</b2>을 고르세요 — 선택하면 아래에 설명이 나옵니다."],
+    ob1: ["Pick your <b2>bean</b2> and <b2>method</b2> in the tabs below — ⭐ marks the recommended pairing.",
+          "아래 탭에서 <b2>원두</b2>와 <b2>추출법</b2>을 고르세요 — ⭐가 추천 조합입니다."],
     ob2: ["Weigh and grind to the numbers shown, heat your water, rinse the filter.",
           "표시된 대로 원두를 계량·분쇄하고, 물을 데우고, 필터를 린스하세요."],
     ob3: ["Press <b2>Start</b2> with your first pour — chimes guide every step, so just follow the big card.",
@@ -657,6 +707,11 @@
     cups1: ["1 cup", "1잔"],
     cups2: ["2 cups", "2잔"],
     lblRecent: ["Recent brews — tap to reuse", "최근 추출 — 탭하면 그대로 재사용"],
+    tabBrew: ["Brew", "추출"],
+    tabBeans: ["Beans", "원두"],
+    tabMethods: ["Methods", "추출법"],
+    tabHistory: ["History", "기록"],
+    histEmpty: ["No saved brews yet — finish a brew or scan a label and they'll appear here.", "저장된 추출이 아직 없어요 — 추출을 완료하거나 라벨을 스캔하면 여기에 나타납니다."],
     scanChip: ["📷 Scan label", "📷 라벨 스캔"],
     scanLoading: ["Loading scanner (first time only, ~4MB)…", "스캐너 로딩 중 (최초 1회, 약 4MB)…"],
     scanReading: ["Reading the label…", "라벨을 읽는 중…"],
@@ -1440,8 +1495,9 @@
   }
   function buildHistory() {
     const h = histLoad();
-    $("lblRecent").hidden = h.length === 0;
     $("history").hidden = h.length === 0;
+    $("histEmpty").hidden = h.length > 0;
+    $("histEmpty").textContent = ui("histEmpty");
     $("lblRecent").textContent = ui("lblRecent");
     $("history").innerHTML = h.map((e, i) => {
       const m = METHODS.find(x => x.id === e.methodId);
@@ -1464,6 +1520,7 @@
     $("btnIced").setAttribute("aria-selected", mode === "iced");
     scanNote("");
     refresh(true);
+    switchTab("brew");
     histSave(); // bump to front
   }
 
@@ -1678,7 +1735,18 @@
     $("onboard").hidden = true;
   }
 
+  let tab = "brew";
+  function switchTab(t) {
+    tab = t;
+    document.querySelector(".app").dataset.tab = t;
+    document.querySelectorAll(".tabbar button").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
+    window.scrollTo({ top: 0 });
+  }
+  document.querySelectorAll(".tabbar button").forEach(b =>
+    b.addEventListener("click", () => switchTab(b.dataset.tab)));
+
   function applyChrome() {
+    document.querySelectorAll(".tabbar .lbl").forEach(el => { el.textContent = ui(el.dataset.l); });
     $("onboard").hidden = onboarded;
     $("onboardSteps").innerHTML = [ui("ob1"), ui("ob2"), ui("ob3")]
       .map((s, i) => `<li><b>${i + 1}</b><span>${s.replace(/<b2>/g, "<strong>").replace(/<\/b2>/g, "</strong>")}</span></li>`).join("");
@@ -1724,6 +1792,12 @@
         ? `<div class="infoext"><b>${tx(mi.chip)}</b> · ${tx(mi.who)}.<br>${tx(mi.pick)}.<br><b>${tx(b.name)}</b> · ${tx(b.proc)} — ${tx(b.notes)}</div>`
         : "");
     $("methodinfo").onclick = () => { infoOpen = !infoOpen; buildStatics(); };
+
+    $("setupSummary").innerHTML =
+      `<button class="chip" data-go="beans">☕ ${tx(b.chip)}</button>`
+      + `<button class="chip" data-go="methods">${methodId === recc.best ? "⭐ " : ""}${tx(mi.chip)}</button>`;
+    document.querySelectorAll("#setupSummary .chip").forEach(el =>
+      el.addEventListener("click", () => switchTab(el.dataset.go)));
 
     $("customCfg").hidden = beanId !== "custom";
     if (beanId === "custom") {
@@ -2095,6 +2169,7 @@
 
   async function runScan(file) {
     try {
+      switchTab("brew");
       scanNote(ui("scanLoading"));
       await loadTesseract();
       scanNote(ui("scanReading"));
@@ -2135,6 +2210,7 @@
 
   $("btnHot").classList.toggle("on", mode === "hot");
   $("btnIced").classList.toggle("on", mode === "iced");
+  switchTab("brew");
   buildStatics();
   render();
 </script>
