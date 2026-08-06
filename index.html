@@ -711,6 +711,7 @@
     tabBeans: ["Beans", "원두"],
     tabMethods: ["Methods", "추출법"],
     tabHistory: ["History", "기록"],
+    restNow: ["poured ✓ — now rest", "붓기 완료 ✓ — 휴지"],
     histEmpty: ["No saved brews yet — finish a brew or scan a label and they'll appear here.", "저장된 추출이 아직 없어요 — 추출을 완료하거나 라벨을 스캔하면 여기에 나타납니다."],
     scanChip: ["📷 Scan label", "📷 라벨 스캔"],
     scanLoading: ["Loading scanner (first time only, ~4MB)…", "스캐너 로딩 중 (최초 1회, 약 4MB)…"],
@@ -1044,7 +1045,7 @@
       grindNote: x2 ? [" (1 coarser for the bigger bed)", " (큰 배치라 1클릭 굵게)"] : ["", ""],
       total: totalT,
       phases: [
-        { name: ["Bloom", "뜸"], from: 0, to: bloomT, g0: 0, g1, hint: b.hintBloom },
+        { name: ["Bloom", "뜸"], from: 0, to: bloomT, g0: 0, g1, pour: 12, hint: b.hintBloom },
         { name: ["1st Pour", "1차 푸어"], from: bloomT, to: p1T, g0: g1, g1: g2, hint: b.hintP1 },
         { name: ["2nd Pour", "2차 푸어"], from: p1T, to: totalT, g0: g2, g1: water, hint: b.hintP2 },
       ],
@@ -1140,7 +1141,7 @@
         temp, clicks: b.clicks, grindNote,
         total: 210,
         phases: [
-          { name: ["Bloom", "뜸"], from: 0, to: 45, g0: 0, g1: 60, hint: ["60g bloom, grab the brewer and swirl gently", "60g 뜸, 드리퍼를 잡고 부드럽게 스월"] },
+          { name: ["Bloom", "뜸"], from: 0, to: 45, g0: 0, g1: 60, pour: 12, hint: ["60g bloom, grab the brewer and swirl gently", "60g 뜸, 드리퍼를 잡고 부드럽게 스월"] },
           { name: ["Main Pour", "메인 푸어"], from: 45, to: 75, g0: 60, g1: 300, hint: ["One steady spiral to 300g", "300g까지 하나의 일정한 스파이럴"] },
           { name: ["Top-up", "탑업"], from: 75, to: 105, g0: 300, g1: 500, hint: ["To 500g, stir once each way, then swirl", "500g까지, 양방향 한 번씩 저은 뒤 스월"] },
           { name: ["Drawdown", "드로우다운"], from: 105, to: 210, g0: 500, g1: 500, drain: true, hint: ["Hands off — flat bed by 3:30 means even extraction", "손 떼기 — 3:30까지 평평한 베드면 균일 추출"] },
@@ -1156,7 +1157,7 @@
         temp, clicks: b.clicks, grindNote,
         total: 200,
         phases: [
-          { name: ["Bloom", "뜸"], from: 0, to: 45, g0: 0, g1: 60, hint: ["60g bloom, swirl gently", "60g 뜸, 부드럽게 스월"] },
+          { name: ["Bloom", "뜸"], from: 0, to: 45, g0: 0, g1: 60, pour: 12, hint: ["60g bloom, swirl gently", "60g 뜸, 부드럽게 스월"] },
           { name: ["Main Pour", "메인 푸어"], from: 45, to: 75, g0: 60, g1: 200, hint: ["Steady spiral to 200g", "200g까지 일정한 스파이럴"] },
           { name: ["Top-up", "탑업"], from: 75, to: 100, g0: 200, g1: 320, hint: ["To 320g, then one gentle swirl", "320g까지, 부드럽게 한 번 스월"] },
           { name: ["Drawdown", "드로우다운"], from: 100, to: 200, g0: 320, g1: 320, drain: true, hint: ["Hands off — drains onto the ice", "손 떼기 — 얼음 위로 드레인"] },
@@ -1172,7 +1173,7 @@
         temp, clicks: b.clicks, grindNote,
         total: 180,
         phases: [
-          { name: ["Bloom", "뜸"], from: 0, to: 45, g0: 0, g1: 30, hint: ["30g bloom, grab the brewer and swirl gently", "30g 뜸, 드리퍼를 잡고 부드럽게 스월"] },
+          { name: ["Bloom", "뜸"], from: 0, to: 45, g0: 0, g1: 30, pour: 10, hint: ["30g bloom, grab the brewer and swirl gently", "30g 뜸, 드리퍼를 잡고 부드럽게 스월"] },
           { name: ["Main Pour", "메인 푸어"], from: 45, to: 75, g0: 30, g1: 150, hint: ["One steady spiral to 150g", "150g까지 하나의 일정한 스파이럴"] },
           { name: ["Top-up", "탑업"], from: 75, to: 105, g0: 150, g1: 250, hint: ["To 250g, stir once each way, then swirl", "250g까지, 양방향 한 번씩 저은 뒤 스월"] },
           { name: ["Drawdown", "드로우다운"], from: 105, to: 180, g0: 250, g1: 250, drain: true, hint: ["Hands off — flat bed by 3:00 means even extraction", "손 떼기 — 3:00까지 평평한 베드면 균일 추출"] },
@@ -1187,7 +1188,7 @@
       temp, clicks: b.clicks, grindNote,
       total: 160,
       phases: [
-        { name: ["Bloom", "뜸"], from: 0, to: 45, g0: 0, g1: 30, hint: ["30g bloom, swirl gently", "30g 뜸, 부드럽게 스월"] },
+        { name: ["Bloom", "뜸"], from: 0, to: 45, g0: 0, g1: 30, pour: 10, hint: ["30g bloom, swirl gently", "30g 뜸, 부드럽게 스월"] },
         { name: ["Main Pour", "메인 푸어"], from: 45, to: 70, g0: 30, g1: 100, hint: ["Steady spiral to 100g", "100g까지 일정한 스파이럴"] },
         { name: ["Top-up", "탑업"], from: 70, to: 95, g0: 100, g1: 160, hint: ["To 160g, then one gentle swirl", "160g까지, 부드럽게 한 번 스월"] },
         { name: ["Drawdown", "드로우다운"], from: 95, to: 160, g0: 160, g1: 160, drain: true, hint: ["Hands off — drains onto the ice", "손 떼기 — 얼음 위로 드레인"] },
@@ -1356,7 +1357,7 @@
       temp, clicks, grindNote,
       total: cfg.total,
       phases: [
-        { name: ["Bloom", "뜸"], from: 0, to: cfg.bloomT, g0: 0, g1: cfg.bloomG, hint: ["Gentle pour, no swirl — keep everything still", "부드럽게 붓기, 스월 없이 — 모든 것을 고요하게"] },
+        { name: ["Bloom", "뜸"], from: 0, to: cfg.bloomT, g0: 0, g1: cfg.bloomG, pour: 15, hint: ["Gentle pour, no swirl — keep everything still", "부드럽게 붓기, 스월 없이 — 모든 것을 고요하게"] },
         { name: ["Osmotic Pour", "오스모틱 푸어"], from: cfg.bloomT, to: cfg.pourT, g0: cfg.bloomG, g1: cfg.water, hint: ["One unbroken thin thread, dead-center — let the water spread itself", "정중앙에 끊김 없는 가는 물줄기 — 물이 스스로 퍼지게"] },
         { name: ["Drawdown", "드로우다운"], from: cfg.pourT, to: cfg.total, g0: cfg.water, g1: cfg.water, drain: true, hint: [m === "iced" ? "Hands off — drains onto the ice" : "Hands off — let it finish undisturbed", m === "iced" ? "손 떼기 — 얼음 위로 드레인" : "손 떼기 — 방해 없이 마무리"] },
       ],
@@ -1383,7 +1384,7 @@
       temp, clicks, grindNote,
       total: cfg.total,
       phases: [
-        { name: ["Bloom", "뜸"], from: 0, to: p1[0], g0: 0, g1: p1[1], hint: ["Wet evenly, brief rest", "고르게 적시고 잠시 휴지"] },
+        { name: ["Bloom", "뜸"], from: 0, to: p1[0], g0: 0, g1: p1[1], pour: 10, hint: ["Wet evenly, brief rest", "고르게 적시고 잠시 휴지"] },
         { name: ["Pour 2", "푸어 2"], from: p1[0], to: p2[0], g0: p1[1], g1: p2[1], pulse: true, hint: ["Small centered circles, then let it settle", "중앙에 작은 원을 그리고, 가라앉게 두기"] },
         { name: ["Pour 3", "푸어 3"], from: p2[0], to: p3[0], g0: p2[1], g1: p3[1], pulse: true, hint: ["Final pour, same gentle rhythm", "마지막 푸어 — 같은 부드러운 리듬"] },
         { name: ["Drawdown", "드로우다운"], from: p3[0], to: cfg.total, g0: cfg.water, g1: cfg.water, drain: true, hint: [m === "iced" ? "Drains onto the ice" : "Hands off — flat bed, even finish", m === "iced" ? "얼음 위로 드레인" : "손 떼기 — 평평한 베드로 고른 마무리"] },
@@ -1413,7 +1414,7 @@
       temp, clicks, grindNote,
       total: cfg.total,
       phases: [
-        { name: ["Bloom", "뜸"], from: 0, to: cfg.bloomT, g0: 0, g1: cfg.bloomG, hint: ["Even spiral to wet the grounds, let gases escape", "스파이럴로 고르게 적시고 가스 배출"] },
+        { name: ["Bloom", "뜸"], from: 0, to: cfg.bloomT, g0: 0, g1: cfg.bloomG, pour: 10, hint: ["Even spiral to wet the grounds, let gases escape", "스파이럴로 고르게 적시고 가스 배출"] },
         { name: ["Center Pour", "센터 푸어"], from: cfg.bloomT, to: cfg.pourT, g0: cfg.bloomG, g1: cfg.water, hint: ["Everything straight down the center, one steady stream", "전부 정중앙에, 하나의 일정한 물줄기로"] },
         { name: ["Drawdown", "드로우다운"], from: cfg.pourT, to: cfg.total, g0: cfg.water, g1: cfg.water, drain: true, hint: [m === "iced" ? "Drains onto the ice" : "Hands off — done around 2:00", m === "iced" ? "얼음 위로 드레인" : "손 떼기 — 2:00 내외 완료"] },
       ],
@@ -1439,7 +1440,7 @@
       temp, clicks, grindNote,
       total: cfg.total,
       phases: [
-        { name: ["Stirred Bloom", "교반 뜸"], from: 0, to: 45, g0: 0, g1: cfg.bloomG, hint: ["Pour 3× dose, stir gently so every ground is wet", "도징의 3배를 붓고 가볍게 저어 전부 적시기"] },
+        { name: ["Stirred Bloom", "교반 뜸"], from: 0, to: 45, g0: 0, g1: cfg.bloomG, pour: 15, hint: ["Pour 3× dose, stir gently so every ground is wet", "도징의 3배를 붓고 가볍게 저어 전부 적시기"] },
         { name: ["Main Pour", "메인 푸어"], from: 45, to: cfg.pourT, g0: cfg.bloomG, g1: cfg.water, hint: ["One continuous medium-height pour", "중간 높이의 하나의 연속 푸어"] },
         { name: ["Spin + Drawdown", "스핀 + 드로우다운"], from: cfg.pourT, to: cfg.total, g0: cfg.water, g1: cfg.water, drain: true, hint: ["Gentle Rao spin, then hands off — flat bed at the end", "부드러운 라오 스핀 후 손 떼기 — 마지막엔 평평한 베드"] },
       ],
@@ -1872,16 +1873,24 @@
     if (active) {
       if (p.drain) {
         $("targetBig").innerHTML = ko ? `<em>드로우다운</em> · 손 떼기` : `<em>Drawdown</em> · hands off`;
-      } else if (p.pulse) {
-        $("targetBig").innerHTML = ko
-          ? `지금 <em>${p.g1}g</em>까지 붓고 휴지`
-          : `Pour to <em>${p.g1}g</em> now, then rest`;
       } else {
-        const frac = Math.min(1, (sec - p.from) / (p.to - p.from));
-        const pace = Math.round(p.g0 + (p.g1 - p.g0) * frac);
-        $("targetBig").innerHTML = ko
-          ? `<em>${p.g1}g</em>까지 붓기 · 페이스 ~${pace}g`
-          : `Pour to <em>${p.g1}g</em> · pace ~${pace}g`;
+        // Pace tracks the actual pour window, not the whole phase —
+        // after the window, show "rest" instead of a crawling pace.
+        const pw = p.pour || (p.pulse ? 12 : p.to - p.from);
+        const poured = sec - p.from >= pw;
+        if (poured && (p.pour || p.pulse)) {
+          $("targetBig").innerHTML = `<em>${p.g1}g</em> ${ui("restNow")}`;
+        } else if (p.pulse) {
+          $("targetBig").innerHTML = ko
+            ? `지금 <em>${p.g1}g</em>까지 붓고 휴지`
+            : `Pour to <em>${p.g1}g</em> now, then rest`;
+        } else {
+          const frac = Math.min(1, (sec - p.from) / pw);
+          const pace = Math.round(p.g0 + (p.g1 - p.g0) * frac);
+          $("targetBig").innerHTML = ko
+            ? `<em>${p.g1}g</em>까지 붓기 · 페이스 ~${pace}g`
+            : `Pour to <em>${p.g1}g</em> · pace ~${pace}g`;
+        }
       }
       $("targetHint").textContent = p.hint;
       $("dialin").innerHTML = "";
