@@ -496,6 +496,9 @@
     <button id="onboardOk"></button>
   </div>
 
+  <div class="rowlabel" id="lblRecent" hidden>Recent brews</div>
+  <div class="chiprow" id="history" hidden></div>
+
   <div class="rowhead">
     <div class="rowlabel" id="lblBean">Bean</div>
     <div class="mini-seg" id="cupsSeg" role="tablist" aria-label="Cups">
@@ -626,6 +629,7 @@
     obOk: ["Got it", "알겠어요"],
     cups1: ["1 cup", "1잔"],
     cups2: ["2 cups", "2잔"],
+    lblRecent: ["Recent brews — tap to reuse", "최근 추출 — 탭하면 그대로 재사용"],
     scanChip: ["📷 Scan label", "📷 라벨 스캔"],
     scanLoading: ["Loading scanner (first time only, ~4MB)…", "스캐너 로딩 중 (최초 1회, 약 4MB)…"],
     scanReading: ["Reading the label…", "라벨을 읽는 중…"],
@@ -1385,6 +1389,57 @@
   }
   function methodName(id) { return tx(METHODS.find(x => x.id === id).chip); }
 
+  // ---- Brew history: saved setups so you never re-scan the same bean ----
+  function histLoad() {
+    try { return JSON.parse(localStorage.getItem("brew.history") || "[]"); } catch (e) { return []; }
+  }
+  function histEntryKey(e) {
+    return `${e.beanId}|${e.methodId}|${e.mode}|${e.cups}|${e.beanId === "custom" && e.custom ? e.custom.roast + e.custom.process : ""}`;
+  }
+  function histSave() {
+    const e = { beanId, methodId, mode, cups, custom: beanId === "custom" ? { ...customAttrs } : null, t: Date.now() };
+    let h = histLoad().filter(x => histEntryKey(x) !== histEntryKey(e));
+    h.unshift(e);
+    h = h.slice(0, 6);
+    try { localStorage.setItem("brew.history", JSON.stringify(h)); } catch (err) {}
+    buildHistory();
+  }
+  function histBeanLabel(e) {
+    if (e.beanId === "custom" && e.custom) {
+      return `⚙ ${tx(ROAST_LABEL[e.custom.roast] || ["?", "?"])}·${tx(PROC_LABEL[e.custom.process] || ["?", "?"])}`;
+    }
+    const b = PRESETS.find(x => x.id === e.beanId);
+    return b ? tx(b.chip) : e.beanId;
+  }
+  function buildHistory() {
+    const h = histLoad();
+    $("lblRecent").hidden = h.length === 0;
+    $("history").hidden = h.length === 0;
+    $("lblRecent").textContent = ui("lblRecent");
+    $("history").innerHTML = h.map((e, i) => {
+      const m = METHODS.find(x => x.id === e.methodId);
+      if (!m || (e.beanId !== "custom" && !PRESETS.some(x => x.id === e.beanId))) return "";
+      return `<button class="chip" data-hist="${i}">${e.mode === "iced" ? "🧊" : "🔥"} ${histBeanLabel(e)} · ${tx(m.chip)}${e.cups === 2 ? " ×2" : ""}</button>`;
+    }).join("");
+    document.querySelectorAll("#history .chip").forEach(el =>
+      el.addEventListener("click", () => applyHistory(histLoad()[Number(el.dataset.hist)])));
+  }
+  function applyHistory(e) {
+    if (!e) return;
+    beanId = e.beanId;
+    methodId = e.methodId;
+    mode = e.mode === "iced" ? "iced" : "hot";
+    cups = e.cups === 2 ? 2 : 1;
+    if (e.custom) customAttrs = { ...e.custom };
+    $("btnHot").classList.toggle("on", mode === "hot");
+    $("btnIced").classList.toggle("on", mode === "iced");
+    $("btnHot").setAttribute("aria-selected", mode === "hot");
+    $("btnIced").setAttribute("aria-selected", mode === "iced");
+    scanNote("");
+    refresh(true);
+    histSave(); // bump to front
+  }
+
   let mode = "hot";
   let beanId = "house";
   let methodId = "tuned";
@@ -1668,6 +1723,7 @@
     document.querySelectorAll("#methods .chip").forEach(el =>
       el.addEventListener("click", () => setMethod(el.dataset.method)));
 
+    buildHistory();
     applyChrome();
   }
 
@@ -1768,6 +1824,7 @@
       releaseWake();
       $("btnMain").textContent = ui("start");
       document.querySelector(".app").classList.remove("brewing");
+      histSave();
     }
     render();
   }
@@ -2027,6 +2084,7 @@
       beanId = hit.bean;
       methodId = hit.method;
       refresh(true);
+      histSave();
       const b = allBeans().find(x => x.id === hit.bean);
       const altNames = hit.alts.map(methodName).join(", ");
       scanNote(lang === "ko"
