@@ -14,7 +14,7 @@
     --bg: #F6F2EC;
     --surface: #FFFFFF;
     --ink: #2A211A;
-    --muted: #8A7A6A;
+    --muted: #6F5F4F;
     --line: rgba(42, 33, 26, 0.12);
     --track: rgba(42, 33, 26, 0.08);
     --hot: #B06A2C;
@@ -28,7 +28,7 @@
       --bg: #16110D;
       --surface: #211A14;
       --ink: #F2E9DF;
-      --muted: #A08D7A;
+      --muted: #B4A28E;
       --line: rgba(242, 233, 223, 0.12);
       --track: rgba(242, 233, 223, 0.09);
       --hot: #D98E4A;
@@ -41,7 +41,7 @@
     --bg: #F6F2EC;
     --surface: #FFFFFF;
     --ink: #2A211A;
-    --muted: #8A7A6A;
+    --muted: #6F5F4F;
     --line: rgba(42, 33, 26, 0.12);
     --track: rgba(42, 33, 26, 0.08);
     --hot: #B06A2C;
@@ -53,7 +53,7 @@
     --bg: #16110D;
     --surface: #211A14;
     --ink: #F2E9DF;
-    --muted: #A08D7A;
+    --muted: #B4A28E;
     --line: rgba(242, 233, 223, 0.12);
     --track: rgba(242, 233, 223, 0.09);
     --hot: #D98E4A;
@@ -78,7 +78,7 @@
   .app {
     max-width: 420px;
     margin: 0 auto;
-    padding: max(14px, env(safe-area-inset-top)) 18px calc(24px + env(safe-area-inset-bottom));
+    padding: max(14px, env(safe-area-inset-top)) 18px 6px;
     display: flex;
     flex-direction: column;
     gap: 13px;
@@ -102,7 +102,8 @@
     background: var(--surface);
     color: var(--ink);
     font: 700 12px/1 ui-rounded, -apple-system, system-ui, sans-serif;
-    padding: 9px 12px;
+    min-height: 44px;
+    padding: 0 14px;
     border-radius: 999px;
     cursor: pointer;
     white-space: nowrap;
@@ -123,7 +124,8 @@
     color: var(--muted);
     font: 600 13px/1 ui-rounded, -apple-system, system-ui, sans-serif;
     letter-spacing: 0.08em;
-    padding: 9px 0;
+    min-height: 40px;
+    padding: 0;
     border-radius: 999px;
     cursor: pointer;
   }
@@ -141,11 +143,14 @@
   .chip {
     appearance: none;
     flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
     border: 1px solid var(--line);
     background: var(--surface);
     color: var(--ink);
     font: 600 13px/1 ui-rounded, -apple-system, system-ui, sans-serif;
-    padding: 10px 14px;
+    padding: 0 16px;
     border-radius: 999px;
     cursor: pointer;
     white-space: nowrap;
@@ -153,9 +158,9 @@
   .chip.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
   .chip.scan { border-style: dashed; }
   .chiprow.methods { margin-top: -6px; }
-  .chiprow.methods .chip { font-size: 12px; padding: 8px 12px; }
+  .chiprow.methods .chip { font-size: 13px; padding: 0 14px; }
   .rowlabel {
-    font-size: 10px;
+    font-size: 11px;
     color: var(--muted);
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -181,8 +186,9 @@
     border: 0;
     background: transparent;
     color: var(--muted);
-    font: 600 11px/1 ui-rounded, -apple-system, system-ui, sans-serif;
-    padding: 7px 11px;
+    font: 600 12px/1 ui-rounded, -apple-system, system-ui, sans-serif;
+    min-height: 40px;
+    padding: 0 14px;
     border-radius: 999px;
     cursor: pointer;
     white-space: nowrap;
@@ -191,18 +197,27 @@
 
   .beaninfo {
     text-align: center;
-    font-size: 12.5px;
+    font-size: 13px;
     color: var(--muted);
     margin-top: -4px;
     line-height: 1.45;
   }
   .beaninfo b { color: var(--ink); font-weight: 600; }
+  .inforow {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 40px;
+    cursor: pointer;
+  }
+  .chevlite { color: var(--accent); }
+  .infoext { margin-top: 2px; padding-bottom: 4px; }
 
   .custom-cfg { display: flex; flex-direction: column; gap: 8px; margin-top: -2px; }
   .custom-cfg[hidden] { display: none; }
   .cfg-row { display: grid; grid-template-columns: 66px 1fr; align-items: center; gap: 10px; }
   .cfg-row > span {
-    font-size: 10.5px;
+    font-size: 11px;
     color: var(--muted);
     letter-spacing: 0.07em;
     text-transform: uppercase;
@@ -214,8 +229,9 @@
     border: 0;
     background: transparent;
     color: var(--muted);
-    font: 600 12px/1 ui-rounded, -apple-system, system-ui, sans-serif;
-    padding: 8px 0;
+    font: 600 12.5px/1 ui-rounded, -apple-system, system-ui, sans-serif;
+    min-height: 40px;
+    padding: 0;
     border-radius: 999px;
     cursor: pointer;
     white-space: nowrap;
@@ -257,7 +273,7 @@
   }
   .method dt {
     color: var(--muted);
-    font-size: 10.5px;
+    font-size: 11px;
     letter-spacing: 0.07em;
     text-transform: uppercase;
     font-weight: 600;
@@ -266,7 +282,7 @@
   .method dd { margin: 0; font-variant-numeric: tabular-nums; }
   .method .why {
     margin: 0;
-    font-size: 12.5px;
+    font-size: 13px;
     color: var(--muted);
     border-top: 1px solid var(--line);
     padding-top: 10px;
@@ -293,7 +309,7 @@
   }
   .stat span {
     display: block;
-    font-size: 10px;
+    font-size: 11px;
     color: var(--muted);
     letter-spacing: 0.05em;
     text-transform: uppercase;
@@ -336,7 +352,7 @@
     letter-spacing: -0.01em;
   }
   .subclock {
-    font-size: 12.5px;
+    font-size: 13px;
     color: var(--muted);
     font-variant-numeric: tabular-nums;
   }
@@ -374,13 +390,22 @@
   .step .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--track); }
   .step .name { font-weight: 600; }
   .step .name small { display: block; font-weight: 400; font-size: 12px; color: var(--muted); margin-top: 1px; }
-  .step .time { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .step .time { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .step.active { opacity: 1; border-color: var(--accent); }
   .step.active .dot { background: var(--accent); }
   .step.done { opacity: 0.62; }
   .step.done .dot { background: var(--done); }
 
-  .controls { display: grid; grid-template-columns: 1fr 96px; gap: 10px; margin-top: auto; }
+  .controls {
+    display: grid;
+    grid-template-columns: 1fr 96px;
+    gap: 10px;
+    margin-top: auto;
+    position: sticky;
+    bottom: 0;
+    padding: 10px 0 max(10px, env(safe-area-inset-bottom));
+    background: linear-gradient(to top, var(--bg) 78%, transparent);
+  }
   .btn {
     appearance: none;
     border: 0;
@@ -433,8 +458,9 @@
     border: 0;
     background: var(--track);
     color: var(--ink);
-    font: 600 12.5px/1 ui-rounded, -apple-system, system-ui, sans-serif;
-    padding: 9px 16px;
+    font: 600 13px/1 ui-rounded, -apple-system, system-ui, sans-serif;
+    min-height: 44px;
+    padding: 0 18px;
     border-radius: 999px;
     cursor: pointer;
   }
@@ -446,7 +472,8 @@
     border: 1px solid var(--line);
     background: var(--bg);
     color: var(--ink);
-    font: 600 12px/1.3 ui-rounded, -apple-system, system-ui, sans-serif;
+    font: 600 12.5px/1.3 ui-rounded, -apple-system, system-ui, sans-serif;
+    min-height: 56px;
     padding: 10px 4px;
     border-radius: 12px;
     cursor: pointer;
@@ -455,7 +482,7 @@
   .dialin-row button b { display: block; font-size: 18px; margin-bottom: 3px; }
   .dialin-note {
     margin-top: 10px;
-    font-size: 12.5px;
+    font-size: 13px;
     line-height: 1.45;
     color: var(--muted);
     border-top: 1px solid var(--line);
@@ -1471,6 +1498,7 @@
   let wakeLock = null;
   let audioCtx = null;
   let methodOpen = false;
+  let infoOpen = false;      // collapsible method/bean explainer
   let feedbackGiven = false; // answered for the current finished brew
 
   // ---- Dial-in feedback: taste verdict → concrete advice ----
@@ -1684,14 +1712,18 @@
     const recc = recommendFor(b);
     $("methods").innerHTML = METHODS
       .map(x => `<button class="chip${x.id === methodId ? " on" : ""}" data-method="${x.id}" role="tab" aria-selected="${x.id === methodId}">${x.id === recc.best ? "⭐ " : ""}${tx(x.chip)}</button>`).join("");
-    $("beaninfo").innerHTML = `<b>${tx(b.name)}</b> · ${tx(b.proc)} — ${tx(b.notes)}`;
+    $("beaninfo").hidden = true; // folded into the collapsible info row
     const mi = METHODS.find(x => x.id === methodId);
     const recLine = methodId === recc.best
       ? (lang === "ko" ? `⭐ ${tx(b.name)}에 추천하는 조합입니다` : `⭐ Recommended pairing for ${tx(b.name)}`)
       : (lang === "ko"
         ? `⭐ ${tx(b.name)} 추천: <b>${methodName(recc.best)}</b> — ${tx(recc.reason)}`
         : `⭐ Best for ${tx(b.name)}: <b>${methodName(recc.best)}</b> — ${tx(recc.reason)}`);
-    $("methodinfo").innerHTML = `<b>${tx(mi.chip)}</b> · ${tx(mi.who)}.<br>${tx(mi.pick)}.<br>${recLine}`;
+    $("methodinfo").innerHTML = `<span class="inforow" role="button" aria-expanded="${infoOpen}">${recLine} <span class="chevlite">${infoOpen ? "▴" : "▾"}</span></span>`
+      + (infoOpen
+        ? `<div class="infoext"><b>${tx(mi.chip)}</b> · ${tx(mi.who)}.<br>${tx(mi.pick)}.<br><b>${tx(b.name)}</b> · ${tx(b.proc)} — ${tx(b.notes)}</div>`
+        : "");
+    $("methodinfo").onclick = () => { infoOpen = !infoOpen; buildStatics(); };
 
     $("customCfg").hidden = beanId !== "custom";
     if (beanId === "custom") {
