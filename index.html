@@ -518,7 +518,7 @@
     position: fixed;
     left: 0; right: 0; bottom: 0;
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     background: var(--surface);
     border-top: 1px solid var(--line);
     padding: 5px 8px calc(5px + env(safe-area-inset-bottom));
@@ -529,25 +529,61 @@
     border: 0;
     background: transparent;
     color: var(--muted);
-    font: 600 11px/1.2 ui-rounded, -apple-system, system-ui, sans-serif;
+    font: 600 13px/1.2 ui-rounded, -apple-system, system-ui, sans-serif;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 3px;
-    padding: 6px 0 4px;
-    min-height: 48px;
+    padding: 6px 0 5px;
+    min-height: 50px;
     border-radius: 12px;
     cursor: pointer;
   }
   .tabbar button .ico { font-size: 21px; line-height: 1; }
-  .tabbar button.on { color: var(--accent); }
+  .tabbar button .lbl { font-size: 13px; font-weight: 700; }
+  .tabbar button.on {
+    color: var(--accent);
+    background: var(--track);
+  }
+  .tabbar button.on .lbl { font-weight: 800; }
+  .tabbar button.on .ico { transform: scale(1.12); }
   .app.brewing .tabbar { display: none; }
 
   /* Tab visibility matrix */
-  .app[data-tab="brew"] .sec-beans, .app[data-tab="brew"] .sec-methods, .app[data-tab="brew"] .sec-history,
-  .app[data-tab="beans"] .sec-brew, .app[data-tab="beans"] .sec-methods, .app[data-tab="beans"] .sec-history,
-  .app[data-tab="methods"] .sec-brew, .app[data-tab="methods"] .sec-beans, .app[data-tab="methods"] .sec-history,
-  .app[data-tab="history"] .sec-brew, .app[data-tab="history"] .sec-beans, .app[data-tab="history"] .sec-methods { display: none !important; }
+  .app[data-tab="brew"] .sec-beans, .app[data-tab="brew"] .sec-methods, .app[data-tab="brew"] .sec-history, .app[data-tab="brew"] .sec-guide,
+  .app[data-tab="beans"] .sec-brew, .app[data-tab="beans"] .sec-methods, .app[data-tab="beans"] .sec-history, .app[data-tab="beans"] .sec-guide,
+  .app[data-tab="methods"] .sec-brew, .app[data-tab="methods"] .sec-beans, .app[data-tab="methods"] .sec-history, .app[data-tab="methods"] .sec-guide,
+  .app[data-tab="history"] .sec-brew, .app[data-tab="history"] .sec-beans, .app[data-tab="history"] .sec-methods, .app[data-tab="history"] .sec-guide,
+  .app[data-tab="guide"] .sec-brew, .app[data-tab="guide"] .sec-beans, .app[data-tab="guide"] .sec-methods, .app[data-tab="guide"] .sec-history { display: none !important; }
+
+  .gcard {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 14px 15px;
+  }
+  .gcard h3 {
+    margin: 0 0 8px;
+    font: 700 14px/1.3 ui-rounded, -apple-system, system-ui, sans-serif;
+  }
+  .gcard p, .gcard li { font-size: 13px; line-height: 1.55; color: var(--muted); margin: 0; }
+  .gcard b { color: var(--ink); }
+  .gcard ol, .gcard ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 7px; }
+  .gflow {
+    text-align: center;
+    font: 700 15px/1.4 ui-rounded, -apple-system, system-ui, sans-serif;
+    color: var(--accent);
+  }
+  .gstart {
+    appearance: none;
+    border: 0;
+    border-radius: 18px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font: 700 17px/1 ui-rounded, -apple-system, system-ui, sans-serif;
+    min-height: 54px;
+    cursor: pointer;
+  }
 
   .app { padding-bottom: calc(78px + env(safe-area-inset-bottom)); }
   .app.brewing { padding-bottom: 6px; }
@@ -652,7 +688,10 @@
     <button class="btn ghost" id="btnReset">Reset</button>
   </div>
 
+  <div class="sec-guide" id="guide" style="display:flex;flex-direction:column;gap:12px"></div>
+
   <nav class="tabbar" id="tabbar">
+    <button data-tab="guide"><span class="ico">📖</span><span class="lbl" data-l="tabGuide"></span></button>
     <button data-tab="beans"><span class="ico">🫘</span><span class="lbl" data-l="tabBeans"></span></button>
     <button data-tab="methods"><span class="ico">🫖</span><span class="lbl" data-l="tabMethods"></span></button>
     <button data-tab="brew" class="on"><span class="ico">☕</span><span class="lbl" data-l="tabBrew"></span></button>
@@ -722,6 +761,7 @@
     tabBeans: ["Beans", "원두"],
     tabMethods: ["Methods", "추출법"],
     tabHistory: ["History", "기록"],
+    tabGuide: ["Guide", "가이드"],
     restNow: ["poured ✓ — now rest", "붓기 완료 ✓ — 휴지"],
     histEmpty: ["No saved brews yet — finish a brew or scan a label and they'll appear here.", "저장된 추출이 아직 없어요 — 추출을 완료하거나 라벨을 스캔하면 여기에 나타납니다."],
     scanChip: ["📷 Scan label", "📷 라벨 스캔"],
@@ -1809,9 +1849,59 @@
   document.querySelectorAll(".tabbar button").forEach(b =>
     b.addEventListener("click", () => switchTab(b.dataset.tab)));
 
+  function buildGuide() {
+    const ko = lang === "ko";
+    const g = (en, k) => ko ? k : en;
+    $("guide").innerHTML = `
+      <div class="gflow">${g("🫘 Beans → 🫖 Method → ☕ Brew", "🫘 원두 → 🫖 추출법 → ☕ 추출")}</div>
+      <div class="gcard">
+        <h3>${g("What this app does", "이 앱이 하는 일")}</h3>
+        <p>${g("A pour-over brew guide with a live timer. Pick your bean, get the best method for it, then follow timed pour targets with sound cues — for the best-tasting cup, every time.",
+               "라이브 타이머가 있는 푸어오버 브루잉 가이드입니다. 원두를 고르면 가장 잘 맞는 추출법을 추천하고, 소리 신호와 함께 시간별 푸어 타깃을 안내합니다 — 매번 최고의 한 잔을 위해.")}</p>
+      </div>
+      <div class="gcard">
+        <h3>${g("What you need", "준비물")}</h3>
+        <ul>
+          <li>${g("<b>Dripper + paper filter</b> (V60-style; Kalita for the flat-bed method)", "<b>드리퍼 + 종이 필터</b> (V60 계열; 칼리타 방식은 평바닥 드리퍼)")}</li>
+          <li>${g("<b>Scale</b> — the app guides you by grams", "<b>저울</b> — 앱이 그램 단위로 안내합니다")}</li>
+          <li>${g("<b>Grinder</b> — 'clicks' are hand-grinder clicks; treat as a starting point for yours", "<b>그라인더</b> — '클릭'은 핸드그라인더 기준이니 내 그라인더에 맞게 조절하세요")}</li>
+          <li>${g("<b>Kettle</b> — gooseneck is best for slow pours", "<b>주전자</b> — 느린 푸어에는 구스넥이 좋습니다")}</li>
+        </ul>
+      </div>
+      <div class="gcard">
+        <h3>${g("How to brew", "추출하는 방법")}</h3>
+        <ol>
+          <li>${g("<b>🫘 Beans</b>: pick your bean — or tap <b>📷 Scan label</b> and photograph the bag. Choose HOT/ICED and 1–2 cups.",
+                  "<b>🫘 원두</b>: 원두를 고르거나 <b>📷 라벨 스캔</b>으로 봉투를 찍으세요. HOT/ICED와 1–2잔을 선택합니다.")}</li>
+          <li>${g("<b>🫖 Methods</b>: ⭐ marks the best method for your bean. Open <b>Best method</b> for the full recipe — ratio, water temp, grind.",
+                  "<b>🫖 추출법</b>: ⭐가 내 원두에 가장 잘 맞는 방식입니다. <b>추출 레시피</b>를 열면 비율·물 온도·분쇄도가 나옵니다.")}</li>
+          <li>${g("<b>Prepare</b>: weigh & grind the dose, heat water to the shown temperature, rinse the filter, tare your scale.",
+                  "<b>준비</b>: 원두를 계량·분쇄하고, 표시된 온도로 물을 데우고, 필터를 린스하고, 저울을 0점 맞춥니다.")}</li>
+          <li>${g("<b>☕ Brew</b>: press <b>Start</b> as your first pour begins. The big card always says what to do right now — pour to the target, or rest.",
+                  "<b>☕ 추출</b>: 첫 푸어와 동시에 <b>시작</b>을 누르세요. 큰 카드가 지금 할 일을 알려줍니다 — 타깃까지 붓기, 또는 휴지.")}</li>
+          <li>${g("<b>After</b>: tell it how the cup tasted (😖😋😣) and it computes your grind fix for next time. Every brew saves to <b>🕘 History</b> for one-tap reuse.",
+                  "<b>추출 후</b>: 맛이 어땠는지(😖😋😣) 알려주면 다음번 분쇄 조정값을 계산해 줍니다. 모든 추출은 <b>🕘 기록</b>에 저장되어 한 번의 탭으로 재사용됩니다.")}</li>
+        </ol>
+      </div>
+      <div class="gcard">
+        <h3>${g("Sounds & signals", "소리와 신호")}</h3>
+        <ul>
+          <li>${g("<b>Rising chime</b> — brew started", "<b>상승 차임</b> — 추출 시작")}</li>
+          <li>${g("<b>5 short ticks</b> — next step in 5 seconds, lift your kettle", "<b>짧은 틱 5번</b> — 5초 후 다음 단계, 주전자를 드세요")}</li>
+          <li>${g("<b>Two-note chime</b> — next pour now", "<b>2음 차임</b> — 지금 다음 푸어")}</li>
+          <li>${g("<b>Melody</b> — brew finished", "<b>멜로디</b> — 추출 완료")}</li>
+          <li>${g("<b>pace ~Ng</b> — what your scale should read right now", "<b>페이스 ~Ng</b> — 지금 저울에 표시되어야 할 무게")}</li>
+          <li>${g("The screen stays awake while brewing; keep the app open for the chimes.", "추출 중에는 화면이 꺼지지 않습니다. 차임벨을 위해 앱을 열어 두세요.")}</li>
+        </ul>
+      </div>
+      <button class="gstart" id="guideStart">${g("Start brewing →", "시작하기 →")}</button>`;
+    $("guideStart").onclick = () => { dismissOnboard(); switchTab("beans"); };
+  }
+
   function applyChrome() {
     document.querySelectorAll(".tabbar .lbl").forEach(el => { el.textContent = ui(el.dataset.l); });
-    $("onboard").hidden = onboarded;
+    buildGuide();
+    $("onboard").hidden = true; // retired — replaced by the Guide tab
     $("onboardSteps").innerHTML = [ui("ob1"), ui("ob2"), ui("ob3")]
       .map((s, i) => `<li><b>${i + 1}</b><span>${s.replace(/<b2>/g, "<strong>").replace(/<\/b2>/g, "</strong>")}</span></li>`).join("");
     $("onboardOk").textContent = ui("obOk");
@@ -2287,7 +2377,7 @@
   if ($("buildStamp").textContent.includes("BUILD_STAMP_DEV")) $("buildStamp").hidden = true;
   $("btnHot").classList.toggle("on", mode === "hot");
   $("btnIced").classList.toggle("on", mode === "iced");
-  switchTab("brew");
+  switchTab(onboarded ? "brew" : "guide");
   buildStatics();
   render();
 </script>
