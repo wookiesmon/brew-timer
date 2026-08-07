@@ -169,8 +169,14 @@
     padding-left: 0;
     padding-right: 0;
   }
+  .pagetitle {
+    font: 800 23px/1.2 ui-rounded, -apple-system, system-ui, sans-serif;
+    letter-spacing: -0.01em;
+    margin: -2px 0 -4px 2px;
+  }
+  .app.brewing .pagetitle { display: none; }
   .rowlabel {
-    font-size: 11px;
+    font-size: 13px;
     color: var(--muted);
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -605,6 +611,8 @@
     </div>
   </header>
 
+  <div class="pagetitle" id="pageTitle"></div>
+
   <div class="onboard sec-brew" id="onboard" hidden>
     <ol id="onboardSteps"></ol>
     <button id="onboardOk"></button>
@@ -623,7 +631,6 @@
     </div>
   </div>
   <div class="chiprow sec-beans" id="beans" role="tablist" aria-label="Bean"></div>
-  <div class="rowlabel sec-methods" id="lblMethod">Method</div>
   <div class="chiprow methods sec-methods" id="methods" role="tablist" aria-label="Method"></div>
   <div class="beaninfo sec-methods" id="methodinfo"></div>
   <div class="beaninfo" id="beaninfo"></div>
@@ -711,8 +718,7 @@
 
   const UI = {
     subtitle: ["Pour-over drip", "푸어오버 드립"],
-    lblBean: ["Bean", "원두"],
-    lblMethod: ["Method", "추출법"],
+    lblBean: ["Cups", "잔수"],
     lblRoast: ["Roast", "로스팅"],
     lblProcess: ["Process", "가공"],
     bestMethod: ["Best method", "추출 레시피"],
@@ -1840,10 +1846,15 @@
   }
 
   let tab = "brew";
+  function updatePageTitle() {
+    const key = { guide: "tabGuide", beans: "tabBeans", methods: "tabMethods", brew: "tabBrew", history: "tabHistory" }[tab];
+    $("pageTitle").textContent = ui(key);
+  }
   function switchTab(t) {
     tab = t;
     document.querySelector(".app").dataset.tab = t;
     document.querySelectorAll(".tabbar button").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
+    updatePageTitle();
     window.scrollTo({ top: 0 });
   }
   document.querySelectorAll(".tabbar button").forEach(b =>
@@ -1900,6 +1911,7 @@
 
   function applyChrome() {
     document.querySelectorAll(".tabbar .lbl").forEach(el => { el.textContent = ui(el.dataset.l); });
+    updatePageTitle();
     buildGuide();
     $("onboard").hidden = true; // retired — replaced by the Guide tab
     $("onboardSteps").innerHTML = [ui("ob1"), ui("ob2"), ui("ob3")]
@@ -1912,7 +1924,6 @@
     $("subtitle").textContent = ui("subtitle");
     $("btnLang").textContent = lang === "ko" ? "English" : "한국어";
     $("lblBean").textContent = ui("lblBean");
-    $("lblMethod").textContent = ui("lblMethod");
     $("lblRoast").textContent = ui("lblRoast");
     $("lblProcess").textContent = ui("lblProcess");
     $("methodHeadLabel").textContent = ui("bestMethod");
