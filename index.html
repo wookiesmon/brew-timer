@@ -590,6 +590,21 @@
   #beanCard h3 { margin-bottom: 3px; }
   .bc-proc { font-weight: 600; }
   .bc-notes { color: var(--accent) !important; font-weight: 600; margin: 4px 0 7px !important; }
+  .bc-specs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 7px;
+    margin-top: 10px;
+  }
+  .bc-specs > div {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 8px 5px 7px;
+    text-align: center;
+  }
+  .bc-specs b { display: block; font-size: 12px; line-height: 1.3; }
+  .bc-specs span { display: block; font-size: 10.5px; color: var(--muted); margin-top: 2px; }
   .bc-method {
     appearance: none;
     width: 100%;
@@ -820,6 +835,7 @@
     {
       id: "yirg", chip: ["Ethiopia", "에티오피아"], name: ["Ethiopia Yirgacheffe", "에티오피아 예가체프"], roast: "light",
       proc: ["Washed · light roast", "워시드 · 라이트 로스팅"], notes: ["Jasmine, bergamot, stone fruit", "자스민, 베르가못, 핵과류"],
+      specs: { elev: "1,700–2,200m", vari: "Heirloom", harv: ["Oct–Jan", "10–1월"] },
       temp: 95, clicks: 19,
       hot: { bloom: 45, p1: 78, total: 130 },
       iced: { bloom: 45, p1: 75, total: 95 },
@@ -833,6 +849,7 @@
     {
       id: "kenya", chip: ["Kenya AA", "케냐 AA"], name: ["Kenya AA", "케냐 AA"], roast: "light",
       proc: ["Washed · light roast", "워시드 · 라이트 로스팅"], notes: ["Blackcurrant, grapefruit, brown sugar", "블랙커런트, 자몽, 흑설탕"],
+      specs: { elev: "1,500–2,100m", vari: "SL28 · SL34", harv: ["Oct–Dec", "10–12월"] },
       temp: 95, clicks: 19,
       hot: { bloom: 40, p1: 75, total: 125 },
       iced: { bloom: 40, p1: 72, total: 92 },
@@ -846,6 +863,7 @@
     {
       id: "rwanda", chip: ["Rwanda", "르완다"], name: ["Rwanda Bourbon", "르완다 부르봉"], roast: "light",
       proc: ["Washed · light roast", "워시드 · 라이트 로스팅"], notes: ["Red berry, citrus, black tea", "붉은 베리, 시트러스, 홍차"],
+      specs: { elev: "1,500–2,000m", vari: "Red Bourbon", harv: ["Mar–Jul", "3–7월"] },
       temp: 94, clicks: 19,
       hot: { bloom: 42, p1: 76, total: 125 },
       iced: { bloom: 42, p1: 72, total: 92 },
@@ -859,6 +877,7 @@
     {
       id: "colombia", chip: ["Colombia", "콜롬비아"], name: ["Colombia Huila", "콜롬비아 우일라"], roast: "medium",
       proc: ["Washed · medium-light roast", "워시드 · 미디엄라이트 로스팅"], notes: ["Caramel, red apple, panela", "카라멜, 사과, 파넬라"],
+      specs: { elev: "1,200–1,800m", vari: "Caturra · Castillo", harv: ["Oct–Dec · Apr–Jun", "10–12월 · 4–6월"] },
       temp: 92, clicks: 20,
       hot: { bloom: 40, p1: 72, total: 115 },
       iced: { bloom: 40, p1: 68, total: 88 },
@@ -872,6 +891,7 @@
     {
       id: "honduras", chip: ["Honduras", "온두라스"], name: ["Honduras Marcala", "온두라스 마르칼라"], roast: "medium",
       proc: ["Washed · medium roast", "워시드 · 미디엄 로스팅"], notes: ["Toffee, orange, milk chocolate", "토피, 오렌지, 밀크초콜릿"],
+      specs: { elev: "1,300–1,700m", vari: "Catuaí · Lempira", harv: ["Nov–Apr", "11–4월"] },
       temp: 91, clicks: 21,
       hot: { bloom: 38, p1: 70, total: 112 },
       iced: { bloom: 38, p1: 66, total: 86 },
@@ -885,6 +905,7 @@
     {
       id: "guatemala", chip: ["Guatemala", "과테말라"], name: ["Guatemala Antigua", "과테말라 안티구아"], roast: "medium",
       proc: ["Washed · medium roast", "워시드 · 미디엄 로스팅"], notes: ["Cocoa, spice, orange zest", "코코아, 스파이스, 오렌지 제스트"],
+      specs: { elev: "1,500–1,700m", vari: "Bourbon · Caturra", harv: ["Dec–Mar", "12–3월"] },
       temp: 91, clicks: 20,
       hot: { bloom: 38, p1: 72, total: 115 },
       iced: { bloom: 38, p1: 68, total: 88 },
@@ -898,6 +919,7 @@
     {
       id: "costarica", chip: ["Costa Rica", "코스타리카"], name: ["Costa Rica Honey", "코스타리카 허니"], roast: "medium",
       proc: ["Honey process · medium-light", "허니 프로세스 · 미디엄라이트"], notes: ["Honey, citrus, brown sugar", "꿀, 시트러스, 흑설탕"],
+      specs: { elev: "1,200–1,900m", vari: "Caturra · Catuaí", harv: ["Dec–Mar", "12–3월"] },
       temp: 92, clicks: 20,
       hot: { bloom: 42, p1: 74, total: 118 },
       iced: { bloom: 42, p1: 70, total: 90 },
@@ -911,6 +933,7 @@
     {
       id: "peru", chip: ["Peru", "페루"], name: ["Peru Cajamarca", "페루 카하마르카"], roast: "medium",
       proc: ["Washed · medium roast", "워시드 · 미디엄 로스팅"], notes: ["Chocolate, caramel, soft citrus", "초콜릿, 카라멜, 부드러운 시트러스"],
+      specs: { elev: "1,600–2,000m", vari: "Typica · Caturra", harv: ["Jun–Sep", "6–9월"] },
       temp: 91, clicks: 20,
       hot: { bloom: 38, p1: 70, total: 112 },
       iced: { bloom: 38, p1: 66, total: 86 },
@@ -924,6 +947,7 @@
     {
       id: "mexico", chip: ["Mexico", "멕시코"], name: ["Mexico Chiapas", "멕시코 치아파스"], roast: "medium",
       proc: ["Washed · medium roast", "워시드 · 미디엄 로스팅"], notes: ["Nutty, cocoa, soft apple", "고소함, 코코아, 부드러운 사과"],
+      specs: { elev: "900–1,400m", vari: "Typica · Bourbon", harv: ["Nov–Mar", "11–3월"] },
       temp: 90, clicks: 21,
       hot: { bloom: 36, p1: 68, total: 110 },
       iced: { bloom: 36, p1: 64, total: 84 },
@@ -937,6 +961,7 @@
     {
       id: "nicaragua", chip: ["Nicaragua", "니카라과"], name: ["Nicaragua Jinotega", "니카라과 히노테가"], roast: "medium",
       proc: ["Washed · medium roast", "워시드 · 미디엄 로스팅"], notes: ["Cocoa, dried fruit, honey", "코코아, 건과일, 꿀"],
+      specs: { elev: "1,100–1,500m", vari: "Caturra · Maragogype", harv: ["Dec–Mar", "12–3월"] },
       temp: 91, clicks: 20,
       hot: { bloom: 38, p1: 70, total: 112 },
       iced: { bloom: 38, p1: 66, total: 86 },
@@ -950,6 +975,7 @@
     {
       id: "gesha", chip: ["Gesha", "게샤"], name: ["Gesha Lot", "게샤 랏"], roast: "light",
       proc: ["Washed · light roast", "워시드 · 라이트 로스팅"], notes: ["Tea-like body, intense florals, tropical", "티 같은 바디, 강렬한 플로럴, 트로피컬"],
+      specs: { elev: "1,600–1,900m", vari: "Geisha", harv: ["Dec–Mar", "12–3월"] },
       temp: 94, clicks: 20,
       hot: { bloom: 45, p1: 85, total: 140 },
       iced: { bloom: 45, p1: 78, total: 100 },
@@ -963,6 +989,7 @@
     {
       id: "coan", chip: ["Anaerobic", "무산소"], name: ["Colombia Anaerobic", "콜롬비아 무산소"], roast: "light",
       proc: ["Anaerobic natural", "무산소 내추럴"], notes: ["Berry wine, tropical funk, syrupy", "베리 와인, 트로피컬 펑크, 시럽 같은 바디"],
+      specs: { elev: "1,500–1,900m", vari: "Caturra · Castillo", harv: ["Oct–Dec", "10–12월"] },
       temp: 91, clicks: 20,
       hot: { bloom: 50, p1: 80, total: 120 },
       iced: { bloom: 50, p1: 75, total: 90 },
@@ -976,6 +1003,7 @@
     {
       id: "brazil", chip: ["Brazil", "브라질"], name: ["Brazil Cerrado", "브라질 세하도"], roast: "medium",
       proc: ["Natural · medium roast", "내추럴 · 미디엄 로스팅"], notes: ["Chocolate, hazelnut, caramel", "초콜릿, 헤이즐넛, 카라멜"],
+      specs: { elev: "900–1,250m", vari: "Mundo Novo · Catuaí", harv: ["May–Sep", "5–9월"] },
       temp: 90, clicks: 21,
       hot: { bloom: 35, p1: 70, total: 110 },
       iced: { bloom: 35, p1: 65, total: 85 },
@@ -989,6 +1017,7 @@
     {
       id: "blend", chip: ["Choc-Nut Blend", "초코넛 블렌드"], name: ["Chocolate-Nut Blend", "초콜릿-넛 블렌드"], roast: "medium",
       proc: ["Colombia + Brazil · medium", "콜롬비아+브라질 · 미디엄"], notes: ["Milk chocolate, caramel, roasted nuts", "밀크초콜릿, 카라멜, 구운 견과"],
+      specs: { elev: ["Multiple origins", "여러 산지"], vari: ["Blend", "블렌드"], harv: ["Year-round", "연중"] },
       temp: 89, clicks: 21,
       hot: { bloom: 32, p1: 65, total: 105 },
       iced: { bloom: 32, p1: 62, total: 82 },
@@ -1002,6 +1031,7 @@
     {
       id: "sumatra", chip: ["Sumatra", "수마트라"], name: ["Sumatra Mandheling", "수마트라 만델링"], roast: "dark",
       proc: ["Wet-hulled · dark roast", "웻헐드 · 다크 로스팅"], notes: ["Earthy, cedar, dark cocoa", "흙내음, 시더, 다크 코코아"],
+      specs: { elev: "900–1,500m", vari: "Ateng · Typica", harv: ["Oct–Mar", "10–3월"] },
       temp: 88, clicks: 22,
       hot: { bloom: 30, p1: 62, total: 100 },
       iced: { bloom: 30, p1: 60, total: 80 },
@@ -1999,6 +2029,11 @@
       <p class="bc-proc">${tx(b.proc)}</p>
       <p class="bc-notes">☕ ${tx(b.notes)}</p>
       <p>${tx(b.why)}</p>
+      ${b.specs ? `<div class="bc-specs">
+        <div><b>⛰ ${tx(b.specs.elev)}</b><span>${lang === "ko" ? "재배 고도" : "Elevation"}</span></div>
+        <div><b>🌱 ${tx(b.specs.vari)}</b><span>${lang === "ko" ? "품종" : "Varieties"}</span></div>
+        <div><b>🗓 ${tx(b.specs.harv)}</b><span>${lang === "ko" ? "수확기" : "Harvest"}</span></div>
+      </div>` : ""}
       <button class="bc-method" id="beanCardGo">${lang === "ko"
         ? `⭐ ${methodName(recc.best)}(으)로 추출하기 →`
         : `Use ⭐ ${methodName(recc.best)} →`}</button>`;
