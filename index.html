@@ -587,6 +587,21 @@
     font: 700 15px/1.4 ui-rounded, -apple-system, system-ui, sans-serif;
     color: var(--accent);
   }
+  #beanCard h3 { margin-bottom: 3px; }
+  .bc-proc { font-weight: 600; }
+  .bc-notes { color: var(--accent) !important; font-weight: 600; margin: 4px 0 7px !important; }
+  .bc-method {
+    appearance: none;
+    width: 100%;
+    margin-top: 11px;
+    border: 1.5px solid var(--accent);
+    background: transparent;
+    color: var(--accent);
+    font: 700 14px/1.2 ui-rounded, -apple-system, system-ui, sans-serif;
+    min-height: 46px;
+    border-radius: 14px;
+    cursor: pointer;
+  }
   .gstart {
     appearance: none;
     border: 0;
@@ -659,6 +674,8 @@
       </div>
     </div>
   </div>
+
+  <div class="gcard sec-beans" id="beanCard"></div>
 
   <div class="method sec-methods" id="method">
     <button class="method-head" id="methodToggle" aria-expanded="false">
@@ -1976,6 +1993,16 @@
       document.querySelectorAll("#cfgProcess button").forEach(el =>
         el.classList.toggle("on", el.dataset.v === customAttrs.process));
     }
+
+    $("beanCard").innerHTML = `
+      <h3>${tx(b.name)}</h3>
+      <p class="bc-proc">${tx(b.proc)}</p>
+      <p class="bc-notes">☕ ${tx(b.notes)}</p>
+      <p>${tx(b.why)}</p>
+      <button class="bc-method" id="beanCardGo">${lang === "ko"
+        ? `⭐ ${methodName(recc.best)}(으)로 추출하기 →`
+        : `Use ⭐ ${methodName(recc.best)} →`}</button>`;
+    $("beanCardGo").onclick = () => { if (methodId !== recc.best) { methodId = recc.best; persist(); } switchTab("methods"); buildStatics(); reset(); };
 
     buildMethod();
 
