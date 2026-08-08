@@ -11,6 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="Brew Timer">
 <style>
   :root {
+    --display: ui-serif, "New York", Georgia, "Times New Roman", serif;
     --bg: #F6F2EC;
     --surface: #FFFFFF;
     --ink: #2A211A;
@@ -85,10 +86,17 @@
     min-height: 100dvh;
   }
 
-  header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding-bottom: 11px;
+    border-bottom: 1px solid var(--line);
+  }
   h1 {
-    font-family: ui-rounded, -apple-system, system-ui, sans-serif;
-    font-size: 17px;
+    font-family: var(--display);
+    font-size: 20px;
     font-weight: 700;
     letter-spacing: 0.01em;
     margin: 0;
@@ -151,7 +159,7 @@
     color: var(--ink);
     font: 600 13px/1 ui-rounded, -apple-system, system-ui, sans-serif;
     padding: 0 16px;
-    border-radius: 999px;
+    border-radius: 12px;
     cursor: pointer;
     white-space: nowrap;
   }
@@ -176,7 +184,7 @@
     margin: -2px 0 -4px 0;
   }
   .pagetitle {
-    font: 800 23px/1.2 ui-rounded, -apple-system, system-ui, sans-serif;
+    font: 700 25px/1.2 var(--display);
     letter-spacing: -0.01em;
     margin-left: 2px;
   }
@@ -264,7 +272,7 @@
   .method {
     background: var(--surface);
     border: 1px solid var(--line);
-    border-radius: 16px;
+    border-radius: 14px;
     overflow: hidden;
   }
   .method-head {
@@ -320,14 +328,13 @@
   .stat {
     background: var(--surface);
     border: 1px solid var(--line);
-    border-radius: 14px;
+    border-radius: 12px;
     padding: 9px 6px 8px;
     text-align: center;
   }
   .stat b {
     display: block;
-    font-size: 16px;
-    font-weight: 700;
+    font: 700 17px/1.2 var(--display);
     font-variant-numeric: tabular-nums;
   }
   .stat span {
@@ -367,8 +374,8 @@
     color: var(--accent);
   }
   .clock {
-    font-family: ui-rounded, -apple-system, system-ui, sans-serif;
-    font-size: 54px;
+    font-family: var(--display);
+    font-size: 56px;
     font-weight: 700;
     line-height: 1;
     font-variant-numeric: tabular-nums;
@@ -383,7 +390,7 @@
   .target {
     background: var(--surface);
     border: 1px solid var(--line);
-    border-radius: 18px;
+    border-radius: 14px;
     padding: 13px 16px;
     text-align: center;
   }
@@ -404,7 +411,7 @@
     gap: 12px;
     background: var(--surface);
     border: 1px solid var(--line);
-    border-radius: 14px;
+    border-radius: 12px;
     padding: 11px 14px;
     font-size: 14px;
     opacity: 0.62;
@@ -432,9 +439,9 @@
   .btn {
     appearance: none;
     border: 0;
-    border-radius: 18px;
+    border-radius: 14px;
     font: 700 17px/1 ui-rounded, -apple-system, system-ui, sans-serif;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.05em;
     padding: 18px 0;
     cursor: pointer;
   }
@@ -445,7 +452,7 @@
   .onboard {
     background: var(--surface);
     border: 1px solid var(--accent);
-    border-radius: 16px;
+    border-radius: 14px;
     padding: 13px 14px 12px;
     display: flex;
     flex-direction: column;
@@ -572,12 +579,12 @@
   .gcard {
     background: var(--surface);
     border: 1px solid var(--line);
-    border-radius: 16px;
+    border-radius: 14px;
     padding: 14px 15px;
   }
   .gcard h3 {
     margin: 0 0 8px;
-    font: 700 14px/1.3 ui-rounded, -apple-system, system-ui, sans-serif;
+    font: 700 16px/1.3 var(--display);
   }
   .gcard p, .gcard li { font-size: 13px; line-height: 1.55; color: var(--muted); margin: 0; }
   .gcard b { color: var(--ink); }
@@ -597,12 +604,12 @@
     color: var(--muted);
   }
   .bc-name {
-    font: 800 20px/1.2 ui-rounded, -apple-system, system-ui, sans-serif;
+    font: 700 22px/1.2 var(--display);
     letter-spacing: -0.01em;
     margin: 3px 0 8px;
   }
   .bc-hero {
-    font: 700 17px/1.4 ui-rounded, -apple-system, system-ui, sans-serif;
+    font: 600 17px/1.45 var(--display);
     color: var(--ink);
   }
   .bc-hero .sep { color: var(--accent); font-weight: 400; padding: 0 2px; }
