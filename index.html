@@ -226,6 +226,52 @@
   }
   .mini-seg button.on { background: var(--accent); color: var(--accent-ink); }
 
+  .histlist { display: flex; flex-direction: column; gap: 8px; }
+  .histlist[hidden] { display: none; }
+  .app.brewing .histlist { display: none; }
+  .histrow {
+    appearance: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    text-align: left;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 14px;
+    min-height: 60px;
+    cursor: pointer;
+    color: var(--ink);
+  }
+  .histrow:active { transform: scale(0.99); }
+  .histrow .hr-icon { font-size: 20px; flex: 0 0 auto; }
+  .histrow .hr-main { flex: 1 1 auto; min-width: 0; }
+  .histrow .hr-bean {
+    display: block;
+    font: 600 16px/1.25 var(--display);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .histrow .hr-sub {
+    display: block;
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .histrow .hr-when {
+    flex: 0 0 auto;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .histrow .hr-go { flex: 0 0 auto; color: var(--accent); font-size: 17px; }
+
   .beaninfo {
     text-align: center;
     font-size: 13px;
@@ -699,7 +745,7 @@
   </div>
 
   <div class="rowlabel sec-history" id="lblRecent">Recent brews</div>
-  <div class="chiprow sec-history" id="history" hidden></div>
+  <div class="histlist sec-history" id="history" hidden></div>
   <div class="beaninfo sec-history" id="histEmpty" hidden></div>
   <div class="beaninfo sec-history" style="opacity:.55;font-size:11px" id="buildStamp">build BUILD_STAMP_DEV</div>
 
@@ -1693,6 +1739,18 @@
     const b = PRESETS.find(x => x.id === e.beanId);
     return b ? tx(b.chip) : e.beanId;
   }
+  function histWhen(t) {
+    const ko = lang === "ko";
+    if (!t) return "";
+    const mins = Math.max(0, Math.round((Date.now() - t) / 60000));
+    if (mins < 1) return ko ? "방금" : "just now";
+    if (mins < 60) return ko ? `${mins}분 전` : `${mins} min`;
+    const hrs = Math.round(mins / 60);
+    if (hrs < 24) return ko ? `${hrs}시간 전` : `${hrs} hr`;
+    const days = Math.round(hrs / 24);
+    return ko ? `${days}일 전` : `${days} ${days === 1 ? "day" : "days"}`;
+  }
+
   function buildHistory() {
     const h = histLoad();
     $("history").hidden = h.length === 0;
@@ -1702,9 +1760,19 @@
     $("history").innerHTML = h.map((e, i) => {
       const m = METHODS.find(x => x.id === e.methodId);
       if (!m || (e.beanId !== "custom" && !PRESETS.some(x => x.id === e.beanId))) return "";
-      return `<button class="chip" data-hist="${i}">${e.mode === "iced" ? "🧊" : "🔥"} ${histBeanLabel(e)} · ${tx(m.chip)}${e.cups === 2 ? " ×2" : ""}</button>`;
+      const modeTxt = e.mode === "iced" ? (lang === "ko" ? "아이스" : "Iced") : (lang === "ko" ? "핫" : "Hot");
+      const cupsTxt = e.cups === 2 ? (lang === "ko" ? "2잔" : "2 cups") : (lang === "ko" ? "1잔" : "1 cup");
+      return `<button class="histrow" data-hist="${i}">
+        <span class="hr-icon">${e.mode === "iced" ? "🧊" : "🔥"}</span>
+        <span class="hr-main">
+          <span class="hr-bean">${histBeanLabel(e)}</span>
+          <span class="hr-sub">${tx(m.chip)} · ${modeTxt} · ${cupsTxt}</span>
+        </span>
+        <span class="hr-when">${histWhen(e.t)}</span>
+        <span class="hr-go">›</span>
+      </button>`;
     }).join("");
-    document.querySelectorAll("#history .chip").forEach(el =>
+    document.querySelectorAll("#history .histrow").forEach(el =>
       el.addEventListener("click", () => applyHistory(histLoad()[Number(el.dataset.hist)])));
   }
   function applyHistory(e) {
