@@ -90,12 +90,13 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
+    gap: 8px;
     padding-bottom: 11px;
     border-bottom: 1px solid var(--line);
   }
   h1 {
     font-family: var(--display);
+    white-space: nowrap;
     font-size: 20px;
     font-weight: 700;
     letter-spacing: 0.01em;
@@ -109,9 +110,9 @@
     border: 1px solid var(--line);
     background: var(--surface);
     color: var(--ink);
-    font: 700 12px/1 ui-rounded, -apple-system, system-ui, sans-serif;
+    font: 700 11.5px/1 ui-rounded, -apple-system, system-ui, sans-serif;
     min-height: 44px;
-    padding: 0 14px;
+    padding: 0 11px;
     border-radius: 999px;
     cursor: pointer;
     white-space: nowrap;
@@ -123,7 +124,7 @@
     background: var(--track);
     border-radius: 999px;
     padding: 3px;
-    min-width: 132px;
+    min-width: 124px;
   }
   .seg button {
     appearance: none;
@@ -157,7 +158,7 @@
     border: 1px solid var(--line);
     background: var(--surface);
     color: var(--ink);
-    font: 600 15px/1 var(--display);
+    font: 600 17px/1.4 var(--display);
     padding: 0 16px;
     border-radius: 12px;
     cursor: pointer;
@@ -166,7 +167,7 @@
   .chip.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
   .chip.scan { border-style: dashed; }
   .chiprow.methods { margin-top: -6px; }
-  .chiprow.methods .chip { font-size: 14.5px; padding: 0 14px; }
+  .chiprow.methods .chip { font-size: 16px; padding: 0 14px; }
   /* Beans & Methods live on their own tabs now — show every option in a
      wrapped grid instead of a horizontal scroller. */
   #beans, #methods {
@@ -249,7 +250,7 @@
   .histrow .hr-main { flex: 1 1 auto; min-width: 0; }
   .histrow .hr-bean {
     display: block;
-    font: 600 16px/1.25 var(--display);
+    font: 600 17px/1.35 var(--display);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
