@@ -11,7 +11,11 @@
 <meta name="apple-mobile-web-app-title" content="Brew Timer">
 <style>
   :root {
-    --display: ui-serif, "New York", Georgia, "Times New Roman", serif;
+    /* Per-character fallback: Latin renders in the New York serif, while
+       Hangul (absent from those faces) resolves to Apple SD Gothic Neo —
+       the same Korean face used for body text and the spec-table labels. */
+    --display: ui-serif, "New York", Georgia, "Times New Roman",
+      "Apple SD Gothic Neo", Pretendard, "Noto Sans KR", "Malgun Gothic", sans-serif;
     --bg: #EBDFC9;
     --surface: #F7EFDE;
     --ink: #241A12;
