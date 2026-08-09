@@ -157,7 +157,7 @@
     border: 1px solid var(--line);
     background: var(--surface);
     color: var(--ink);
-    font: 600 13px/1 ui-rounded, -apple-system, system-ui, sans-serif;
+    font: 600 15px/1 var(--display);
     padding: 0 16px;
     border-radius: 12px;
     cursor: pointer;
@@ -166,7 +166,7 @@
   .chip.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
   .chip.scan { border-style: dashed; }
   .chiprow.methods { margin-top: -6px; }
-  .chiprow.methods .chip { font-size: 13px; padding: 0 14px; }
+  .chiprow.methods .chip { font-size: 14.5px; padding: 0 14px; }
   /* Beans & Methods live on their own tabs now — show every option in a
      wrapped grid instead of a horizontal scroller. */
   #beans, #methods {
@@ -191,11 +191,11 @@
   .app.brewing .pagetitle-row { display: none; }
   .app[data-tab="guide"] #cupsSeg, .app[data-tab="history"] #cupsSeg { display: none; }
   .rowlabel {
-    font-size: 13px;
+    font-size: 11.5px;
     color: var(--muted);
-    letter-spacing: 0.08em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    font-weight: 600;
+    font-weight: 700;
     margin: -4px 0 -8px 2px;
   }
   .rowhead {
@@ -248,11 +248,11 @@
   .custom-cfg[hidden] { display: none; }
   .cfg-row { display: grid; grid-template-columns: 66px 1fr; align-items: center; gap: 10px; }
   .cfg-row > span {
-    font-size: 11px;
+    font-size: 10.5px;
     color: var(--muted);
-    letter-spacing: 0.07em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    font-weight: 600;
+    font-weight: 700;
   }
   .cfg-seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: var(--track); border-radius: 999px; padding: 3px; }
   .cfg-seg button {
@@ -286,7 +286,7 @@
     justify-content: space-between;
     gap: 8px;
     padding: 12px 14px;
-    font: 600 13px/1.3 ui-rounded, -apple-system, system-ui, sans-serif;
+    font: 700 15px/1.3 var(--display);
     cursor: pointer;
     text-align: left;
   }
@@ -304,11 +304,11 @@
   }
   .method dt {
     color: var(--muted);
-    font-size: 11px;
-    letter-spacing: 0.07em;
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    font-weight: 600;
-    padding-top: 2px;
+    font-weight: 700;
+    padding-top: 3px;
   }
   .method dd { margin: 0; font-variant-numeric: tabular-nums; }
   .method .why {
@@ -339,9 +339,10 @@
   }
   .stat span {
     display: block;
-    font-size: 11px;
+    font-size: 10.5px;
+    font-weight: 700;
     color: var(--muted);
-    letter-spacing: 0.05em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     margin-top: 3px;
   }
@@ -367,9 +368,9 @@
     padding: 0 30px;
   }
   .phase-label {
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.12em;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--accent);
   }
@@ -395,8 +396,8 @@
     text-align: center;
   }
   .target .big {
-    font-family: ui-rounded, -apple-system, system-ui, sans-serif;
-    font-size: 22px;
+    font-family: var(--display);
+    font-size: 23px;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
   }
@@ -418,7 +419,7 @@
     transition: opacity 0.25s, border-color 0.25s;
   }
   .step .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--track); }
-  .step .name { font-weight: 600; }
+  .step .name { font: 600 15px/1.3 var(--display); }
   .step .name small { display: block; font-weight: 400; font-size: 12px; color: var(--muted); margin-top: 1px; }
   .step .time { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .step.active { opacity: 1; border-color: var(--accent); }
@@ -440,8 +441,8 @@
     appearance: none;
     border: 0;
     border-radius: 14px;
-    font: 700 17px/1 ui-rounded, -apple-system, system-ui, sans-serif;
-    letter-spacing: 0.05em;
+    font: 700 19px/1 var(--display);
+    letter-spacing: 0.04em;
     padding: 18px 0;
     cursor: pointer;
   }
@@ -591,7 +592,7 @@
   .gcard ol, .gcard ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 7px; }
   .gflow {
     text-align: center;
-    font: 700 15px/1.4 ui-rounded, -apple-system, system-ui, sans-serif;
+    font: 700 16px/1.4 var(--display);
     color: var(--accent);
   }
   /* Bean card styled like a modern roaster label (Onyx / Blue Bottle school):
@@ -647,7 +648,7 @@
     border: 0;
     background: var(--accent);
     color: var(--accent-ink);
-    font: 700 15px/1.2 ui-rounded, -apple-system, system-ui, sans-serif;
+    font: 700 16px/1.2 var(--display);
     min-height: 48px;
     border-radius: 14px;
     cursor: pointer;
@@ -659,7 +660,7 @@
     border-radius: 18px;
     background: var(--accent);
     color: var(--accent-ink);
-    font: 700 17px/1 ui-rounded, -apple-system, system-ui, sans-serif;
+    font: 700 18px/1 var(--display);
     min-height: 54px;
     cursor: pointer;
   }
