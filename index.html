@@ -548,6 +548,7 @@
   }
 
   .dialin-row { display: flex; gap: 7px; margin-top: 11px; }
+  .dialin-row + .dialin-row { margin-top: 7px; }
   .dialin-row button {
     appearance: none;
     flex: 1;
@@ -874,9 +875,12 @@
       washed: ["Washed", "워시드"], natural: ["Natural", "내추럴"], anaerobic: ["Anaerobic", "무산소"],
     },
     fbPrompt: ["How did it taste?", "맛이 어땠나요?"],
-    fbSour: ["Sour / weak", "시큼·밍밍"],
+    fbSour: ["Sour / acidic", "시큼함"],
     fbGood: ["Perfect", "딱 좋아요"],
     fbBitter: ["Bitter / harsh", "쓰고 떫음"],
+    fbWeak: ["Weak / watery", "밍밍·묽음"],
+    fbStrong: ["Too strong", "너무 진함"],
+    fbFlat: ["Flat / dull", "밋밋함"],
     fbSaved: ["Saved — I'll remind you next brew.", "저장했어요 — 다음 추출 때 알려드릴게요."],
     lastBrew: ["Last brew", "지난 추출"],
     ob1: ["Pick your <b2>bean</b2> and <b2>method</b2> in the tabs below — ⭐ marks the recommended pairing.",
@@ -1129,6 +1133,48 @@
       agitation: ["None — pour gently", "없음 — 부드럽게 붓기"],
       why: ["Dark wet-hulled beans are brittle and extract almost instantly: the coolest water, coarsest grind, and a short rich brew keep the body heavy but never ashy.",
             "다크 웻헐드 원두는 잘 부서지고 즉시 추출됩니다: 가장 낮은 온도, 가장 굵은 분쇄, 짧고 진한 추출로 묵직하되 재맛 없이."],
+    },
+    {
+      id: "sulawesi", chip: ["Sulawesi", "술라웨시"], name: ["Sulawesi Toraja", "술라웨시 토라자"], roast: "medium",
+      proc: ["Semi-washed · medium-dark roast", "세미워시드 · 미디엄다크 로스팅"], notes: ["Dark cocoa, ripe plum, sweet spice", "다크 코코아, 잘 익은 자두, 스위트 스파이스"],
+      specs: { elev: "1,400–1,900m", vari: "S795 · Typica", harv: ["Jun–Oct", "6–10월"] },
+      temp: 90, clicks: 21,
+      hot: { bloom: 38, p1: 70, total: 110 },
+      iced: { bloom: 38, p1: 66, total: 85 },
+      hintBloom: ["Pour 40g, let the semi-washed bean degas", "40g — 세미워시드 원두의 가스를 내보내기"],
+      hintP1: ["Gentle spiral, keep the bed calm", "부드러운 스파이럴 — 커피베드를 고요하게"],
+      hintP2: ["Steady finish — sweetness over earth", "일정하게 마무리 — 흙내음보다 단맛"],
+      agitation: ["Light swirl after bloom", "뜸 후 가벼운 스월"],
+      why: ["Toraja highland lots are the cleanest of Indonesia — semi-washed but grown high and slow, so 90°C and a calm, shorter brew pull dark cocoa and plum without the earthiness of wet-hulled Sumatra.",
+            "토라자 고지대 랏은 인도네시아에서 가장 클린합니다 — 세미워시드지만 높고 느리게 자라, 90°C와 차분하고 짧은 추출로 수마트라 웻헐드의 흙내음 없이 다크 코코아와 자두를 냅니다."],
+    },
+    {
+      id: "java", chip: ["Java", "자바"], name: ["Java Estate", "자바 에스테이트"], roast: "medium",
+      proc: ["Washed · medium roast", "워시드 · 미디엄 로스팅"], notes: ["Molasses, walnut, heavy syrupy body", "당밀, 호두, 묵직한 시럽 바디"],
+      specs: { elev: "900–1,600m", vari: "Typica · Ateng", harv: ["Jun–Oct", "6–10월"] },
+      temp: 90, clicks: 21,
+      hot: { bloom: 36, p1: 68, total: 108 },
+      iced: { bloom: 36, p1: 64, total: 84 },
+      hintBloom: ["Pour 40g, short easy bloom", "40g, 짧고 편한 뜸"],
+      hintP1: ["Relaxed spiral — low acidity forgives everything", "여유로운 스파이럴 — 낮은 산미는 관대합니다"],
+      hintP2: ["Stop on time — keep it syrupy, not woody", "시간 맞춰 종료 — 우디하지 않게 시럽처럼"],
+      agitation: ["Light swirl after bloom", "뜸 후 가벼운 스월"],
+      why: ["Java's old Dutch estates wash their coffee, rare for Indonesia — the cup is rustic-sweet with almost no acidity, so 90°C and a shorter drawdown keep molasses and walnut from drifting into woodiness.",
+            "자바의 오래된 에스테이트는 인도네시아에서 드물게 워시드 가공을 합니다 — 산미가 거의 없는 러스틱한 단맛이라, 90°C와 짧은 드로우다운으로 당밀과 호두가 우디해지지 않게 지킵니다."],
+    },
+    {
+      id: "bali", chip: ["Bali", "발리"], name: ["Bali Kintamani", "발리 킨타마니"], roast: "medium",
+      proc: ["Washed · medium-light roast", "워시드 · 미디엄라이트 로스팅"], notes: ["Tangerine, honey, clean sweet finish", "귤, 꿀, 클린한 단맛 피니시"],
+      specs: { elev: "1,200–1,600m", vari: "Bourbon · Typica", harv: ["May–Sep", "5–9월"] },
+      temp: 92, clicks: 20,
+      hot: { bloom: 40, p1: 72, total: 115 },
+      iced: { bloom: 40, p1: 68, total: 88 },
+      hintBloom: ["Pour 40g, even saturation", "40g를 고르게 적시기"],
+      hintP1: ["Steady spiral — citrus wants even extraction", "일정한 스파이럴 — 시트러스는 고른 추출을 원합니다"],
+      hintP2: ["Even pour to the end for the honey finish", "꿀 피니시를 위해 끝까지 고르게"],
+      agitation: ["Swirl once after bloom", "뜸 후 한 번 스월"],
+      why: ["Kintamani's volcanic highlands and washed processing make Indonesia's brightest cup — 92°C and an even three-stage pour balance tangerine acidity over honey sweetness, closer to a Central American than a Sumatran.",
+            "킨타마니의 화산 고지대와 워시드 가공은 인도네시아에서 가장 밝은 한 잔을 만듭니다 — 92°C와 고른 3단계 푸어로 귤의 산미와 꿀 단맛의 밸런스를 잡아, 수마트라보다 중미에 가깝습니다."],
     },
   ];
 
@@ -1729,13 +1775,28 @@
   function histEntryKey(e) {
     return `${e.beanId}|${e.methodId}|${e.mode}|${e.cups}|${e.beanId === "custom" && e.custom ? e.custom.roast + e.custom.process : ""}`;
   }
-  function histSave() {
+  function histSave(brew) {
     const e = { beanId, methodId, mode, cups, custom: beanId === "custom" ? { ...customAttrs } : null, t: Date.now() };
-    let h = histLoad().filter(x => histEntryKey(x) !== histEntryKey(e));
+    const old = histLoad();
+    // A re-save without fresh details (scan, tap-to-reuse) keeps the last brew's log
+    const prev = old.find(x => histEntryKey(x) === histEntryKey(e));
+    e.brew = brew || (prev && prev.brew) || null;
+    let h = old.filter(x => histEntryKey(x) !== histEntryKey(e));
     h.unshift(e);
     h = h.slice(0, 6);
     try { localStorage.setItem("brew.history", JSON.stringify(h)); } catch (err) {}
     buildHistory();
+  }
+  function histBrewDetail(brew) {
+    if (!brew) return "";
+    const ko = lang === "ko";
+    const verdict = brew.v ? ` · ${FB_EMOJI[brew.v] || ""} ${fbVerdictLabel(brew.v)}` : "";
+    return [
+      `${brew.dose}g : ${brew.water}g`,
+      brew.ice ? `🧊${brew.ice}g` : "",
+      `${brew.temp}°C`,
+      ko ? `${brew.clicks}클릭` : `${brew.clicks} clicks`,
+    ].filter(Boolean).join(" · ") + verdict;
   }
   function histBeanLabel(e) {
     if (e.beanId === "custom" && e.custom) {
@@ -1767,11 +1828,13 @@
       if (!m || (e.beanId !== "custom" && !PRESETS.some(x => x.id === e.beanId))) return "";
       const modeTxt = e.mode === "iced" ? (lang === "ko" ? "아이스" : "Iced") : (lang === "ko" ? "핫" : "Hot");
       const cupsTxt = e.cups === 2 ? (lang === "ko" ? "2잔" : "2 cups") : (lang === "ko" ? "1잔" : "1 cup");
+      const detail = histBrewDetail(e.brew);
       return `<button class="histrow" data-hist="${i}">
         <span class="hr-icon">${e.mode === "iced" ? "🧊" : "🔥"}</span>
         <span class="hr-main">
           <span class="hr-bean">${histBeanLabel(e)}</span>
           <span class="hr-sub">${tx(m.chip)} · ${modeTxt} · ${cupsTxt}</span>
+          ${detail ? `<span class="hr-sub">${detail}</span>` : ""}
         </span>
         <span class="hr-when">${histWhen(e.t)}</span>
         <span class="hr-go">›</span>
@@ -1842,25 +1905,55 @@
       all[fbKey()] = { v: verdict, t: Date.now() };
       localStorage.setItem("brew.feedback", JSON.stringify(all));
     } catch (e) {}
+    // Attach the verdict to this setup's logged brew details
+    const key = histEntryKey({ beanId, methodId, mode, cups, custom: beanId === "custom" ? customAttrs : null });
+    const h = histLoad();
+    const e = h.find(x => histEntryKey(x) === key);
+    if (e && e.brew) {
+      e.brew.v = verdict;
+      try { localStorage.setItem("brew.history", JSON.stringify(h)); } catch (err) {}
+      buildHistory();
+    }
   }
-  function fbAdvice(verdict, clicks) {
+  // Each verdict maps to a different lever: grind/temp for extraction faults,
+  // dose/water for concentration faults, heat/agitation for muted cups.
+  function fbAdvice(verdict, rec) {
     const ko = lang === "ko";
+    const { clicks, dose, water } = rec;
     if (verdict === "sour") {
       return ko
-        ? `다음엔 <em>${clicks - 1}클릭</em>(1 더 가늘게) 또는 물 <em>+2°C</em> — 신맛·밍밍함은 과소추출 신호입니다.`
-        : `Next time try <em>${clicks - 1} clicks</em> (1 finer) or <em>+2°C</em> water — sour or weak means under-extraction.`;
+        ? `다음엔 <em>${clicks - 1}클릭</em>(1 더 가늘게) 또는 물 <em>+2°C</em> — 시큼함은 과소추출 신호입니다.`
+        : `Next time try <em>${clicks - 1} clicks</em> (1 finer) or <em>+2°C</em> water — sourness means under-extraction.`;
     }
     if (verdict === "bitter") {
       return ko
         ? `다음엔 <em>${clicks + 1}클릭</em>(1 더 굵게) 또는 물 <em>−2°C</em> — 쓴맛·떫음은 과다추출 신호입니다.`
         : `Next time try <em>${clicks + 1} clicks</em> (1 coarser) or <em>−2°C</em> water — bitter or harsh means over-extraction.`;
     }
+    if (verdict === "weak") {
+      return ko
+        ? `다음엔 커피 <em>${dose + 1}g</em> 또는 <em>${clicks - 1}클릭</em>(1 더 가늘게) — 묽은 바디는 물 대비 커피가 부족하다는 신호입니다.`
+        : `Next time try <em>${dose + 1}g</em> coffee or <em>${clicks - 1} clicks</em> (1 finer) — a thin, watery cup means too little coffee for the water.`;
+    }
+    if (verdict === "strong") {
+      return ko
+        ? `다음엔 물 <em>${water + 15}g</em> 또는 커피 <em>${dose - 1}g</em> — 쓰지 않은데 진하면 추출이 아니라 농도 문제입니다.`
+        : `Next time try <em>${water + 15}g</em> water or <em>${dose - 1}g</em> coffee — intense but not bitter is a concentration problem, not extraction.`;
+    }
+    if (verdict === "flat") {
+      return ko
+        ? `다음엔 물 <em>+2°C</em>와 뜸 후 <em>스월 한 번</em> — 밋밋함은 향 추출이 부족하다는 신호입니다.`
+        : `Next time try <em>+2°C</em> water and <em>one swirl</em> after the bloom — flat or dull means the aromatics are under-extracted.`;
+    }
     return ko
       ? `잘 맞았어요 — 다음에도 <em>같은 세팅</em>으로 내리세요.`
       : `Dialed in — brew with <em>the same settings</em> next time.`;
   }
+  const FB_EMOJI = { sour: "😖", good: "😋", bitter: "😣", weak: "💧", strong: "💪", flat: "😐" };
   function fbVerdictLabel(v) {
-    return v === "sour" ? ui("fbSour") : v === "bitter" ? ui("fbBitter") : ui("fbGood");
+    return v === "sour" ? ui("fbSour") : v === "bitter" ? ui("fbBitter")
+      : v === "weak" ? ui("fbWeak") : v === "strong" ? ui("fbStrong")
+      : v === "flat" ? ui("fbFlat") : ui("fbGood");
   }
 
   function elapsedNow() {
@@ -2206,10 +2299,15 @@
             <button data-fb="sour"><b>😖</b>${ui("fbSour")}</button>
             <button data-fb="good"><b>😋</b>${ui("fbGood")}</button>
             <button data-fb="bitter"><b>😣</b>${ui("fbBitter")}</button>
+          </div>
+          <div class="dialin-row">
+            <button data-fb="weak"><b>💧</b>${ui("fbWeak")}</button>
+            <button data-fb="strong"><b>💪</b>${ui("fbStrong")}</button>
+            <button data-fb="flat"><b>😐</b>${ui("fbFlat")}</button>
           </div>`;
       } else {
         const v = (fbLoad()[fbKey()] || {}).v || "good";
-        $("dialin").innerHTML = `<div class="dialin-note">${fbAdvice(v, rec.clicks)}<br>${ui("fbSaved")}</div>`;
+        $("dialin").innerHTML = `<div class="dialin-note">${fbAdvice(v, rec)}<br>${ui("fbSaved")}</div>`;
       }
       rec.phases.forEach((_, j) => { const el = $("step" + j); if (el) { el.classList.remove("active"); el.classList.add("done"); } });
       return;
@@ -2252,10 +2350,26 @@
         ? `<em>${rec.phases[0].g1}g</em>까지 붓기`
         : `Pour to <em>${rec.phases[0].g1}g</em>`;
       $("targetHint").textContent = rec.prep;
+      const key = histEntryKey({ beanId, methodId, mode, cups, custom: beanId === "custom" ? customAttrs : null });
+      const lastH = histLoad().find(x => histEntryKey(x) === key);
       const last = fbLoad()[fbKey()];
-      $("dialin").innerHTML = last
-        ? `<div class="dialin-note">💡 ${ui("lastBrew")}: ${fbVerdictLabel(last.v)} — ${fbAdvice(last.v, rec.clicks)}</div>`
-        : "";
+      if (lastH && lastH.brew) {
+        const b = lastH.brew;
+        const detail = [
+          `${b.dose}g : ${b.water}g`,
+          `${b.temp}°C`,
+          ko ? `${b.clicks}클릭` : `${b.clicks} clicks`,
+        ].join(" · ");
+        const verdictLine = b.v
+          ? ` · ${FB_EMOJI[b.v] || ""} ${fbVerdictLabel(b.v)}<br>${fbAdvice(b.v, rec)}`
+          : "";
+        $("dialin").innerHTML = `<div class="dialin-note">💡 ${ui("lastBrew")} (${histWhen(b.t)}): ${detail}${verdictLine}</div>`;
+      } else if (last) {
+        // Pre-history data: verdict only, no logged brew details
+        $("dialin").innerHTML = `<div class="dialin-note">💡 ${ui("lastBrew")}: ${fbVerdictLabel(last.v)} — ${fbAdvice(last.v, rec)}</div>`;
+      } else {
+        $("dialin").innerHTML = "";
+      }
     }
 
     rec.phases.forEach((_, j) => {
@@ -2292,7 +2406,8 @@
       releaseWake();
       $("btnMain").textContent = ui("start");
       document.querySelector(".app").classList.remove("brewing");
-      histSave();
+      const rec = recipe();
+      histSave({ dose: rec.dose, water: rec.water, ice: rec.ice || 0, temp: rec.temp, clicks: rec.clicks, t: Date.now(), v: null });
     }
     render();
   }
@@ -2492,6 +2607,9 @@
     else if (has("yirgacheffe", "예가체프", "이르가체페", "ethiopia", "에티오피아", "sidamo", "sidama", "시다모", "시다마", "guji", "구지")) { origin = "yirg"; tags.push("Ethiopia"); }
     else if (has("rwanda", "르완다", "burundi", "부룬디")) { origin = "rwanda"; tags.push("Rwanda"); }
     else if (has("kenya", "케냐", "nyeri", "니에리")) { origin = "kenya"; tags.push("Kenya"); }
+    else if (has("sulawesi", "술라웨시", "toraja", "토라자", "celebes", "셀레베스")) { origin = "sulawesi"; tags.push("Sulawesi"); }
+    else if (has("kintamani", "킨타마니", "bali", "발리")) { origin = "bali"; tags.push("Bali"); }
+    else if (has("java", "자바")) { origin = "java"; tags.push("Java"); }
     else if (has("sumatra", "수마트라", "mandheling", "만델링", "indonesia", "인도네시아")) { origin = "sumatra"; tags.push("Sumatra"); }
     else if (has("honduras", "온두라스", "marcala", "마르칼라")) { origin = "honduras"; tags.push("Honduras"); }
     else if (has("guatemala", "과테말라", "antigua", "안티구아", "huehuetenango", "우에우에")) { origin = "guatemala"; tags.push("Guatemala"); }
