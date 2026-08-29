@@ -18,8 +18,10 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - name: Stamp build version into the page
-        run: sed -i "s/BUILD_STAMP_DEV/$(git rev-parse --short HEAD) · $(date -u '+%Y-%m-%d %H:%M UTC')/" index.html
+      - name: Stamp build version into the page and service worker
+        run: |
+          sed -i "s/BUILD_STAMP_DEV/$(git rev-parse --short HEAD) · $(date -u '+%Y-%m-%d %H:%M UTC')/" index.html
+          sed -i "s/BUILD_STAMP_DEV/$(git rev-parse --short HEAD)/" sw.js
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
