@@ -8,4 +8,5 @@ A bilingual (English/한국어) pour-over brew timer for iPhone and any phone br
 - 5 brew methods: Bean-tuned, 4:6 (Tetsu Kasuya), Hoffmann, 점드립 (Korean jeom-drip), and Momos Coffee's official store recipe
 - HOT and ICED modes, phase-by-phase pour targets, audio chimes, screen wake-lock
 - Post-brew taste feedback (6 verdicts → concrete grind/temp/dose advice) and a brew history logging bean, method, and full recipe details for every brew
+- Process override on any origin preset: mark your bag as washed / natural / anaerobic (or the bean's native honey, wet-hulled, semi-washed) and the recipe shifts temperature, bloom, and agitation to match — the label scanner sets it automatically
 - Add to Home Screen for an app-like experience
