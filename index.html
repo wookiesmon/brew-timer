@@ -793,6 +793,45 @@
       why: ["Dark wet-hulled beans are brittle and extract almost instantly: the coolest water, coarsest grind, and a short rich brew keep the body heavy but never ashy.",
             "다크 웻헐드 원두는 잘 부서지고 즉시 추출됩니다: 가장 낮은 온도, 가장 굵은 분쇄, 짧고 진한 추출로 묵직하되 재맛 없이."],
     },
+    {
+      id: "sulawesi", chip: ["Sulawesi", "술라웨시"], name: ["Sulawesi Toraja", "술라웨시 토라자"], roast: "medium",
+      proc: ["Semi-washed · medium-dark roast", "세미워시드 · 미디엄다크 로스팅"], notes: ["Dark cocoa, ripe plum, sweet spice", "다크 코코아, 잘 익은 자두, 스위트 스파이스"],
+      temp: 90, clicks: 21,
+      hot: { bloom: 38, p1: 70, total: 110 },
+      iced: { bloom: 38, p1: 66, total: 85 },
+      hintBloom: ["Pour 40g, let the semi-washed bean degas", "40g — 세미워시드 원두의 가스를 내보내기"],
+      hintP1: ["Gentle spiral, keep the bed calm", "부드러운 스파이럴 — 커피베드를 고요하게"],
+      hintP2: ["Steady finish — sweetness over earth", "일정하게 마무리 — 흙내음보다 단맛"],
+      agitation: ["Light swirl after bloom", "뜸 후 가벼운 스월"],
+      why: ["Toraja highland lots are the cleanest of Indonesia — semi-washed but grown high and slow, so 90°C and a calm, shorter brew pull dark cocoa and plum without the earthiness of wet-hulled Sumatra.",
+            "토라자 고지대 랏은 인도네시아에서 가장 클린합니다 — 세미워시드지만 높고 느리게 자라, 90°C와 차분하고 짧은 추출로 수마트라 웻헐드의 흙내음 없이 다크 코코아와 자두를 냅니다."],
+    },
+    {
+      id: "java", chip: ["Java", "자바"], name: ["Java Estate", "자바 에스테이트"], roast: "medium",
+      proc: ["Washed · medium roast", "워시드 · 미디엄 로스팅"], notes: ["Molasses, walnut, heavy syrupy body", "당밀, 호두, 묵직한 시럽 바디"],
+      temp: 90, clicks: 21,
+      hot: { bloom: 36, p1: 68, total: 108 },
+      iced: { bloom: 36, p1: 64, total: 84 },
+      hintBloom: ["Pour 40g, short easy bloom", "40g, 짧고 편한 뜸"],
+      hintP1: ["Relaxed spiral — low acidity forgives everything", "여유로운 스파이럴 — 낮은 산미는 관대합니다"],
+      hintP2: ["Stop on time — keep it syrupy, not woody", "시간 맞춰 종료 — 우디하지 않게 시럽처럼"],
+      agitation: ["Light swirl after bloom", "뜸 후 가벼운 스월"],
+      why: ["Java's old Dutch estates wash their coffee, rare for Indonesia — the cup is rustic-sweet with almost no acidity, so 90°C and a shorter drawdown keep molasses and walnut from drifting into woodiness.",
+            "자바의 오래된 에스테이트는 인도네시아에서 드물게 워시드 가공을 합니다 — 산미가 거의 없는 러스틱한 단맛이라, 90°C와 짧은 드로우다운으로 당밀과 호두가 우디해지지 않게 지킵니다."],
+    },
+    {
+      id: "bali", chip: ["Bali", "발리"], name: ["Bali Kintamani", "발리 킨타마니"], roast: "medium",
+      proc: ["Washed · medium-light roast", "워시드 · 미디엄라이트 로스팅"], notes: ["Tangerine, honey, clean sweet finish", "귤, 꿀, 클린한 단맛 피니시"],
+      temp: 92, clicks: 20,
+      hot: { bloom: 40, p1: 72, total: 115 },
+      iced: { bloom: 40, p1: 68, total: 88 },
+      hintBloom: ["Pour 40g, even saturation", "40g를 고르게 적시기"],
+      hintP1: ["Steady spiral — citrus wants even extraction", "일정한 스파이럴 — 시트러스는 고른 추출을 원합니다"],
+      hintP2: ["Even pour to the end for the honey finish", "꿀 피니시를 위해 끝까지 고르게"],
+      agitation: ["Swirl once after bloom", "뜸 후 한 번 스월"],
+      why: ["Kintamani's volcanic highlands and washed processing make Indonesia's brightest cup — 92°C and an even three-stage pour balance tangerine acidity over honey sweetness, closer to a Central American than a Sumatran.",
+            "킨타마니의 화산 고지대와 워시드 가공은 인도네시아에서 가장 밝은 한 잔을 만듭니다 — 92°C와 고른 3단계 푸어로 귤의 산미와 꿀 단맛의 밸런스를 잡아, 수마트라보다 중미에 가깝습니다."],
+    },
   ];
 
   const ROAST_LABEL = { light: ["Light", "라이트"], medium: ["Medium", "미디엄"], dark: ["Dark", "다크"] };
@@ -1966,6 +2005,9 @@
     if (has("gesha", "geisha", "게샤", "게이샤", "panama", "파나마")) { origin = "gesha"; tags.push("Gesha"); }
     else if (has("yirgacheffe", "예가체프", "이르가체페", "ethiopia", "에티오피아", "sidamo", "sidama", "시다모", "시다마", "guji", "구지")) { origin = "yirg"; tags.push("Ethiopia"); }
     else if (has("kenya", "케냐", "nyeri", "니에리")) { origin = "kenya"; tags.push("Kenya"); }
+    else if (has("sulawesi", "술라웨시", "toraja", "토라자", "celebes", "셀레베스")) { origin = "sulawesi"; tags.push("Sulawesi"); }
+    else if (has("kintamani", "킨타마니", "bali", "발리")) { origin = "bali"; tags.push("Bali"); }
+    else if (has("java", "자바")) { origin = "java"; tags.push("Java"); }
     else if (has("sumatra", "수마트라", "mandheling", "만델링", "indonesia", "인도네시아")) { origin = "sumatra"; tags.push("Sumatra"); }
     else if (has("honduras", "온두라스", "marcala", "마르칼라")) { origin = "honduras"; tags.push("Honduras"); }
     else if (has("guatemala", "과테말라", "antigua", "안티구아", "huehuetenango", "우에우에")) { origin = "guatemala"; tags.push("Guatemala"); }
