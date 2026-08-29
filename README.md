@@ -9,4 +9,6 @@ A bilingual (English/한국어) pour-over brew timer for iPhone and any phone br
 - HOT and ICED modes, phase-by-phase pour targets, audio chimes, screen wake-lock
 - Post-brew taste feedback (6 verdicts → concrete grind/temp/dose advice) and a brew history logging bean, method, and full recipe details for every brew
 - Process override on any origin preset: mark your bag as washed / natural / anaerobic (or the bean's native honey, wet-hulled, semi-washed) and the recipe shifts temperature, bloom, and agitation to match — the label scanner sets it automatically
+- Works offline: a service worker caches the app, so the timer runs with no signal (the label scanner still needs a connection)
+- Applied dial-in: after rating a brew, one tap stores the fix (grind/temp) into that setup's recipe — next brew starts from the corrected numbers, with a reset any time
 - Add to Home Screen for an app-like experience
