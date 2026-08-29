@@ -4,62 +4,67 @@
 <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='88'>☕</text></svg>">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#B06A2C">
+<meta name="theme-color" content="#A64B24">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Brew Timer">
 <style>
   :root {
-    --bg: #F6F2EC;
-    --surface: #FFFFFF;
-    --ink: #2A211A;
-    --muted: #8A7A6A;
-    --line: rgba(42, 33, 26, 0.12);
-    --track: rgba(42, 33, 26, 0.08);
-    --hot: #B06A2C;
-    --iced: #2E7EA6;
+    /* Per-character fallback: Latin renders in the New York serif, while
+       Hangul (absent from those faces) resolves to Apple SD Gothic Neo —
+       the same Korean face used for body text and the spec-table labels. */
+    --display: ui-serif, "New York", Georgia, "Times New Roman",
+      "Apple SD Gothic Neo", Pretendard, "Noto Sans KR", "Malgun Gothic", sans-serif;
+    --bg: #EBDFC9;
+    --surface: #F7EFDE;
+    --ink: #241A12;
+    --muted: #6B5B47;
+    --line: rgba(36, 26, 18, 0.16);
+    --track: rgba(36, 26, 18, 0.10);
+    --hot: #A64B24;
+    --iced: #3E7A8C;
     --accent: var(--hot);
-    --accent-ink: #FFFFFF;
-    --done: #4C8A5C;
+    --accent-ink: #FFF6E9;
+    --done: #4C7F49;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #16110D;
-      --surface: #211A14;
-      --ink: #F2E9DF;
-      --muted: #A08D7A;
-      --line: rgba(242, 233, 223, 0.12);
-      --track: rgba(242, 233, 223, 0.09);
-      --hot: #D98E4A;
-      --iced: #7FB8D6;
-      --accent-ink: #16110D;
-      --done: #7DB98D;
+      --bg: #332619;
+      --surface: #423220;
+      --ink: #F2E9DB;
+      --muted: #C4B199;
+      --line: rgba(242, 233, 219, 0.17);
+      --track: rgba(242, 233, 219, 0.11);
+      --hot: #E08A4F;
+      --iced: #84B9CC;
+      --accent-ink: #2A1D10;
+      --done: #8FC79B;
     }
   }
   :root[data-theme="light"] {
-    --bg: #F6F2EC;
-    --surface: #FFFFFF;
-    --ink: #2A211A;
-    --muted: #8A7A6A;
-    --line: rgba(42, 33, 26, 0.12);
-    --track: rgba(42, 33, 26, 0.08);
-    --hot: #B06A2C;
-    --iced: #2E7EA6;
-    --accent-ink: #FFFFFF;
-    --done: #4C8A5C;
+    --bg: #EBDFC9;
+    --surface: #F7EFDE;
+    --ink: #241A12;
+    --muted: #6B5B47;
+    --line: rgba(36, 26, 18, 0.16);
+    --track: rgba(36, 26, 18, 0.10);
+    --hot: #A64B24;
+    --iced: #3E7A8C;
+    --accent-ink: #FFF6E9;
+    --done: #4C7F49;
   }
   :root[data-theme="dark"] {
-    --bg: #16110D;
-    --surface: #211A14;
-    --ink: #F2E9DF;
-    --muted: #A08D7A;
-    --line: rgba(242, 233, 223, 0.12);
-    --track: rgba(242, 233, 223, 0.09);
-    --hot: #D98E4A;
-    --iced: #7FB8D6;
-    --accent-ink: #16110D;
-    --done: #7DB98D;
+    --bg: #332619;
+    --surface: #423220;
+    --ink: #F2E9DB;
+    --muted: #C4B199;
+    --line: rgba(242, 233, 219, 0.17);
+    --track: rgba(242, 233, 219, 0.11);
+    --hot: #E08A4F;
+    --iced: #84B9CC;
+    --accent-ink: #2A1D10;
+    --done: #8FC79B;
   }
   :root.iced { --accent: var(--iced); }
 
@@ -78,17 +83,25 @@
   .app {
     max-width: 420px;
     margin: 0 auto;
-    padding: max(14px, env(safe-area-inset-top)) 18px calc(24px + env(safe-area-inset-bottom));
+    padding: max(14px, env(safe-area-inset-top)) 18px 6px;
     display: flex;
     flex-direction: column;
     gap: 13px;
     min-height: 100dvh;
   }
 
-  header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-bottom: 11px;
+    border-bottom: 1px solid var(--line);
+  }
   h1 {
-    font-family: ui-rounded, -apple-system, system-ui, sans-serif;
-    font-size: 17px;
+    font-family: var(--display);
+    white-space: nowrap;
+    font-size: 20px;
     font-weight: 700;
     letter-spacing: 0.01em;
     margin: 0;
@@ -101,8 +114,9 @@
     border: 1px solid var(--line);
     background: var(--surface);
     color: var(--ink);
-    font: 700 12px/1 ui-rounded, -apple-system, system-ui, sans-serif;
-    padding: 9px 12px;
+    font: 700 11.5px/1 ui-rounded, -apple-system, system-ui, sans-serif;
+    min-height: 44px;
+    padding: 0 11px;
     border-radius: 999px;
     cursor: pointer;
     white-space: nowrap;
@@ -114,7 +128,7 @@
     background: var(--track);
     border-radius: 999px;
     padding: 3px;
-    min-width: 132px;
+    min-width: 124px;
   }
   .seg button {
     appearance: none;
@@ -123,7 +137,8 @@
     color: var(--muted);
     font: 600 13px/1 ui-rounded, -apple-system, system-ui, sans-serif;
     letter-spacing: 0.08em;
-    padding: 9px 0;
+    min-height: 40px;
+    padding: 0;
     border-radius: 999px;
     cursor: pointer;
   }
@@ -141,25 +156,51 @@
   .chip {
     appearance: none;
     flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
     border: 1px solid var(--line);
     background: var(--surface);
     color: var(--ink);
-    font: 600 13px/1 ui-rounded, -apple-system, system-ui, sans-serif;
-    padding: 10px 14px;
-    border-radius: 999px;
+    font: 600 17px/1.4 var(--display);
+    padding: 0 16px;
+    border-radius: 12px;
     cursor: pointer;
     white-space: nowrap;
   }
   .chip.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
   .chip.scan { border-style: dashed; }
   .chiprow.methods { margin-top: -6px; }
-  .chiprow.methods .chip { font-size: 12px; padding: 8px 12px; }
+  .chiprow.methods .chip { font-size: 16px; padding: 0 14px; }
+  /* Beans & Methods live on their own tabs now — show every option in a
+     wrapped grid instead of a horizontal scroller. */
+  #beans, #methods {
+    flex-wrap: wrap;
+    overflow-x: visible;
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .pagetitle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: -2px 0 -4px 0;
+  }
+  .pagetitle {
+    font: 700 25px/1.2 var(--display);
+    letter-spacing: -0.01em;
+    margin-left: 2px;
+  }
+  .app.brewing .pagetitle-row { display: none; }
+  .app[data-tab="guide"] #cupsSeg, .app[data-tab="history"] #cupsSeg { display: none; }
   .rowlabel {
-    font-size: 10px;
+    font-size: 11.5px;
     color: var(--muted);
-    letter-spacing: 0.08em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    font-weight: 600;
+    font-weight: 700;
     margin: -4px 0 -8px 2px;
   }
   .rowhead {
@@ -181,22 +222,78 @@
     border: 0;
     background: transparent;
     color: var(--muted);
-    font: 600 11px/1 ui-rounded, -apple-system, system-ui, sans-serif;
-    padding: 7px 11px;
+    font: 600 12px/1 ui-rounded, -apple-system, system-ui, sans-serif;
+    min-height: 40px;
+    padding: 0 14px;
     border-radius: 999px;
     cursor: pointer;
     white-space: nowrap;
   }
   .mini-seg button.on { background: var(--accent); color: var(--accent-ink); }
 
+  .histlist { display: flex; flex-direction: column; gap: 8px; }
+  .histlist[hidden] { display: none; }
+  .app.brewing .histlist { display: none; }
+  .histrow {
+    appearance: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    text-align: left;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 14px;
+    min-height: 60px;
+    cursor: pointer;
+    color: var(--ink);
+  }
+  .histrow:active { transform: scale(0.99); }
+  .histrow .hr-icon { font-size: 20px; flex: 0 0 auto; }
+  .histrow .hr-main { flex: 1 1 auto; min-width: 0; }
+  .histrow .hr-bean {
+    display: block;
+    font: 600 17px/1.35 var(--display);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .histrow .hr-sub {
+    display: block;
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .histrow .hr-when {
+    flex: 0 0 auto;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .histrow .hr-go { flex: 0 0 auto; color: var(--accent); font-size: 17px; }
+
   .beaninfo {
     text-align: center;
-    font-size: 12.5px;
+    font-size: 13px;
     color: var(--muted);
     margin-top: -4px;
     line-height: 1.45;
   }
   .beaninfo b { color: var(--ink); font-weight: 600; }
+  .inforow {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 40px;
+    cursor: pointer;
+  }
+  .chevlite { color: var(--accent); }
+  .infoext { margin-top: 2px; padding-bottom: 4px; }
 
   .custom-cfg { display: flex; flex-direction: column; gap: 8px; margin-top: -2px; }
   .custom-cfg[hidden] { display: none; }
@@ -204,9 +301,9 @@
   .cfg-row > span {
     font-size: 10.5px;
     color: var(--muted);
-    letter-spacing: 0.07em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    font-weight: 600;
+    font-weight: 700;
   }
   .cfg-seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: var(--track); border-radius: 999px; padding: 3px; }
   .cfg-seg button {
@@ -214,8 +311,9 @@
     border: 0;
     background: transparent;
     color: var(--muted);
-    font: 600 12px/1 ui-rounded, -apple-system, system-ui, sans-serif;
-    padding: 8px 0;
+    font: 600 12.5px/1 ui-rounded, -apple-system, system-ui, sans-serif;
+    min-height: 40px;
+    padding: 0;
     border-radius: 999px;
     cursor: pointer;
     white-space: nowrap;
@@ -225,7 +323,7 @@
   .method {
     background: var(--surface);
     border: 1px solid var(--line);
-    border-radius: 16px;
+    border-radius: 14px;
     overflow: hidden;
   }
   .method-head {
@@ -239,7 +337,7 @@
     justify-content: space-between;
     gap: 8px;
     padding: 12px 14px;
-    font: 600 13px/1.3 ui-rounded, -apple-system, system-ui, sans-serif;
+    font: 700 15px/1.3 var(--display);
     cursor: pointer;
     text-align: left;
   }
@@ -258,15 +356,15 @@
   .method dt {
     color: var(--muted);
     font-size: 10.5px;
-    letter-spacing: 0.07em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    font-weight: 600;
-    padding-top: 2px;
+    font-weight: 700;
+    padding-top: 3px;
   }
   .method dd { margin: 0; font-variant-numeric: tabular-nums; }
   .method .why {
     margin: 0;
-    font-size: 12.5px;
+    font-size: 13px;
     color: var(--muted);
     border-top: 1px solid var(--line);
     padding-top: 10px;
@@ -281,21 +379,21 @@
   .stat {
     background: var(--surface);
     border: 1px solid var(--line);
-    border-radius: 14px;
+    border-radius: 12px;
     padding: 9px 6px 8px;
     text-align: center;
   }
   .stat b {
     display: block;
-    font-size: 16px;
-    font-weight: 700;
+    font: 700 17px/1.2 var(--display);
     font-variant-numeric: tabular-nums;
   }
   .stat span {
     display: block;
-    font-size: 10px;
+    font-size: 10.5px;
+    font-weight: 700;
     color: var(--muted);
-    letter-spacing: 0.05em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     margin-top: 3px;
   }
@@ -321,22 +419,22 @@
     padding: 0 30px;
   }
   .phase-label {
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.12em;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--accent);
   }
   .clock {
-    font-family: ui-rounded, -apple-system, system-ui, sans-serif;
-    font-size: 54px;
+    font-family: var(--display);
+    font-size: 56px;
     font-weight: 700;
     line-height: 1;
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.01em;
   }
   .subclock {
-    font-size: 12.5px;
+    font-size: 13px;
     color: var(--muted);
     font-variant-numeric: tabular-nums;
   }
@@ -344,13 +442,13 @@
   .target {
     background: var(--surface);
     border: 1px solid var(--line);
-    border-radius: 18px;
+    border-radius: 14px;
     padding: 13px 16px;
     text-align: center;
   }
   .target .big {
-    font-family: ui-rounded, -apple-system, system-ui, sans-serif;
-    font-size: 22px;
+    font-family: var(--display);
+    font-size: 23px;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
   }
@@ -365,28 +463,37 @@
     gap: 12px;
     background: var(--surface);
     border: 1px solid var(--line);
-    border-radius: 14px;
+    border-radius: 12px;
     padding: 11px 14px;
     font-size: 14px;
     opacity: 0.62;
     transition: opacity 0.25s, border-color 0.25s;
   }
   .step .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--track); }
-  .step .name { font-weight: 600; }
+  .step .name { font: 600 15px/1.3 var(--display); }
   .step .name small { display: block; font-weight: 400; font-size: 12px; color: var(--muted); margin-top: 1px; }
-  .step .time { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .step .time { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .step.active { opacity: 1; border-color: var(--accent); }
   .step.active .dot { background: var(--accent); }
   .step.done { opacity: 0.62; }
   .step.done .dot { background: var(--done); }
 
-  .controls { display: grid; grid-template-columns: 1fr 96px; gap: 10px; margin-top: auto; }
+  .controls {
+    display: grid;
+    grid-template-columns: 1fr 96px;
+    gap: 10px;
+    margin-top: auto;
+    position: sticky;
+    bottom: 0;
+    padding: 10px 0 max(10px, env(safe-area-inset-bottom));
+    background: linear-gradient(to top, var(--bg) 78%, transparent);
+  }
   .btn {
     appearance: none;
     border: 0;
-    border-radius: 18px;
-    font: 700 17px/1 ui-rounded, -apple-system, system-ui, sans-serif;
-    letter-spacing: 0.02em;
+    border-radius: 14px;
+    font: 700 19px/1 var(--display);
+    letter-spacing: 0.04em;
     padding: 18px 0;
     cursor: pointer;
   }
@@ -397,7 +504,7 @@
   .onboard {
     background: var(--surface);
     border: 1px solid var(--accent);
-    border-radius: 16px;
+    border-radius: 14px;
     padding: 13px 14px 12px;
     display: flex;
     flex-direction: column;
@@ -433,8 +540,9 @@
     border: 0;
     background: var(--track);
     color: var(--ink);
-    font: 600 12.5px/1 ui-rounded, -apple-system, system-ui, sans-serif;
-    padding: 9px 16px;
+    font: 600 13px/1 ui-rounded, -apple-system, system-ui, sans-serif;
+    min-height: 44px;
+    padding: 0 18px;
     border-radius: 999px;
     cursor: pointer;
   }
@@ -447,7 +555,8 @@
     border: 1px solid var(--line);
     background: var(--bg);
     color: var(--ink);
-    font: 600 12px/1.3 ui-rounded, -apple-system, system-ui, sans-serif;
+    font: 600 12.5px/1.3 ui-rounded, -apple-system, system-ui, sans-serif;
+    min-height: 56px;
     padding: 10px 4px;
     border-radius: 12px;
     cursor: pointer;
@@ -456,7 +565,7 @@
   .dialin-row button b { display: block; font-size: 18px; margin-bottom: 3px; }
   .dialin-note {
     margin-top: 10px;
-    font-size: 12.5px;
+    font-size: 13px;
     line-height: 1.45;
     color: var(--muted);
     border-top: 1px solid var(--line);
@@ -464,12 +573,6 @@
   }
   .dialin-note em { font-style: normal; color: var(--accent); font-weight: 600; }
   #dialin:empty { display: none; }
-
-  .histlist { display: flex; flex-direction: column; }
-  .hist-row { font-size: 12.5px; line-height: 1.5; border-top: 1px solid var(--line); padding: 8px 0; }
-  .hist-row:first-child { border-top: 0; padding-top: 0; }
-  .hist-row b { font-weight: 600; }
-  .hist-row .h2 { color: var(--muted); font-variant-numeric: tabular-nums; }
 
   /* Focus mode: while brewing, hide everything that isn't the brew */
   .app.brewing .rowlabel,
@@ -482,6 +585,142 @@
   .app.brewing .recipe { display: none; }
   .app.brewing .ringwrap { width: min(84vw, 320px); margin-top: 8px; }
   .app.brewing .clock { font-size: 62px; }
+
+  /* ---- iOS-style bottom tab bar ---- */
+  .tabbar {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    padding: 5px 8px calc(5px + env(safe-area-inset-bottom));
+    z-index: 50;
+  }
+  .tabbar button {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    font: 600 13px/1.2 ui-rounded, -apple-system, system-ui, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 0 5px;
+    min-height: 50px;
+    border-radius: 12px;
+    cursor: pointer;
+  }
+  .tabbar button .ico { font-size: 21px; line-height: 1; }
+  .tabbar button .lbl { font-size: 13px; font-weight: 700; }
+  .tabbar button.on {
+    color: var(--accent);
+    background: var(--track);
+  }
+  .tabbar button.on .lbl { font-weight: 800; }
+  .tabbar button.on .ico { transform: scale(1.12); }
+  .app.brewing .tabbar { display: none; }
+
+  /* Tab visibility matrix */
+  .app[data-tab="brew"] .sec-beans, .app[data-tab="brew"] .sec-methods, .app[data-tab="brew"] .sec-history, .app[data-tab="brew"] .sec-guide,
+  .app[data-tab="beans"] .sec-brew, .app[data-tab="beans"] .sec-methods, .app[data-tab="beans"] .sec-history, .app[data-tab="beans"] .sec-guide,
+  .app[data-tab="methods"] .sec-brew, .app[data-tab="methods"] .sec-beans, .app[data-tab="methods"] .sec-history, .app[data-tab="methods"] .sec-guide,
+  .app[data-tab="history"] .sec-brew, .app[data-tab="history"] .sec-beans, .app[data-tab="history"] .sec-methods, .app[data-tab="history"] .sec-guide,
+  .app[data-tab="guide"] .sec-brew, .app[data-tab="guide"] .sec-beans, .app[data-tab="guide"] .sec-methods, .app[data-tab="guide"] .sec-history { display: none !important; }
+
+  .gcard {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 14px 15px;
+  }
+  .gcard h3 {
+    margin: 0 0 8px;
+    font: 700 16px/1.3 var(--display);
+  }
+  .gcard p, .gcard li { font-size: 13px; line-height: 1.55; color: var(--muted); margin: 0; }
+  .gcard b { color: var(--ink); }
+  .gcard ol, .gcard ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 7px; }
+  .gflow {
+    text-align: center;
+    font: 700 16px/1.4 var(--display);
+    color: var(--accent);
+  }
+  /* Bean card styled like a modern roaster label (Onyx / Blue Bottle school):
+     eyebrow → name → tasting-note headline → hairline spec table → CTA */
+  .bc-eyebrow {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .bc-name {
+    font: 700 22px/1.2 var(--display);
+    letter-spacing: -0.01em;
+    margin: 3px 0 8px;
+  }
+  .bc-hero {
+    font: 600 17px/1.45 var(--display);
+    color: var(--ink);
+  }
+  .bc-hero .sep { color: var(--accent); font-weight: 400; padding: 0 2px; }
+  .bc-table { margin: 13px 0 11px; border-top: 1px solid var(--line); }
+  .bc-trow {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 7.5px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .bc-trow .k {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    flex: 0 0 auto;
+  }
+  .bc-trow .v {
+    font-size: 13px;
+    font-weight: 600;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .bc-dots { letter-spacing: 2px; }
+  .bc-dots .on { color: var(--accent); }
+  .bc-dots .off { opacity: 0.22; }
+  .bc-why { font-size: 12.5px !important; }
+  .bc-method {
+    appearance: none;
+    width: 100%;
+    margin-top: 12px;
+    border: 0;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font: 700 16px/1.2 var(--display);
+    min-height: 48px;
+    border-radius: 14px;
+    cursor: pointer;
+  }
+  .bc-method:active { transform: scale(0.98); }
+  .gstart {
+    appearance: none;
+    border: 0;
+    border-radius: 18px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font: 700 18px/1 var(--display);
+    min-height: 54px;
+    cursor: pointer;
+  }
+
+  .app { padding-bottom: calc(78px + env(safe-area-inset-bottom)); }
+  .app.brewing { padding-bottom: 6px; }
+  .app .controls { bottom: calc(59px + env(safe-area-inset-bottom)); }
+  .app.brewing .controls { bottom: 0; }
 
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; }
@@ -498,26 +737,30 @@
     </div>
   </header>
 
-  <div class="onboard" id="onboard" hidden>
-    <ol id="onboardSteps"></ol>
-    <button id="onboardOk"></button>
-  </div>
-
-  <div class="rowhead">
-    <div class="rowlabel" id="lblBean">Bean</div>
+  <div class="pagetitle-row">
+    <div class="pagetitle" id="pageTitle"></div>
     <div class="mini-seg" id="cupsSeg" role="tablist" aria-label="Cups">
       <button data-c="1" id="cupsBtn1">1 cup</button>
       <button data-c="2" id="cupsBtn2">2 cups</button>
     </div>
   </div>
-  <div class="chiprow" id="beans" role="tablist" aria-label="Bean"></div>
-  <div class="beaninfo" id="scanNote" hidden></div>
-  <div class="rowlabel" id="lblMethod">Method</div>
-  <div class="chiprow methods" id="methods" role="tablist" aria-label="Method"></div>
-  <div class="beaninfo" id="methodinfo"></div>
+
+  <div class="onboard sec-brew" id="onboard" hidden>
+    <ol id="onboardSteps"></ol>
+    <button id="onboardOk"></button>
+  </div>
+
+  <div class="rowlabel sec-history" id="lblRecent">Recent brews</div>
+  <div class="histlist sec-history" id="history" hidden></div>
+  <div class="beaninfo sec-history" id="histEmpty" hidden></div>
+  <div class="beaninfo sec-history" style="opacity:.55;font-size:11px" id="buildStamp">build BUILD_STAMP_DEV</div>
+
+  <div class="chiprow sec-beans" id="beans" role="tablist" aria-label="Bean"></div>
+  <div class="chiprow methods sec-methods" id="methods" role="tablist" aria-label="Method"></div>
+  <div class="beaninfo sec-methods" id="methodinfo"></div>
   <div class="beaninfo" id="beaninfo"></div>
 
-  <div class="custom-cfg" id="customCfg" hidden>
+  <div class="custom-cfg sec-beans" id="customCfg" hidden>
     <div class="cfg-row">
       <span id="lblRoast">Roast</span>
       <div class="cfg-seg" id="cfgRoast">
@@ -536,7 +779,9 @@
     </div>
   </div>
 
-  <div class="method" id="method">
+  <div class="gcard sec-beans" id="beanCard"></div>
+
+  <div class="method sec-methods" id="method">
     <button class="method-head" id="methodToggle" aria-expanded="false">
       <span><span id="methodHeadLabel">Best method</span>&nbsp;<span class="sum" id="methodSummary"></span></span>
       <span class="chev">▾</span>
@@ -547,9 +792,11 @@
     </div>
   </div>
 
-  <div class="recipe" id="recipe"></div>
+  <div class="chiprow sec-brew" id="setupSummary"></div>
+  <div class="beaninfo sec-brew" id="scanNote" hidden></div>
+  <div class="recipe sec-brew" id="recipe"></div>
 
-  <div class="ringwrap">
+  <div class="ringwrap sec-brew">
     <svg viewBox="0 0 280 280" aria-hidden="true">
       <circle class="ring-track" cx="140" cy="140" r="124" fill="none" stroke-width="14"></circle>
       <circle class="ring-fill" id="ringFill" cx="140" cy="140" r="124" fill="none" stroke-width="14"></circle>
@@ -562,28 +809,28 @@
     </div>
   </div>
 
-  <div class="target">
+  <div class="target sec-brew">
     <div class="big" id="targetBig"></div>
     <div class="hint" id="targetHint"></div>
     <div id="dialin"></div>
   </div>
 
-  <div class="steps" id="steps"></div>
+  <div class="steps sec-brew" id="steps"></div>
 
-  <div class="method" id="histCard" hidden>
-    <button class="method-head" id="histToggle" aria-expanded="false">
-      <span><span id="histHeadLabel">Brew history</span>&nbsp;<span class="sum" id="histSummary"></span></span>
-      <span class="chev">▾</span>
-    </button>
-    <div class="method-body">
-      <div class="histlist" id="histRows"></div>
-    </div>
-  </div>
-
-  <div class="controls">
+  <div class="controls sec-brew">
     <button class="btn primary" id="btnMain">Start</button>
     <button class="btn ghost" id="btnReset">Reset</button>
   </div>
+
+  <div class="sec-guide" id="guide" style="display:flex;flex-direction:column;gap:12px"></div>
+
+  <nav class="tabbar" id="tabbar">
+    <button data-tab="guide"><span class="ico">📖</span><span class="lbl" data-l="tabGuide"></span></button>
+    <button data-tab="beans"><span class="ico">🫘</span><span class="lbl" data-l="tabBeans"></span></button>
+    <button data-tab="methods"><span class="ico">🫖</span><span class="lbl" data-l="tabMethods"></span></button>
+    <button data-tab="brew" class="on"><span class="ico">☕</span><span class="lbl" data-l="tabBrew"></span></button>
+    <button data-tab="history"><span class="ico">🕘</span><span class="lbl" data-l="tabHistory"></span></button>
+  </nav>
 </div>
 
 <!-- No capture attribute: the OS offers both "Take Photo" and "Photo Library" -->
@@ -598,8 +845,7 @@
 
   const UI = {
     subtitle: ["Pour-over drip", "푸어오버 드립"],
-    lblBean: ["Bean", "원두"],
-    lblMethod: ["Method", "추출법"],
+    lblBean: ["Cups", "잔수"],
     lblRoast: ["Roast", "로스팅"],
     lblProcess: ["Process", "가공"],
     bestMethod: ["Best method", "추출 레시피"],
@@ -637,10 +883,8 @@
     fbFlat: ["Flat / dull", "밋밋함"],
     fbSaved: ["Saved — I'll remind you next brew.", "저장했어요 — 다음 추출 때 알려드릴게요."],
     lastBrew: ["Last brew", "지난 추출"],
-    histTitle: ["Brew history", "추출 기록"],
-    histNoRating: ["not rated", "평가 없음"],
-    ob1: ["Pick your <b2>bean</b2> and a <b2>method</b2> — each choice explains itself below the chips.",
-          "<b2>원두</b2>와 <b2>추출법</b2>을 고르세요 — 선택하면 아래에 설명이 나옵니다."],
+    ob1: ["Pick your <b2>bean</b2> and <b2>method</b2> in the tabs below — ⭐ marks the recommended pairing.",
+          "아래 탭에서 <b2>원두</b2>와 <b2>추출법</b2>을 고르세요 — ⭐가 추천 조합입니다."],
     ob2: ["Weigh and grind to the numbers shown, heat your water, rinse the filter.",
           "표시된 대로 원두를 계량·분쇄하고, 물을 데우고, 필터를 린스하세요."],
     ob3: ["Press <b2>Start</b2> with your first pour — chimes guide every step, so just follow the big card.",
@@ -648,6 +892,14 @@
     obOk: ["Got it", "알겠어요"],
     cups1: ["1 cup", "1잔"],
     cups2: ["2 cups", "2잔"],
+    lblRecent: ["Recent brews — tap to reuse", "최근 추출 — 탭하면 그대로 재사용"],
+    tabBrew: ["Brew", "추출"],
+    tabBeans: ["Beans", "원두"],
+    tabMethods: ["Methods", "추출법"],
+    tabHistory: ["History", "기록"],
+    tabGuide: ["Guide", "가이드"],
+    restNow: ["poured ✓ — now rest", "붓기 완료 ✓ — 휴지"],
+    histEmpty: ["No saved brews yet — finish a brew or scan a label and they'll appear here.", "저장된 추출이 아직 없어요 — 추출을 완료하거나 라벨을 스캔하면 여기에 나타납니다."],
     scanChip: ["📷 Scan label", "📷 라벨 스캔"],
     scanLoading: ["Loading scanner (first time only, ~4MB)…", "스캐너 로딩 중 (최초 1회, 약 4MB)…"],
     scanReading: ["Reading the label…", "라벨을 읽는 중…"],
@@ -675,6 +927,7 @@
     {
       id: "yirg", chip: ["Ethiopia", "에티오피아"], name: ["Ethiopia Yirgacheffe", "에티오피아 예가체프"], roast: "light",
       proc: ["Washed · light roast", "워시드 · 라이트 로스팅"], notes: ["Jasmine, bergamot, stone fruit", "자스민, 베르가못, 핵과류"],
+      specs: { elev: "1,700–2,200m", vari: "Heirloom", harv: ["Oct–Jan", "10–1월"] },
       temp: 95, clicks: 19,
       hot: { bloom: 45, p1: 78, total: 130 },
       iced: { bloom: 45, p1: 75, total: 95 },
@@ -688,6 +941,7 @@
     {
       id: "kenya", chip: ["Kenya AA", "케냐 AA"], name: ["Kenya AA", "케냐 AA"], roast: "light",
       proc: ["Washed · light roast", "워시드 · 라이트 로스팅"], notes: ["Blackcurrant, grapefruit, brown sugar", "블랙커런트, 자몽, 흑설탕"],
+      specs: { elev: "1,500–2,100m", vari: "SL28 · SL34", harv: ["Oct–Dec", "10–12월"] },
       temp: 95, clicks: 19,
       hot: { bloom: 40, p1: 75, total: 125 },
       iced: { bloom: 40, p1: 72, total: 92 },
@@ -699,8 +953,23 @@
             "케냐 AA는 스페셜티에서 가장 밀도 높은 원두: 충분한 열과 추출이 날카로운 산미를 주시한 블랙커런트 단맛으로 바꿉니다."],
     },
     {
+      id: "rwanda", chip: ["Rwanda", "르완다"], name: ["Rwanda Bourbon", "르완다 부르봉"], roast: "light",
+      proc: ["Washed · light roast", "워시드 · 라이트 로스팅"], notes: ["Red berry, citrus, black tea", "붉은 베리, 시트러스, 홍차"],
+      specs: { elev: "1,500–2,000m", vari: "Red Bourbon", harv: ["Mar–Jul", "3–7월"] },
+      temp: 94, clicks: 19,
+      hot: { bloom: 42, p1: 76, total: 125 },
+      iced: { bloom: 42, p1: 72, total: 92 },
+      hintBloom: ["Pour fast — washed bourbons open with heat", "빠르게 붓기 — 워시드 부르봉은 열로 열립니다"],
+      hintP1: ["Steady spiral to full saturation", "완전히 적시도록 일정한 스파이럴"],
+      hintP2: ["Even finish — tea-like clarity comes late", "고르게 마무리 — 홍차 같은 클린함은 후반에"],
+      agitation: ["Swirl once after bloom", "뜸 후 한 번 스월"],
+      why: ["East African washed bourbons (Rwanda, Burundi) brew like a brighter, tea-like cousin of Kenya — 94°C and full extraction turn the berry acidity into red-fruit sweetness.",
+            "동아프리카 워시드 부르봉(르완다·부룬디)은 케냐의 밝고 홍차 같은 사촌 격입니다 — 94°C와 충분한 추출로 베리 산미가 붉은 과일 단맛으로 바뀝니다."],
+    },
+    {
       id: "colombia", chip: ["Colombia", "콜롬비아"], name: ["Colombia Huila", "콜롬비아 우일라"], roast: "medium",
       proc: ["Washed · medium-light roast", "워시드 · 미디엄라이트 로스팅"], notes: ["Caramel, red apple, panela", "카라멜, 사과, 파넬라"],
+      specs: { elev: "1,200–1,800m", vari: "Caturra · Castillo", harv: ["Oct–Dec · Apr–Jun", "10–12월 · 4–6월"] },
       temp: 92, clicks: 20,
       hot: { bloom: 40, p1: 72, total: 115 },
       iced: { bloom: 40, p1: 68, total: 88 },
@@ -714,6 +983,7 @@
     {
       id: "honduras", chip: ["Honduras", "온두라스"], name: ["Honduras Marcala", "온두라스 마르칼라"], roast: "medium",
       proc: ["Washed · medium roast", "워시드 · 미디엄 로스팅"], notes: ["Toffee, orange, milk chocolate", "토피, 오렌지, 밀크초콜릿"],
+      specs: { elev: "1,300–1,700m", vari: "Catuaí · Lempira", harv: ["Nov–Apr", "11–4월"] },
       temp: 91, clicks: 21,
       hot: { bloom: 38, p1: 70, total: 112 },
       iced: { bloom: 38, p1: 66, total: 86 },
@@ -727,6 +997,7 @@
     {
       id: "guatemala", chip: ["Guatemala", "과테말라"], name: ["Guatemala Antigua", "과테말라 안티구아"], roast: "medium",
       proc: ["Washed · medium roast", "워시드 · 미디엄 로스팅"], notes: ["Cocoa, spice, orange zest", "코코아, 스파이스, 오렌지 제스트"],
+      specs: { elev: "1,500–1,700m", vari: "Bourbon · Caturra", harv: ["Dec–Mar", "12–3월"] },
       temp: 91, clicks: 20,
       hot: { bloom: 38, p1: 72, total: 115 },
       iced: { bloom: 38, p1: 68, total: 88 },
@@ -740,6 +1011,7 @@
     {
       id: "costarica", chip: ["Costa Rica", "코스타리카"], name: ["Costa Rica Honey", "코스타리카 허니"], roast: "medium",
       proc: ["Honey process · medium-light", "허니 프로세스 · 미디엄라이트"], notes: ["Honey, citrus, brown sugar", "꿀, 시트러스, 흑설탕"],
+      specs: { elev: "1,200–1,900m", vari: "Caturra · Catuaí", harv: ["Dec–Mar", "12–3월"] },
       temp: 92, clicks: 20,
       hot: { bloom: 42, p1: 74, total: 118 },
       iced: { bloom: 42, p1: 70, total: 90 },
@@ -751,8 +1023,51 @@
             "허니 프로세스 코스타리카는 과육 점액질을 남깁니다 — 약간 긴 뜸과 부드러운 푸어로 발효 신맛 없이 시럽 같은 꿀 단맛을 냅니다."],
     },
     {
+      id: "peru", chip: ["Peru", "페루"], name: ["Peru Cajamarca", "페루 카하마르카"], roast: "medium",
+      proc: ["Washed · medium roast", "워시드 · 미디엄 로스팅"], notes: ["Chocolate, caramel, soft citrus", "초콜릿, 카라멜, 부드러운 시트러스"],
+      specs: { elev: "1,600–2,000m", vari: "Typica · Caturra", harv: ["Jun–Sep", "6–9월"] },
+      temp: 91, clicks: 20,
+      hot: { bloom: 38, p1: 70, total: 112 },
+      iced: { bloom: 38, p1: 66, total: 86 },
+      hintBloom: ["Pour 40g, short easy bloom", "40g, 짧고 편한 뜸"],
+      hintP1: ["Relaxed spiral pour", "여유로운 스파이럴 푸어"],
+      hintP2: ["Steady finish — softness is the charm", "일정하게 마무리 — 부드러움이 매력"],
+      agitation: ["Light swirl after bloom", "뜸 후 가벼운 스월"],
+      why: ["Peruvian highland lots are gentle and sweet (a specialty-shelf staple, especially organic lines) — 91°C and an easy three-stage pour keep the chocolate-caramel profile round.",
+            "페루 고지대 랏은 부드럽고 달콤합니다 (특히 유기농 라인의 스페셜티 단골) — 91°C와 편안한 3단계 푸어로 초콜릿-카라멜 프로파일을 둥글게 지킵니다."],
+    },
+    {
+      id: "mexico", chip: ["Mexico", "멕시코"], name: ["Mexico Chiapas", "멕시코 치아파스"], roast: "medium",
+      proc: ["Washed · medium roast", "워시드 · 미디엄 로스팅"], notes: ["Nutty, cocoa, soft apple", "고소함, 코코아, 부드러운 사과"],
+      specs: { elev: "900–1,400m", vari: "Typica · Bourbon", harv: ["Nov–Mar", "11–3월"] },
+      temp: 90, clicks: 21,
+      hot: { bloom: 36, p1: 68, total: 110 },
+      iced: { bloom: 36, p1: 64, total: 84 },
+      hintBloom: ["Quick bloom — opens easily", "짧은 뜸 — 쉽게 열립니다"],
+      hintP1: ["Relaxed spiral pour", "여유로운 스파이럴 푸어"],
+      hintP2: ["Finish steady for nutty sweetness", "고소한 단맛을 위해 일정하게 마무리"],
+      agitation: ["Light swirl after bloom", "뜸 후 가벼운 스월"],
+      why: ["Mexican Chiapas and Oaxaca lots are comfort coffees — 90°C, a slightly coarse grind, and a shorter brew land on nutty cocoa without sharpness.",
+            "멕시코 치아파스·오악사카 랏은 편안한 커피입니다 — 90°C, 약간 굵은 분쇄, 짧은 추출로 각 없이 고소한 코코아에 안착합니다."],
+    },
+    {
+      id: "nicaragua", chip: ["Nicaragua", "니카라과"], name: ["Nicaragua Jinotega", "니카라과 히노테가"], roast: "medium",
+      proc: ["Washed · medium roast", "워시드 · 미디엄 로스팅"], notes: ["Cocoa, dried fruit, honey", "코코아, 건과일, 꿀"],
+      specs: { elev: "1,100–1,500m", vari: "Caturra · Maragogype", harv: ["Dec–Mar", "12–3월"] },
+      temp: 91, clicks: 20,
+      hot: { bloom: 38, p1: 70, total: 112 },
+      iced: { bloom: 38, p1: 66, total: 86 },
+      hintBloom: ["Pour 40g, easy bloom", "40g, 편한 뜸"],
+      hintP1: ["Steady spiral pour", "일정한 스파이럴 푸어"],
+      hintP2: ["Even finish for honeyed body", "꿀 같은 바디를 위해 고르게 마무리"],
+      agitation: ["Light swirl after bloom", "뜸 후 가벼운 스월"],
+      why: ["Nicaraguan lots sit between Honduras and Guatemala in character — 91°C and full, even pours bring out cocoa and dried-fruit sweetness with a honeyed body.",
+            "니카라과 랏은 온두라스와 과테말라 사이의 캐릭터입니다 — 91°C와 고른 푸어로 코코아·건과일 단맛과 꿀 같은 바디를 끌어냅니다."],
+    },
+    {
       id: "gesha", chip: ["Gesha", "게샤"], name: ["Gesha Lot", "게샤 랏"], roast: "light",
       proc: ["Washed · light roast", "워시드 · 라이트 로스팅"], notes: ["Tea-like body, intense florals, tropical", "티 같은 바디, 강렬한 플로럴, 트로피컬"],
+      specs: { elev: "1,600–1,900m", vari: "Geisha", harv: ["Dec–Mar", "12–3월"] },
       temp: 94, clicks: 20,
       hot: { bloom: 45, p1: 85, total: 140 },
       iced: { bloom: 45, p1: 78, total: 100 },
@@ -766,6 +1081,7 @@
     {
       id: "coan", chip: ["Anaerobic", "무산소"], name: ["Colombia Anaerobic", "콜롬비아 무산소"], roast: "light",
       proc: ["Anaerobic natural", "무산소 내추럴"], notes: ["Berry wine, tropical funk, syrupy", "베리 와인, 트로피컬 펑크, 시럽 같은 바디"],
+      specs: { elev: "1,500–1,900m", vari: "Caturra · Castillo", harv: ["Oct–Dec", "10–12월"] },
       temp: 91, clicks: 20,
       hot: { bloom: 50, p1: 80, total: 120 },
       iced: { bloom: 50, p1: 75, total: 90 },
@@ -779,6 +1095,7 @@
     {
       id: "brazil", chip: ["Brazil", "브라질"], name: ["Brazil Cerrado", "브라질 세하도"], roast: "medium",
       proc: ["Natural · medium roast", "내추럴 · 미디엄 로스팅"], notes: ["Chocolate, hazelnut, caramel", "초콜릿, 헤이즐넛, 카라멜"],
+      specs: { elev: "900–1,250m", vari: "Mundo Novo · Catuaí", harv: ["May–Sep", "5–9월"] },
       temp: 90, clicks: 21,
       hot: { bloom: 35, p1: 70, total: 110 },
       iced: { bloom: 35, p1: 65, total: 85 },
@@ -792,6 +1109,7 @@
     {
       id: "blend", chip: ["Choc-Nut Blend", "초코넛 블렌드"], name: ["Chocolate-Nut Blend", "초콜릿-넛 블렌드"], roast: "medium",
       proc: ["Colombia + Brazil · medium", "콜롬비아+브라질 · 미디엄"], notes: ["Milk chocolate, caramel, roasted nuts", "밀크초콜릿, 카라멜, 구운 견과"],
+      specs: { elev: ["Multiple origins", "여러 산지"], vari: ["Blend", "블렌드"], harv: ["Year-round", "연중"] },
       temp: 89, clicks: 21,
       hot: { bloom: 32, p1: 65, total: 105 },
       iced: { bloom: 32, p1: 62, total: 82 },
@@ -805,6 +1123,7 @@
     {
       id: "sumatra", chip: ["Sumatra", "수마트라"], name: ["Sumatra Mandheling", "수마트라 만델링"], roast: "dark",
       proc: ["Wet-hulled · dark roast", "웻헐드 · 다크 로스팅"], notes: ["Earthy, cedar, dark cocoa", "흙내음, 시더, 다크 코코아"],
+      specs: { elev: "900–1,500m", vari: "Ateng · Typica", harv: ["Oct–Mar", "10–3월"] },
       temp: 88, clicks: 22,
       hot: { bloom: 30, p1: 62, total: 100 },
       iced: { bloom: 30, p1: 60, total: 80 },
@@ -818,6 +1137,7 @@
     {
       id: "sulawesi", chip: ["Sulawesi", "술라웨시"], name: ["Sulawesi Toraja", "술라웨시 토라자"], roast: "medium",
       proc: ["Semi-washed · medium-dark roast", "세미워시드 · 미디엄다크 로스팅"], notes: ["Dark cocoa, ripe plum, sweet spice", "다크 코코아, 잘 익은 자두, 스위트 스파이스"],
+      specs: { elev: "1,400–1,900m", vari: "S795 · Typica", harv: ["Jun–Oct", "6–10월"] },
       temp: 90, clicks: 21,
       hot: { bloom: 38, p1: 70, total: 110 },
       iced: { bloom: 38, p1: 66, total: 85 },
@@ -831,6 +1151,7 @@
     {
       id: "java", chip: ["Java", "자바"], name: ["Java Estate", "자바 에스테이트"], roast: "medium",
       proc: ["Washed · medium roast", "워시드 · 미디엄 로스팅"], notes: ["Molasses, walnut, heavy syrupy body", "당밀, 호두, 묵직한 시럽 바디"],
+      specs: { elev: "900–1,600m", vari: "Typica · Ateng", harv: ["Jun–Oct", "6–10월"] },
       temp: 90, clicks: 21,
       hot: { bloom: 36, p1: 68, total: 108 },
       iced: { bloom: 36, p1: 64, total: 84 },
@@ -844,6 +1165,7 @@
     {
       id: "bali", chip: ["Bali", "발리"], name: ["Bali Kintamani", "발리 킨타마니"], roast: "medium",
       proc: ["Washed · medium-light roast", "워시드 · 미디엄라이트 로스팅"], notes: ["Tangerine, honey, clean sweet finish", "귤, 꿀, 클린한 단맛 피니시"],
+      specs: { elev: "1,200–1,600m", vari: "Bourbon · Typica", harv: ["May–Sep", "5–9월"] },
       temp: 92, clicks: 20,
       hot: { bloom: 40, p1: 72, total: 115 },
       iced: { bloom: 40, p1: 68, total: 88 },
@@ -1019,7 +1341,7 @@
       grindNote: x2 ? [" (1 coarser for the bigger bed)", " (큰 배치라 1클릭 굵게)"] : ["", ""],
       total: totalT,
       phases: [
-        { name: ["Bloom", "뜸"], from: 0, to: bloomT, g0: 0, g1, hint: b.hintBloom },
+        { name: ["Bloom", "뜸"], from: 0, to: bloomT, g0: 0, g1, pour: 12, hint: b.hintBloom },
         { name: ["1st Pour", "1차 푸어"], from: bloomT, to: p1T, g0: g1, g1: g2, hint: b.hintP1 },
         { name: ["2nd Pour", "2차 푸어"], from: p1T, to: totalT, g0: g2, g1: water, hint: b.hintP2 },
       ],
@@ -1115,7 +1437,7 @@
         temp, clicks: b.clicks, grindNote,
         total: 210,
         phases: [
-          { name: ["Bloom", "뜸"], from: 0, to: 45, g0: 0, g1: 60, hint: ["60g bloom, grab the brewer and swirl gently", "60g 뜸, 드리퍼를 잡고 부드럽게 스월"] },
+          { name: ["Bloom", "뜸"], from: 0, to: 45, g0: 0, g1: 60, pour: 12, hint: ["60g bloom, grab the brewer and swirl gently", "60g 뜸, 드리퍼를 잡고 부드럽게 스월"] },
           { name: ["Main Pour", "메인 푸어"], from: 45, to: 75, g0: 60, g1: 300, hint: ["One steady spiral to 300g", "300g까지 하나의 일정한 스파이럴"] },
           { name: ["Top-up", "탑업"], from: 75, to: 105, g0: 300, g1: 500, hint: ["To 500g, stir once each way, then swirl", "500g까지, 양방향 한 번씩 저은 뒤 스월"] },
           { name: ["Drawdown", "드로우다운"], from: 105, to: 210, g0: 500, g1: 500, drain: true, hint: ["Hands off — flat bed by 3:30 means even extraction", "손 떼기 — 3:30까지 평평한 베드면 균일 추출"] },
@@ -1131,7 +1453,7 @@
         temp, clicks: b.clicks, grindNote,
         total: 200,
         phases: [
-          { name: ["Bloom", "뜸"], from: 0, to: 45, g0: 0, g1: 60, hint: ["60g bloom, swirl gently", "60g 뜸, 부드럽게 스월"] },
+          { name: ["Bloom", "뜸"], from: 0, to: 45, g0: 0, g1: 60, pour: 12, hint: ["60g bloom, swirl gently", "60g 뜸, 부드럽게 스월"] },
           { name: ["Main Pour", "메인 푸어"], from: 45, to: 75, g0: 60, g1: 200, hint: ["Steady spiral to 200g", "200g까지 일정한 스파이럴"] },
           { name: ["Top-up", "탑업"], from: 75, to: 100, g0: 200, g1: 320, hint: ["To 320g, then one gentle swirl", "320g까지, 부드럽게 한 번 스월"] },
           { name: ["Drawdown", "드로우다운"], from: 100, to: 200, g0: 320, g1: 320, drain: true, hint: ["Hands off — drains onto the ice", "손 떼기 — 얼음 위로 드레인"] },
@@ -1147,7 +1469,7 @@
         temp, clicks: b.clicks, grindNote,
         total: 180,
         phases: [
-          { name: ["Bloom", "뜸"], from: 0, to: 45, g0: 0, g1: 30, hint: ["30g bloom, grab the brewer and swirl gently", "30g 뜸, 드리퍼를 잡고 부드럽게 스월"] },
+          { name: ["Bloom", "뜸"], from: 0, to: 45, g0: 0, g1: 30, pour: 10, hint: ["30g bloom, grab the brewer and swirl gently", "30g 뜸, 드리퍼를 잡고 부드럽게 스월"] },
           { name: ["Main Pour", "메인 푸어"], from: 45, to: 75, g0: 30, g1: 150, hint: ["One steady spiral to 150g", "150g까지 하나의 일정한 스파이럴"] },
           { name: ["Top-up", "탑업"], from: 75, to: 105, g0: 150, g1: 250, hint: ["To 250g, stir once each way, then swirl", "250g까지, 양방향 한 번씩 저은 뒤 스월"] },
           { name: ["Drawdown", "드로우다운"], from: 105, to: 180, g0: 250, g1: 250, drain: true, hint: ["Hands off — flat bed by 3:00 means even extraction", "손 떼기 — 3:00까지 평평한 베드면 균일 추출"] },
@@ -1162,7 +1484,7 @@
       temp, clicks: b.clicks, grindNote,
       total: 160,
       phases: [
-        { name: ["Bloom", "뜸"], from: 0, to: 45, g0: 0, g1: 30, hint: ["30g bloom, swirl gently", "30g 뜸, 부드럽게 스월"] },
+        { name: ["Bloom", "뜸"], from: 0, to: 45, g0: 0, g1: 30, pour: 10, hint: ["30g bloom, swirl gently", "30g 뜸, 부드럽게 스월"] },
         { name: ["Main Pour", "메인 푸어"], from: 45, to: 70, g0: 30, g1: 100, hint: ["Steady spiral to 100g", "100g까지 일정한 스파이럴"] },
         { name: ["Top-up", "탑업"], from: 70, to: 95, g0: 100, g1: 160, hint: ["To 160g, then one gentle swirl", "160g까지, 부드럽게 한 번 스월"] },
         { name: ["Drawdown", "드로우다운"], from: 95, to: 160, g0: 160, g1: 160, drain: true, hint: ["Hands off — drains onto the ice", "손 떼기 — 얼음 위로 드레인"] },
@@ -1331,7 +1653,7 @@
       temp, clicks, grindNote,
       total: cfg.total,
       phases: [
-        { name: ["Bloom", "뜸"], from: 0, to: cfg.bloomT, g0: 0, g1: cfg.bloomG, hint: ["Gentle pour, no swirl — keep everything still", "부드럽게 붓기, 스월 없이 — 모든 것을 고요하게"] },
+        { name: ["Bloom", "뜸"], from: 0, to: cfg.bloomT, g0: 0, g1: cfg.bloomG, pour: 15, hint: ["Gentle pour, no swirl — keep everything still", "부드럽게 붓기, 스월 없이 — 모든 것을 고요하게"] },
         { name: ["Osmotic Pour", "오스모틱 푸어"], from: cfg.bloomT, to: cfg.pourT, g0: cfg.bloomG, g1: cfg.water, hint: ["One unbroken thin thread, dead-center — let the water spread itself", "정중앙에 끊김 없는 가는 물줄기 — 물이 스스로 퍼지게"] },
         { name: ["Drawdown", "드로우다운"], from: cfg.pourT, to: cfg.total, g0: cfg.water, g1: cfg.water, drain: true, hint: [m === "iced" ? "Hands off — drains onto the ice" : "Hands off — let it finish undisturbed", m === "iced" ? "손 떼기 — 얼음 위로 드레인" : "손 떼기 — 방해 없이 마무리"] },
       ],
@@ -1358,7 +1680,7 @@
       temp, clicks, grindNote,
       total: cfg.total,
       phases: [
-        { name: ["Bloom", "뜸"], from: 0, to: p1[0], g0: 0, g1: p1[1], hint: ["Wet evenly, brief rest", "고르게 적시고 잠시 휴지"] },
+        { name: ["Bloom", "뜸"], from: 0, to: p1[0], g0: 0, g1: p1[1], pour: 10, hint: ["Wet evenly, brief rest", "고르게 적시고 잠시 휴지"] },
         { name: ["Pour 2", "푸어 2"], from: p1[0], to: p2[0], g0: p1[1], g1: p2[1], pulse: true, hint: ["Small centered circles, then let it settle", "중앙에 작은 원을 그리고, 가라앉게 두기"] },
         { name: ["Pour 3", "푸어 3"], from: p2[0], to: p3[0], g0: p2[1], g1: p3[1], pulse: true, hint: ["Final pour, same gentle rhythm", "마지막 푸어 — 같은 부드러운 리듬"] },
         { name: ["Drawdown", "드로우다운"], from: p3[0], to: cfg.total, g0: cfg.water, g1: cfg.water, drain: true, hint: [m === "iced" ? "Drains onto the ice" : "Hands off — flat bed, even finish", m === "iced" ? "얼음 위로 드레인" : "손 떼기 — 평평한 베드로 고른 마무리"] },
@@ -1388,7 +1710,7 @@
       temp, clicks, grindNote,
       total: cfg.total,
       phases: [
-        { name: ["Bloom", "뜸"], from: 0, to: cfg.bloomT, g0: 0, g1: cfg.bloomG, hint: ["Even spiral to wet the grounds, let gases escape", "스파이럴로 고르게 적시고 가스 배출"] },
+        { name: ["Bloom", "뜸"], from: 0, to: cfg.bloomT, g0: 0, g1: cfg.bloomG, pour: 10, hint: ["Even spiral to wet the grounds, let gases escape", "스파이럴로 고르게 적시고 가스 배출"] },
         { name: ["Center Pour", "센터 푸어"], from: cfg.bloomT, to: cfg.pourT, g0: cfg.bloomG, g1: cfg.water, hint: ["Everything straight down the center, one steady stream", "전부 정중앙에, 하나의 일정한 물줄기로"] },
         { name: ["Drawdown", "드로우다운"], from: cfg.pourT, to: cfg.total, g0: cfg.water, g1: cfg.water, drain: true, hint: [m === "iced" ? "Drains onto the ice" : "Hands off — done around 2:00", m === "iced" ? "얼음 위로 드레인" : "손 떼기 — 2:00 내외 완료"] },
       ],
@@ -1414,7 +1736,7 @@
       temp, clicks, grindNote,
       total: cfg.total,
       phases: [
-        { name: ["Stirred Bloom", "교반 뜸"], from: 0, to: 45, g0: 0, g1: cfg.bloomG, hint: ["Pour 3× dose, stir gently so every ground is wet", "도징의 3배를 붓고 가볍게 저어 전부 적시기"] },
+        { name: ["Stirred Bloom", "교반 뜸"], from: 0, to: 45, g0: 0, g1: cfg.bloomG, pour: 15, hint: ["Pour 3× dose, stir gently so every ground is wet", "도징의 3배를 붓고 가볍게 저어 전부 적시기"] },
         { name: ["Main Pour", "메인 푸어"], from: 45, to: cfg.pourT, g0: cfg.bloomG, g1: cfg.water, hint: ["One continuous medium-height pour", "중간 높이의 하나의 연속 푸어"] },
         { name: ["Spin + Drawdown", "스핀 + 드로우다운"], from: cfg.pourT, to: cfg.total, g0: cfg.water, g1: cfg.water, drain: true, hint: ["Gentle Rao spin, then hands off — flat bed at the end", "부드러운 라오 스핀 후 손 떼기 — 마지막엔 평평한 베드"] },
       ],
@@ -1444,7 +1766,99 @@
     return M("kasuya46", ["tuned", "momos"],
       ["sweet and forgiving — ideal for balanced mediums", "달콤하고 관대함 — 밸런스형 미디엄에 이상적입니다"]);
   }
-  function methodName(id) { const m = METHODS.find(x => x.id === id); return m ? tx(m.chip) : id; }
+  function methodName(id) { return tx(METHODS.find(x => x.id === id).chip); }
+
+  // ---- Brew history: saved setups so you never re-scan the same bean ----
+  function histLoad() {
+    try { return JSON.parse(localStorage.getItem("brew.history") || "[]"); } catch (e) { return []; }
+  }
+  function histEntryKey(e) {
+    return `${e.beanId}|${e.methodId}|${e.mode}|${e.cups}|${e.beanId === "custom" && e.custom ? e.custom.roast + e.custom.process : ""}`;
+  }
+  function histSave(brew) {
+    const e = { beanId, methodId, mode, cups, custom: beanId === "custom" ? { ...customAttrs } : null, t: Date.now() };
+    const old = histLoad();
+    // A re-save without fresh details (scan, tap-to-reuse) keeps the last brew's log
+    const prev = old.find(x => histEntryKey(x) === histEntryKey(e));
+    e.brew = brew || (prev && prev.brew) || null;
+    let h = old.filter(x => histEntryKey(x) !== histEntryKey(e));
+    h.unshift(e);
+    h = h.slice(0, 6);
+    try { localStorage.setItem("brew.history", JSON.stringify(h)); } catch (err) {}
+    buildHistory();
+  }
+  function histBrewDetail(brew) {
+    if (!brew) return "";
+    const ko = lang === "ko";
+    const verdict = brew.v ? ` · ${FB_EMOJI[brew.v] || ""} ${fbVerdictLabel(brew.v)}` : "";
+    return [
+      `${brew.dose}g : ${brew.water}g`,
+      brew.ice ? `🧊${brew.ice}g` : "",
+      `${brew.temp}°C`,
+      ko ? `${brew.clicks}클릭` : `${brew.clicks} clicks`,
+    ].filter(Boolean).join(" · ") + verdict;
+  }
+  function histBeanLabel(e) {
+    if (e.beanId === "custom" && e.custom) {
+      return `⚙ ${tx(ROAST_LABEL[e.custom.roast] || ["?", "?"])}·${tx(PROC_LABEL[e.custom.process] || ["?", "?"])}`;
+    }
+    const b = PRESETS.find(x => x.id === e.beanId);
+    return b ? tx(b.chip) : e.beanId;
+  }
+  function histWhen(t) {
+    const ko = lang === "ko";
+    if (!t) return "";
+    const mins = Math.max(0, Math.round((Date.now() - t) / 60000));
+    if (mins < 1) return ko ? "방금" : "just now";
+    if (mins < 60) return ko ? `${mins}분 전` : `${mins} min`;
+    const hrs = Math.round(mins / 60);
+    if (hrs < 24) return ko ? `${hrs}시간 전` : `${hrs} hr`;
+    const days = Math.round(hrs / 24);
+    return ko ? `${days}일 전` : `${days} ${days === 1 ? "day" : "days"}`;
+  }
+
+  function buildHistory() {
+    const h = histLoad();
+    $("history").hidden = h.length === 0;
+    $("histEmpty").hidden = h.length > 0;
+    $("histEmpty").textContent = ui("histEmpty");
+    $("lblRecent").textContent = ui("lblRecent");
+    $("history").innerHTML = h.map((e, i) => {
+      const m = METHODS.find(x => x.id === e.methodId);
+      if (!m || (e.beanId !== "custom" && !PRESETS.some(x => x.id === e.beanId))) return "";
+      const modeTxt = e.mode === "iced" ? (lang === "ko" ? "아이스" : "Iced") : (lang === "ko" ? "핫" : "Hot");
+      const cupsTxt = e.cups === 2 ? (lang === "ko" ? "2잔" : "2 cups") : (lang === "ko" ? "1잔" : "1 cup");
+      const detail = histBrewDetail(e.brew);
+      return `<button class="histrow" data-hist="${i}">
+        <span class="hr-icon">${e.mode === "iced" ? "🧊" : "🔥"}</span>
+        <span class="hr-main">
+          <span class="hr-bean">${histBeanLabel(e)}</span>
+          <span class="hr-sub">${tx(m.chip)} · ${modeTxt} · ${cupsTxt}</span>
+          ${detail ? `<span class="hr-sub">${detail}</span>` : ""}
+        </span>
+        <span class="hr-when">${histWhen(e.t)}</span>
+        <span class="hr-go">›</span>
+      </button>`;
+    }).join("");
+    document.querySelectorAll("#history .histrow").forEach(el =>
+      el.addEventListener("click", () => applyHistory(histLoad()[Number(el.dataset.hist)])));
+  }
+  function applyHistory(e) {
+    if (!e) return;
+    beanId = e.beanId;
+    methodId = e.methodId;
+    mode = e.mode === "iced" ? "iced" : "hot";
+    cups = e.cups === 2 ? 2 : 1;
+    if (e.custom) customAttrs = { ...e.custom };
+    $("btnHot").classList.toggle("on", mode === "hot");
+    $("btnIced").classList.toggle("on", mode === "iced");
+    $("btnHot").setAttribute("aria-selected", mode === "hot");
+    $("btnIced").setAttribute("aria-selected", mode === "iced");
+    scanNote("");
+    refresh(true);
+    switchTab("brew");
+    histSave(); // bump to front
+  }
 
   let mode = "hot";
   let beanId = "house";
@@ -1477,6 +1891,7 @@
   let wakeLock = null;
   let audioCtx = null;
   let methodOpen = false;
+  let infoOpen = false;      // collapsible method/bean explainer
   let feedbackGiven = false; // answered for the current finished brew
 
   // ---- Dial-in feedback: taste verdict → concrete advice ----
@@ -1490,11 +1905,13 @@
       all[fbKey()] = { v: verdict, t: Date.now() };
       localStorage.setItem("brew.feedback", JSON.stringify(all));
     } catch (e) {}
-    // Attach the verdict to the brew that was just logged
+    // Attach the verdict to this setup's logged brew details
+    const key = histEntryKey({ beanId, methodId, mode, cups, custom: beanId === "custom" ? customAttrs : null });
     const h = histLoad();
-    if (h[0] && h[0].bean === beanId && h[0].method === methodId && h[0].mode === mode && h[0].cups === cups) {
-      h[0].v = verdict;
-      histSave(h);
+    const e = h.find(x => histEntryKey(x) === key);
+    if (e && e.brew) {
+      e.brew.v = verdict;
+      try { localStorage.setItem("brew.history", JSON.stringify(h)); } catch (err) {}
       buildHistory();
     }
   }
@@ -1537,35 +1954,6 @@
     return v === "sour" ? ui("fbSour") : v === "bitter" ? ui("fbBitter")
       : v === "weak" ? ui("fbWeak") : v === "strong" ? ui("fbStrong")
       : v === "flat" ? ui("fbFlat") : ui("fbGood");
-  }
-
-  // ---- Brew history: every finished brew, with the full bean + recipe ----
-  function histLoad() {
-    try { return JSON.parse(localStorage.getItem("brew.history") || "[]"); } catch (e) { return []; }
-  }
-  function histSave(list) {
-    try { localStorage.setItem("brew.history", JSON.stringify(list.slice(0, 30))); } catch (e) {}
-  }
-  function histAdd() {
-    const b = bean();
-    const rec = recipe();
-    const h = histLoad();
-    h.unshift({
-      t: Date.now(), bean: beanId, name: b.name, proc: b.proc,
-      method: methodId, mode, cups,
-      dose: rec.dose, water: rec.water, ice: rec.ice || 0,
-      temp: rec.temp, clicks: rec.clicks, v: null,
-    });
-    histSave(h);
-    buildHistory();
-  }
-  function histFmtDate(t) {
-    try {
-      return new Date(t).toLocaleDateString(lang === "ko" ? "ko-KR" : "en-US", { month: "short", day: "numeric" });
-    } catch (e) { return ""; }
-  }
-  function histLast() {
-    return histLoad().find(x => x.bean === beanId && x.method === methodId && x.mode === mode && x.cups === cups);
   }
 
   function elapsedNow() {
@@ -1705,32 +2093,6 @@
     $("methodWhy").textContent = rec.why;
   }
 
-  function buildHistory() {
-    const h = histLoad();
-    const card = $("histCard");
-    if (!h.length) { card.hidden = true; return; }
-    const ko = lang === "ko";
-    card.hidden = false;
-    $("histHeadLabel").textContent = ui("histTitle");
-    $("histSummary").textContent = ko ? `· ${h.length}회` : `· ${h.length} brew${h.length > 1 ? "s" : ""}`;
-    $("histRows").innerHTML = h.slice(0, 10).map(e => {
-      const verdict = e.v
-        ? `${FB_EMOJI[e.v] || ""} ${fbVerdictLabel(e.v)}`
-        : ui("histNoRating");
-      const setup = [
-        histFmtDate(e.t),
-        methodName(e.method),
-        e.mode === "iced" ? "ICED" : "HOT",
-        e.cups === 2 ? ui("cups2") : ui("cups1"),
-        `${e.dose}g : ${e.water}g`,
-        e.ice ? `🧊${e.ice}g` : "",
-        `${e.temp}°C`,
-        ko ? `${e.clicks}클릭` : `${e.clicks} clicks`,
-      ].filter(Boolean).join(" · ");
-      return `<div class="hist-row"><b>${tx(e.name)}</b> · ${tx(e.proc)} — ${verdict}<br><span class="h2">${setup}</span></div>`;
-    }).join("");
-  }
-
   let onboarded = false;
   try { onboarded = localStorage.getItem("brew.onboarded") === "1"; } catch (e) {}
   function dismissOnboard() {
@@ -1739,8 +2101,75 @@
     $("onboard").hidden = true;
   }
 
+  let tab = "brew";
+  function updatePageTitle() {
+    const key = { guide: "tabGuide", beans: "tabBeans", methods: "tabMethods", brew: "tabBrew", history: "tabHistory" }[tab];
+    $("pageTitle").textContent = ui(key);
+  }
+  function switchTab(t) {
+    tab = t;
+    document.querySelector(".app").dataset.tab = t;
+    document.querySelectorAll(".tabbar button").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
+    updatePageTitle();
+    window.scrollTo({ top: 0 });
+  }
+  document.querySelectorAll(".tabbar button").forEach(b =>
+    b.addEventListener("click", () => switchTab(b.dataset.tab)));
+
+  function buildGuide() {
+    const ko = lang === "ko";
+    const g = (en, k) => ko ? k : en;
+    $("guide").innerHTML = `
+      <div class="gflow">${g("🫘 Beans → 🫖 Method → ☕ Brew", "🫘 원두 → 🫖 추출법 → ☕ 추출")}</div>
+      <div class="gcard">
+        <h3>${g("What this app does", "이 앱이 하는 일")}</h3>
+        <p>${g("A pour-over brew guide with a live timer. Pick your bean, get the best method for it, then follow timed pour targets with sound cues — for the best-tasting cup, every time.",
+               "라이브 타이머가 있는 푸어오버 브루잉 가이드입니다. 원두를 고르면 가장 잘 맞는 추출법을 추천하고, 소리 신호와 함께 시간별 푸어 타깃을 안내합니다 — 매번 최고의 한 잔을 위해.")}</p>
+      </div>
+      <div class="gcard">
+        <h3>${g("What you need", "준비물")}</h3>
+        <ul>
+          <li>${g("<b>Dripper + paper filter</b> (V60-style; Kalita for the flat-bed method)", "<b>드리퍼 + 종이 필터</b> (V60 계열; 칼리타 방식은 평바닥 드리퍼)")}</li>
+          <li>${g("<b>Scale</b> — the app guides you by grams", "<b>저울</b> — 앱이 그램 단위로 안내합니다")}</li>
+          <li>${g("<b>Grinder</b> — 'clicks' are hand-grinder clicks; treat as a starting point for yours", "<b>그라인더</b> — '클릭'은 핸드그라인더 기준이니 내 그라인더에 맞게 조절하세요")}</li>
+          <li>${g("<b>Kettle</b> — gooseneck is best for slow pours", "<b>주전자</b> — 느린 푸어에는 구스넥이 좋습니다")}</li>
+        </ul>
+      </div>
+      <div class="gcard">
+        <h3>${g("How to brew", "추출하는 방법")}</h3>
+        <ol>
+          <li>${g("<b>🫘 Beans</b>: pick your bean — or tap <b>📷 Scan label</b> and photograph the bag. Choose HOT/ICED and 1–2 cups.",
+                  "<b>🫘 원두</b>: 원두를 고르거나 <b>📷 라벨 스캔</b>으로 봉투를 찍으세요. HOT/ICED와 1–2잔을 선택합니다.")}</li>
+          <li>${g("<b>🫖 Methods</b>: ⭐ marks the best method for your bean. Open <b>Best method</b> for the full recipe — ratio, water temp, grind.",
+                  "<b>🫖 추출법</b>: ⭐가 내 원두에 가장 잘 맞는 방식입니다. <b>추출 레시피</b>를 열면 비율·물 온도·분쇄도가 나옵니다.")}</li>
+          <li>${g("<b>Prepare</b>: weigh & grind the dose, heat water to the shown temperature, rinse the filter, tare your scale.",
+                  "<b>준비</b>: 원두를 계량·분쇄하고, 표시된 온도로 물을 데우고, 필터를 린스하고, 저울을 0점 맞춥니다.")}</li>
+          <li>${g("<b>☕ Brew</b>: press <b>Start</b> as your first pour begins. The big card always says what to do right now — pour to the target, or rest.",
+                  "<b>☕ 추출</b>: 첫 푸어와 동시에 <b>시작</b>을 누르세요. 큰 카드가 지금 할 일을 알려줍니다 — 타깃까지 붓기, 또는 휴지.")}</li>
+          <li>${g("<b>After</b>: tell it how the cup tasted (😖😋😣) and it computes your grind fix for next time. Every brew saves to <b>🕘 History</b> for one-tap reuse.",
+                  "<b>추출 후</b>: 맛이 어땠는지(😖😋😣) 알려주면 다음번 분쇄 조정값을 계산해 줍니다. 모든 추출은 <b>🕘 기록</b>에 저장되어 한 번의 탭으로 재사용됩니다.")}</li>
+        </ol>
+      </div>
+      <div class="gcard">
+        <h3>${g("Sounds & signals", "소리와 신호")}</h3>
+        <ul>
+          <li>${g("<b>Rising chime</b> — brew started", "<b>상승 차임</b> — 추출 시작")}</li>
+          <li>${g("<b>5 short ticks</b> — next step in 5 seconds, lift your kettle", "<b>짧은 틱 5번</b> — 5초 후 다음 단계, 주전자를 드세요")}</li>
+          <li>${g("<b>Two-note chime</b> — next pour now", "<b>2음 차임</b> — 지금 다음 푸어")}</li>
+          <li>${g("<b>Melody</b> — brew finished", "<b>멜로디</b> — 추출 완료")}</li>
+          <li>${g("<b>pace ~Ng</b> — what your scale should read right now", "<b>페이스 ~Ng</b> — 지금 저울에 표시되어야 할 무게")}</li>
+          <li>${g("The screen stays awake while brewing; keep the app open for the chimes.", "추출 중에는 화면이 꺼지지 않습니다. 차임벨을 위해 앱을 열어 두세요.")}</li>
+        </ul>
+      </div>
+      <button class="gstart" id="guideStart">${g("Start brewing →", "시작하기 →")}</button>`;
+    $("guideStart").onclick = () => { dismissOnboard(); switchTab("beans"); };
+  }
+
   function applyChrome() {
-    $("onboard").hidden = onboarded;
+    document.querySelectorAll(".tabbar .lbl").forEach(el => { el.textContent = ui(el.dataset.l); });
+    updatePageTitle();
+    buildGuide();
+    $("onboard").hidden = true; // retired — replaced by the Guide tab
     $("onboardSteps").innerHTML = [ui("ob1"), ui("ob2"), ui("ob3")]
       .map((s, i) => `<li><b>${i + 1}</b><span>${s.replace(/<b2>/g, "<strong>").replace(/<\/b2>/g, "</strong>")}</span></li>`).join("");
     $("onboardOk").textContent = ui("obOk");
@@ -1750,8 +2179,6 @@
     $("cupsBtn2").classList.toggle("on", cups === 2);
     $("subtitle").textContent = ui("subtitle");
     $("btnLang").textContent = lang === "ko" ? "English" : "한국어";
-    $("lblBean").textContent = ui("lblBean");
-    $("lblMethod").textContent = ui("lblMethod");
     $("lblRoast").textContent = ui("lblRoast");
     $("lblProcess").textContent = ui("lblProcess");
     $("methodHeadLabel").textContent = ui("bestMethod");
@@ -1773,14 +2200,24 @@
     const recc = recommendFor(b);
     $("methods").innerHTML = METHODS
       .map(x => `<button class="chip${x.id === methodId ? " on" : ""}" data-method="${x.id}" role="tab" aria-selected="${x.id === methodId}">${x.id === recc.best ? "⭐ " : ""}${tx(x.chip)}</button>`).join("");
-    $("beaninfo").innerHTML = `<b>${tx(b.name)}</b> · ${tx(b.proc)} — ${tx(b.notes)}`;
+    $("beaninfo").hidden = true; // folded into the collapsible info row
     const mi = METHODS.find(x => x.id === methodId);
     const recLine = methodId === recc.best
       ? (lang === "ko" ? `⭐ ${tx(b.name)}에 추천하는 조합입니다` : `⭐ Recommended pairing for ${tx(b.name)}`)
       : (lang === "ko"
         ? `⭐ ${tx(b.name)} 추천: <b>${methodName(recc.best)}</b> — ${tx(recc.reason)}`
         : `⭐ Best for ${tx(b.name)}: <b>${methodName(recc.best)}</b> — ${tx(recc.reason)}`);
-    $("methodinfo").innerHTML = `<b>${tx(mi.chip)}</b> · ${tx(mi.who)}.<br>${tx(mi.pick)}.<br>${recLine}`;
+    $("methodinfo").innerHTML = `<span class="inforow" role="button" aria-expanded="${infoOpen}">${recLine} <span class="chevlite">${infoOpen ? "▴" : "▾"}</span></span>`
+      + (infoOpen
+        ? `<div class="infoext"><b>${tx(mi.chip)}</b> · ${tx(mi.who)}.<br>${tx(mi.pick)}.<br><b>${tx(b.name)}</b> · ${tx(b.proc)} — ${tx(b.notes)}</div>`
+        : "");
+    $("methodinfo").onclick = () => { infoOpen = !infoOpen; buildStatics(); };
+
+    $("setupSummary").innerHTML =
+      `<button class="chip" data-go="beans">☕ ${tx(b.chip)}</button>`
+      + `<button class="chip" data-go="methods">${methodId === recc.best ? "⭐ " : ""}${tx(mi.chip)}</button>`;
+    document.querySelectorAll("#setupSummary .chip").forEach(el =>
+      el.addEventListener("click", () => switchTab(el.dataset.go)));
 
     $("customCfg").hidden = beanId !== "custom";
     if (beanId === "custom") {
@@ -1790,8 +2227,34 @@
         el.classList.toggle("on", el.dataset.v === customAttrs.process));
     }
 
+    const ko2 = lang === "ko";
+    const eyebrow = b.id === "blend" ? (ko2 ? "블렌드" : "Blend")
+      : b.id === "custom" ? (ko2 ? "커스텀" : "Custom")
+      : b.id === "house" ? (ko2 ? "하우스 레시피" : "House recipe")
+      : (ko2 ? "싱글 오리진" : "Single origin");
+    const hero = tx(b.notes).split(/,\s*/).map(n => n.trim())
+      .join('<span class="sep"> · </span>');
+    const dots = { light: 1, medium: 2, dark: 3 }[b.roast] || 2;
+    const roastDots = `<span class="bc-dots"><span class="on">${"●".repeat(dots)}</span><span class="off">${"●".repeat(3 - dots)}</span></span> ${tx(ROAST_LABEL[b.roast] || ["", ""])}`;
+    const trow = (k, v) => `<div class="bc-trow"><span class="k">${k}</span><span class="v">${v}</span></div>`;
+    $("beanCard").innerHTML = `
+      <div class="bc-eyebrow">${eyebrow}</div>
+      <div class="bc-name">${tx(b.name)}</div>
+      <div class="bc-hero">${hero}</div>
+      <div class="bc-table">
+        ${trow(ko2 ? "로스팅" : "Roast", roastDots)}
+        ${trow(ko2 ? "프로파일" : "Profile", tx(b.proc))}
+        ${b.specs ? trow(ko2 ? "재배 고도" : "Elevation", tx(b.specs.elev)) : ""}
+        ${b.specs ? trow(ko2 ? "품종" : "Variety", tx(b.specs.vari)) : ""}
+        ${b.specs ? trow(ko2 ? "수확기" : "Harvest", tx(b.specs.harv)) : ""}
+      </div>
+      <p class="bc-why">${tx(b.why)}</p>
+      <button class="bc-method" id="beanCardGo">${ko2
+        ? `⭐ ${methodName(recc.best)}(으)로 추출하기 →`
+        : `Brew with ⭐ ${methodName(recc.best)} →`}</button>`;
+    $("beanCardGo").onclick = () => { if (methodId !== recc.best) { methodId = recc.best; persist(); } switchTab("methods"); buildStatics(); reset(); };
+
     buildMethod();
-    buildHistory();
 
     $("recipe").innerHTML = rec.stats
       .map(s => `<div class="stat"><b>${s.v}</b><span>${s.l}</span></div>`).join("");
@@ -1813,6 +2276,7 @@
     document.querySelectorAll("#methods .chip").forEach(el =>
       el.addEventListener("click", () => setMethod(el.dataset.method)));
 
+    buildHistory();
     applyChrome();
   }
 
@@ -1860,16 +2324,24 @@
     if (active) {
       if (p.drain) {
         $("targetBig").innerHTML = ko ? `<em>드로우다운</em> · 손 떼기` : `<em>Drawdown</em> · hands off`;
-      } else if (p.pulse) {
-        $("targetBig").innerHTML = ko
-          ? `지금 <em>${p.g1}g</em>까지 붓고 휴지`
-          : `Pour to <em>${p.g1}g</em> now, then rest`;
       } else {
-        const frac = Math.min(1, (sec - p.from) / (p.to - p.from));
-        const pace = Math.round(p.g0 + (p.g1 - p.g0) * frac);
-        $("targetBig").innerHTML = ko
-          ? `<em>${p.g1}g</em>까지 붓기 · 페이스 ~${pace}g`
-          : `Pour to <em>${p.g1}g</em> · pace ~${pace}g`;
+        // Pace tracks the actual pour window, not the whole phase —
+        // after the window, show "rest" instead of a crawling pace.
+        const pw = p.pour || (p.pulse ? 12 : p.to - p.from);
+        const poured = sec - p.from >= pw;
+        if (poured && (p.pour || p.pulse)) {
+          $("targetBig").innerHTML = `<em>${p.g1}g</em> ${ui("restNow")}`;
+        } else if (p.pulse) {
+          $("targetBig").innerHTML = ko
+            ? `지금 <em>${p.g1}g</em>까지 붓고 휴지`
+            : `Pour to <em>${p.g1}g</em> now, then rest`;
+        } else {
+          const frac = Math.min(1, (sec - p.from) / pw);
+          const pace = Math.round(p.g0 + (p.g1 - p.g0) * frac);
+          $("targetBig").innerHTML = ko
+            ? `<em>${p.g1}g</em>까지 붓기 · 페이스 ~${pace}g`
+            : `Pour to <em>${p.g1}g</em> · pace ~${pace}g`;
+        }
       }
       $("targetHint").textContent = p.hint;
       $("dialin").innerHTML = "";
@@ -1878,19 +2350,20 @@
         ? `<em>${rec.phases[0].g1}g</em>까지 붓기`
         : `Pour to <em>${rec.phases[0].g1}g</em>`;
       $("targetHint").textContent = rec.prep;
-      const lastH = histLast();
+      const key = histEntryKey({ beanId, methodId, mode, cups, custom: beanId === "custom" ? customAttrs : null });
+      const lastH = histLoad().find(x => histEntryKey(x) === key);
       const last = fbLoad()[fbKey()];
-      if (lastH) {
+      if (lastH && lastH.brew) {
+        const b = lastH.brew;
         const detail = [
-          `<b>${tx(lastH.name)}</b>`,
-          `${lastH.dose}g : ${lastH.water}g`,
-          `${lastH.temp}°C`,
-          ko ? `${lastH.clicks}클릭` : `${lastH.clicks} clicks`,
+          `${b.dose}g : ${b.water}g`,
+          `${b.temp}°C`,
+          ko ? `${b.clicks}클릭` : `${b.clicks} clicks`,
         ].join(" · ");
-        const verdictLine = lastH.v
-          ? ` · ${FB_EMOJI[lastH.v] || ""} ${fbVerdictLabel(lastH.v)}<br>${fbAdvice(lastH.v, rec)}`
+        const verdictLine = b.v
+          ? ` · ${FB_EMOJI[b.v] || ""} ${fbVerdictLabel(b.v)}<br>${fbAdvice(b.v, rec)}`
           : "";
-        $("dialin").innerHTML = `<div class="dialin-note">💡 ${ui("lastBrew")} (${histFmtDate(lastH.t)}): ${detail}${verdictLine}</div>`;
+        $("dialin").innerHTML = `<div class="dialin-note">💡 ${ui("lastBrew")} (${histWhen(b.t)}): ${detail}${verdictLine}</div>`;
       } else if (last) {
         // Pre-history data: verdict only, no logged brew details
         $("dialin").innerHTML = `<div class="dialin-note">💡 ${ui("lastBrew")}: ${fbVerdictLabel(last.v)} — ${fbAdvice(last.v, rec)}</div>`;
@@ -1929,11 +2402,12 @@
       running = false;
       finished = true;
       clearInterval(timerId);
-      histAdd();
       chimeDone();
       releaseWake();
       $("btnMain").textContent = ui("start");
       document.querySelector(".app").classList.remove("brewing");
+      const rec = recipe();
+      histSave({ dose: rec.dose, water: rec.water, ice: rec.ice || 0, temp: rec.temp, clicks: rec.clicks, t: Date.now(), v: null });
     }
     render();
   }
@@ -1997,13 +2471,6 @@
     $("methodToggle").setAttribute("aria-expanded", String(open));
   }
   $("methodToggle").addEventListener("click", () => setMethodOpen(!methodOpen));
-
-  let histOpen = false;
-  $("histToggle").addEventListener("click", () => {
-    histOpen = !histOpen;
-    $("histCard").classList.toggle("open", histOpen);
-    $("histToggle").setAttribute("aria-expanded", String(histOpen));
-  });
 
   $("onboardOk").addEventListener("click", dismissOnboard);
 
@@ -2138,6 +2605,7 @@
     let origin = null;
     if (has("gesha", "geisha", "게샤", "게이샤", "panama", "파나마")) { origin = "gesha"; tags.push("Gesha"); }
     else if (has("yirgacheffe", "예가체프", "이르가체페", "ethiopia", "에티오피아", "sidamo", "sidama", "시다모", "시다마", "guji", "구지")) { origin = "yirg"; tags.push("Ethiopia"); }
+    else if (has("rwanda", "르완다", "burundi", "부룬디")) { origin = "rwanda"; tags.push("Rwanda"); }
     else if (has("kenya", "케냐", "nyeri", "니에리")) { origin = "kenya"; tags.push("Kenya"); }
     else if (has("sulawesi", "술라웨시", "toraja", "토라자", "celebes", "셀레베스")) { origin = "sulawesi"; tags.push("Sulawesi"); }
     else if (has("kintamani", "킨타마니", "bali", "발리")) { origin = "bali"; tags.push("Bali"); }
@@ -2146,6 +2614,9 @@
     else if (has("honduras", "온두라스", "marcala", "마르칼라")) { origin = "honduras"; tags.push("Honduras"); }
     else if (has("guatemala", "과테말라", "antigua", "안티구아", "huehuetenango", "우에우에")) { origin = "guatemala"; tags.push("Guatemala"); }
     else if (has("costa rica", "costarica", "코스타리카", "tarrazu", "타라주", "따라주")) { origin = "costarica"; tags.push("Costa Rica"); }
+    else if (has("peru", "페루", "cajamarca", "카하마르카")) { origin = "peru"; tags.push("Peru"); }
+    else if (has("mexico", "멕시코", "chiapas", "치아파스", "oaxaca", "오악사카")) { origin = "mexico"; tags.push("Mexico"); }
+    else if (has("nicaragua", "니카라과", "jinotega", "히노테가")) { origin = "nicaragua"; tags.push("Nicaragua"); }
     else if (has("colombia", "columbia", "콜롬비아", "huila", "우일라", "supremo", "수프리모", "narino", "nariño", "나리뇨")) { origin = "colombia"; tags.push("Colombia"); }
     else if (has("brazil", "brasil", "브라질", "cerrado", "세하도", "세라도", "santos", "산토스")) { origin = "brazil"; tags.push("Brazil"); }
 
@@ -2182,6 +2653,7 @@
 
   async function runScan(file) {
     try {
+      switchTab("brew");
       scanNote(ui("scanLoading"));
       await loadTesseract();
       scanNote(ui("scanReading"));
@@ -2203,6 +2675,7 @@
       beanId = hit.bean;
       methodId = hit.method;
       refresh(true);
+      histSave();
       const b = allBeans().find(x => x.id === hit.bean);
       const altNames = hit.alts.map(methodName).join(", ");
       scanNote(lang === "ko"
@@ -2219,8 +2692,10 @@
     if (f) runScan(f);
   });
 
+  if ($("buildStamp").textContent.includes("BUILD_STAMP_DEV")) $("buildStamp").hidden = true;
   $("btnHot").classList.toggle("on", mode === "hot");
   $("btnIced").classList.toggle("on", mode === "iced");
+  switchTab(onboarded ? "brew" : "guide");
   buildStatics();
   render();
 </script>
