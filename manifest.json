@@ -3,8 +3,8 @@
   "short_name": "Brew Timer",
   "start_url": ".",
   "display": "standalone",
-  "background_color": "#EBDFC9",
-  "theme_color": "#A64B24",
+  "background_color": "#F1E9DA",
+  "theme_color": "#C24515",
   "icons": [
     {
       "src": "apple-touch-icon.png",

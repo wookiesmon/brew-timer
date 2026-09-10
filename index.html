@@ -11,60 +11,64 @@
 <meta name="apple-mobile-web-app-title" content="Brew Timer">
 <style>
   :root {
-    /* Per-character fallback: Latin renders in the New York serif, while
-       Hangul (absent from those faces) resolves to Apple SD Gothic Neo —
-       the same Korean face used for body text and the spec-table labels. */
-    --display: ui-serif, "New York", Georgia, "Times New Roman",
+    /* Letterpress ticket voice: condensed grotesque display (Hangul falls
+       back to Apple SD Gothic Neo) and mono numerals like a receipt. */
+    --display: "Avenir Next Condensed", Futura, "Arial Narrow", "Helvetica Neue",
       "Apple SD Gothic Neo", Pretendard, "Noto Sans KR", "Malgun Gothic", sans-serif;
-    --bg: #EBDFC9;
-    --surface: #F7EFDE;
-    --ink: #241A12;
-    --muted: #6B5B47;
-    --line: rgba(36, 26, 18, 0.16);
-    --track: rgba(36, 26, 18, 0.10);
-    --hot: #A64B24;
-    --iced: #3E7A8C;
+    --mono: ui-monospace, "SF Mono", Menlo, "Roboto Mono", monospace;
+    --bg: #F1E9DA;
+    --surface: #FAF4E8;
+    --ink: #20150D;
+    --muted: #715E4A;
+    --line: rgba(32, 21, 13, 0.24);
+    --track: rgba(32, 21, 13, 0.10);
+    --hot: #C24515;
+    --iced: #1E5AA8;
     --accent: var(--hot);
-    --accent-ink: #FFF6E9;
-    --done: #4C7F49;
+    --accent-ink: #FFF8EE;
+    --done: #2F7D46;
+    --drop: #20150D;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #332619;
-      --surface: #423220;
-      --ink: #F2E9DB;
-      --muted: #C4B199;
-      --line: rgba(242, 233, 219, 0.17);
-      --track: rgba(242, 233, 219, 0.11);
-      --hot: #E08A4F;
-      --iced: #84B9CC;
-      --accent-ink: #2A1D10;
-      --done: #8FC79B;
+      --bg: #17100A;
+      --surface: #231A11;
+      --ink: #F4EAD9;
+      --muted: #B49C82;
+      --line: rgba(244, 234, 217, 0.26);
+      --track: rgba(244, 234, 217, 0.12);
+      --hot: #F07B41;
+      --iced: #6FA6E8;
+      --accent-ink: #241206;
+      --done: #7FC08A;
+      --drop: rgba(0, 0, 0, 0.8);
     }
   }
   :root[data-theme="light"] {
-    --bg: #EBDFC9;
-    --surface: #F7EFDE;
-    --ink: #241A12;
-    --muted: #6B5B47;
-    --line: rgba(36, 26, 18, 0.16);
-    --track: rgba(36, 26, 18, 0.10);
-    --hot: #A64B24;
-    --iced: #3E7A8C;
-    --accent-ink: #FFF6E9;
-    --done: #4C7F49;
+    --bg: #F1E9DA;
+    --surface: #FAF4E8;
+    --ink: #20150D;
+    --muted: #715E4A;
+    --line: rgba(32, 21, 13, 0.24);
+    --track: rgba(32, 21, 13, 0.10);
+    --hot: #C24515;
+    --iced: #1E5AA8;
+    --accent-ink: #FFF8EE;
+    --done: #2F7D46;
+    --drop: #20150D;
   }
   :root[data-theme="dark"] {
-    --bg: #332619;
-    --surface: #423220;
-    --ink: #F2E9DB;
-    --muted: #C4B199;
-    --line: rgba(242, 233, 219, 0.17);
-    --track: rgba(242, 233, 219, 0.11);
-    --hot: #E08A4F;
-    --iced: #84B9CC;
-    --accent-ink: #2A1D10;
-    --done: #8FC79B;
+    --bg: #17100A;
+    --surface: #231A11;
+    --ink: #F4EAD9;
+    --muted: #B49C82;
+    --line: rgba(244, 234, 217, 0.26);
+    --track: rgba(244, 234, 217, 0.12);
+    --hot: #F07B41;
+    --iced: #6FA6E8;
+    --accent-ink: #241206;
+    --done: #7FC08A;
+    --drop: rgba(0, 0, 0, 0.8);
   }
   :root.iced { --accent: var(--iced); }
 
@@ -760,6 +764,100 @@
   .app.brewing { padding-bottom: 6px; }
   .app .controls { bottom: calc(59px + env(safe-area-inset-bottom)); }
   .app.brewing .controls { bottom: 0; }
+
+  /* ==== Print-shop skin: hard ink edges, block shadows, condensed caps,
+     mono numerals. Overrides the softer component defaults above. ==== */
+
+  /* Cards and controls get real edges */
+  .langbtn, .chip, .histrow, .method, .stat, .target, .step, .onboard,
+  .dialin-row button, .gcard, .grinder-row select {
+    border: 2px solid var(--ink);
+    border-radius: 4px;
+  }
+  .method, .gcard, .target, .onboard { box-shadow: 4px 4px 0 var(--drop); }
+  .histrow { box-shadow: 3px 3px 0 var(--drop); }
+  .histrow:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--drop); }
+  .onboard { border-color: var(--ink); }
+  .onboard li b { border-radius: 3px; }
+  .step .dot { border-radius: 2px; }
+
+  /* Segmented controls become divided ink boxes */
+  .seg, .mini-seg, .cfg-seg {
+    background: var(--surface);
+    border: 2px solid var(--ink);
+    border-radius: 4px;
+    padding: 0;
+    overflow: hidden;
+  }
+  .seg button, .mini-seg button, .cfg-seg button {
+    border-radius: 0;
+    color: var(--ink);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .cfg-seg button { letter-spacing: 0.01em; font-size: 11.5px; }
+  .seg button + button, .mini-seg button + button, .cfg-seg button + button { border-left: 2px solid var(--ink); }
+  .seg button.on, .mini-seg button.on, .cfg-seg button.on { background: var(--accent); color: var(--accent-ink); }
+
+  /* Chips: stamped uppercase tags, not pills */
+  .chip {
+    font: 800 12.5px/1.25 -apple-system, "SF Pro Text", "Apple SD Gothic Neo", system-ui, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .chiprow.methods .chip { font-size: 12px; padding: 0 12px; }
+  #beans .chip { font-size: 11px; min-height: 34px; padding: 0 10px; border-width: 1.5px; border-radius: 3px; }
+  .chip.on { border-color: var(--ink); box-shadow: 2px 2px 0 var(--drop); }
+
+  /* Wordmark and page titles in tracked condensed caps */
+  h1 { text-transform: uppercase; letter-spacing: 0.05em; font-size: 21px; }
+  .pagetitle { text-transform: uppercase; letter-spacing: 0.04em; font-size: 27px; }
+  .rowlabel { display: flex; align-items: center; gap: 7px; color: var(--ink); }
+  .rowlabel::before { content: ""; width: 14px; height: 3px; background: var(--accent); flex: 0 0 auto; }
+  header { border-bottom: 2px solid var(--ink); }
+
+  /* Numbers read like a receipt */
+  .clock { font-family: var(--mono); font-weight: 800; letter-spacing: -0.05em; }
+  .stat b { font-family: var(--mono); font-size: 16px; letter-spacing: -0.03em; }
+  .method-head .sum, .step .time, .subclock, .bc-trow .v, .hr-when { font-family: var(--mono); }
+  .phase-label { font-family: var(--mono); letter-spacing: 0.14em; }
+  .target .big { letter-spacing: 0.01em; }
+  .ring-fill { stroke-linecap: butt; }
+
+  /* Buttons press into their shadows */
+  .btn {
+    border: 2px solid var(--ink);
+    border-radius: 4px;
+    box-shadow: 0 4px 0 var(--drop);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--drop); }
+  .btn.ghost { border: 2px solid var(--ink); }
+  .bc-method, .gstart {
+    border: 2px solid var(--ink);
+    border-radius: 4px;
+    box-shadow: 0 3px 0 var(--drop);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .bc-method:active, .gstart:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--drop); }
+  .onboard button { border: 2px solid var(--ink); border-radius: 4px; background: var(--surface); font-weight: 800; }
+  .langbtn { border-radius: 4px; font-weight: 800; }
+  .dialin-row button { border-radius: 4px; background: var(--surface); font-weight: 700; }
+  .dialin-row button:active { transform: translate(1px, 1px); }
+  .grinder-row select { border-radius: 4px; font-weight: 700; }
+
+  /* Tab bar: inked rule + underline marker instead of a pill highlight */
+  .tabbar { border-top: 2px solid var(--ink); }
+  .tabbar button { border-radius: 0; }
+  .tabbar button.on { background: transparent; color: var(--accent); box-shadow: inset 0 -3px 0 var(--accent); }
+
+  /* Bean card: keep the roaster-label bones, sharpen the frame */
+  .bc-name { text-transform: uppercase; letter-spacing: 0.02em; }
+  .bc-table { border-top: 2px solid var(--ink); }
+  .method-head { text-transform: uppercase; letter-spacing: 0.03em; font-size: 14px; }
 
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; }
