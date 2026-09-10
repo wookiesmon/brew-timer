@@ -558,6 +558,25 @@
 
   .dialin-row { display: flex; gap: 7px; margin-top: 11px; }
   .dialin-row + .dialin-row { margin-top: 7px; }
+  .grinder-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: -2px 0; }
+  .grinder-row > span {
+    font-size: 10.5px;
+    color: var(--muted);
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .grinder-row select {
+    appearance: none;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    font: 600 12.5px/1 -apple-system, system-ui, sans-serif;
+    padding: 8px 12px;
+    border-radius: 999px;
+    max-width: 60%;
+  }
+  .app.brewing .grinder-row { display: none; }
   .adjreset {
     appearance: none;
     border: 0;
@@ -822,6 +841,10 @@
 
   <div class="chiprow sec-brew" id="setupSummary"></div>
   <div class="beaninfo sec-brew" id="scanNote" hidden></div>
+  <div class="grinder-row sec-brew">
+    <span id="lblGrinder">Grinder</span>
+    <select id="grinderSel"></select>
+  </div>
   <div class="recipe sec-brew" id="recipe"></div>
 
   <div class="ringwrap sec-brew">
@@ -886,6 +909,8 @@
     nextIn: ["next in", "다음까지"],
     statCoffee: ["Coffee", "커피"],
     statClicks: ["Clicks", "클릭"],
+    statDial: ["Dial", "다이얼"],
+    lblGrinder: ["Grinder", "그라인더"],
     statWater: ["Water", "물 온도"],
     statWaterWt: ["Water wt", "총 물"],
     rRatio: ["Ratio", "비율"],
@@ -1363,6 +1388,13 @@
              "클린한 라이트를 빠르게 — 가는 분쇄, 올센터 푸어, 2:00 완성"],
     },
     {
+      id: "winton", chip: ["Winton 5-pour", "윈튼 5푸어"],
+      who: ["Matt Winton, 2021 World Brewers Cup champion (Switzerland)",
+            "맷 윈튼, 2021 월드 브루어스컵 챔피언 (스위스)"],
+      pick: ["Pick for sweetness with zero fuss — five equal pours, each after the bed drains, no swirling at all",
+             "손댈 것 없는 단맛 — 같은 양의 푸어 5번, 매번 드레인 후, 스월 전혀 없음"],
+    },
+    {
       id: "rao", chip: ["Rao", "라오"],
       who: ["Scott Rao, coffee scientist & educator (US)",
             "스콧 라오 — 커피 과학자·교육자 (미국)"],
@@ -1770,6 +1802,41 @@
     };
   }
 
+  function buildWinton(b, m) {
+    // Matt Winton's five-pour V60 (2021 World Brewers Cup champion):
+    // five equal pours, each poured only after the bed fully drains, and no
+    // manual agitation — the kettle stream does all the mixing.
+    const temp = Math.max(90, Math.min(b.temp, 94));
+    const x2 = cups === 2;
+    const clicks = b.clicks + (x2 ? 1 : 0);
+    const grindNote = [" (medium)", " (중간)"];
+    const agitation = ["None — the kettle stream does the agitating", "없음 — 케틀 물줄기가 교반을 대신합니다"];
+    const why = ["Matt Winton's five-pour: 1:15 with five equal pours, each only after the bed fully drains, and zero swirling — turbulence from the kettle stream extracts high and even on its own. The equal pours make it impossible to mis-remember, and the repeated full drains build syrupy sweetness on any dripper.",
+                 "맷 윈튼의 5푸어: 1:15 비율로 같은 양을 5번, 매번 베드가 완전히 드레인된 뒤에만 붓고 스월은 전혀 하지 않습니다 — 케틀 물줄기의 난류만으로 높고 고른 추출이 됩니다. 같은 양의 푸어라 헷갈릴 수 없고, 반복되는 완전한 드레인이 어떤 드리퍼에서든 시럽 같은 단맛을 만듭니다."];
+    const cfg = m === "hot"
+      ? (x2 ? { dose: 30, water: 450, per: 90, gap: 44, total: 250 }
+            : { dose: 20, water: 300, per: 60, gap: 38, total: 215 })
+      : (x2 ? { dose: 30, water: 300, ice: 150, per: 60, gap: 38, total: 215 }
+            : { dose: 20, water: 200, ice: 100, per: 40, gap: 33, total: 190 });
+    const phases = [];
+    for (let i = 0; i < 5; i++) {
+      phases.push({
+        name: [`Pour ${i + 1}`, `푸어 ${i + 1}`],
+        from: i * cfg.gap, to: (i + 1) * cfg.gap,
+        g0: i * cfg.per, g1: (i + 1) * cfg.per, pulse: true,
+        hint: i === 0
+          ? [`${cfg.per}g center-out — the stream is the only agitation`, `${cfg.per}g 중심에서 바깥으로 — 물줄기가 유일한 교반입니다`]
+          : [`${cfg.per}g once the bed drains — never pour onto standing water`, `${cfg.per}g — 베드가 드레인된 뒤에만, 고인 물 위에 붓지 않기`],
+      });
+    }
+    phases.push({
+      name: ["Drawdown", "드로우다운"], from: 5 * cfg.gap, to: cfg.total,
+      g0: cfg.water, g1: cfg.water, drain: true,
+      hint: [m === "iced" ? "Hands off — drains onto the ice" : "Hands off — flat bed, sweet cup", m === "iced" ? "손 떼기 — 얼음 위로 드레인" : "손 떼기 — 평평한 베드, 달콤한 한 잔"],
+    });
+    return { dose: cfg.dose, water: cfg.water, ice: cfg.ice || 0, temp, clicks, grindNote, total: cfg.total, phases, agitation, why };
+  }
+
   function buildRao(b, m) {
     const temp = b.roast === "light" ? Math.max(b.temp, 95) : b.temp;
     const x2 = cups === 2;
@@ -1796,7 +1863,7 @@
     };
   }
 
-  const BUILDERS = { tuned: buildTuned, kasuya46: buildKasuya, hoffmann: buildHoffmann, jeomdrip: buildJeomdrip, momos: buildMomos, osmotic: buildOsmotic, kalita: buildKalita, chadwang: buildChadWang, rao: buildRao };
+  const BUILDERS = { tuned: buildTuned, kasuya46: buildKasuya, hoffmann: buildHoffmann, jeomdrip: buildJeomdrip, momos: buildMomos, osmotic: buildOsmotic, kalita: buildKalita, chadwang: buildChadWang, winton: buildWinton, rao: buildRao };
 
   // ---- Method recommendation from the bean's profile ----
   function recommendFor(b, roastOv, procOv) {
@@ -1847,7 +1914,7 @@
       `${brew.dose}g : ${brew.water}g`,
       brew.ice ? `🧊${brew.ice}g` : "",
       `${brew.temp}°C`,
-      ko ? `${brew.clicks}클릭` : `${brew.clicks} clicks`,
+      grindTxt(brew.clicks),
     ].filter(Boolean).join(" · ") + verdict;
   }
   function histBeanLabel(e) {
@@ -1913,12 +1980,46 @@
     histSave(); // bump to front
   }
 
+  // ---- Grinder display: recipes are tuned in reference clicks (Comandante
+  // C40). Each grinder maps that scale linearly between its fine/coarse
+  // anchors (reference 16 and 25), then snaps to its own step size — so
+  // numbered dials with no clicks get a dial number instead. ----
+  const GRINDERS = [
+    { id: "comandante", name: ["Comandante C40", "코만단테 C40"], lo: 16, hi: 25, min: 1, max: 40, step: 1, clicks: true },
+    { id: "timemore", name: ["Timemore C2/C3", "타임모어 C2/C3"], lo: 15, hi: 24, min: 1, max: 36, step: 1, clicks: true },
+    { id: "onezpresso", name: ["1Zpresso J/JX", "1Z프레소 J/JX"], lo: 50, hi: 78, min: 10, max: 90, step: 3, clicks: true },
+    { id: "harioslim", name: ["Hario Slim/Skerton", "하리오 슬림/스커튼"], lo: 8, hi: 13, min: 1, max: 16, step: 1, clicks: true },
+    { id: "encore", name: ["Baratza Encore", "바라짜 엔코"], lo: 14, hi: 24, min: 1, max: 40, step: 1, clicks: false },
+    { id: "ode", name: ["Fellow Ode", "펠로우 오드"], lo: 4, hi: 8, min: 1, max: 11, step: 0.5, clicks: false },
+    { id: "dial18", name: ["Numbered dial 1–18 (no clicks)", "숫자 다이얼 1–18 (클릭 없음)"], lo: 7, hi: 14, min: 1, max: 18, step: 1, clicks: false },
+  ];
+  function grinder() { return GRINDERS.find(g => g.id === grinderId) || GRINDERS[0]; }
+  function grindVal(c) {
+    const g = grinder();
+    let v = g.lo + (c - 16) * (g.hi - g.lo) / 9;
+    v = Math.round(v / g.step) * g.step;
+    v = Math.max(g.min, Math.min(g.max, v));
+    return g.step < 1 ? String(v).replace(/(\.\d)\d+$/, "$1") : String(v);
+  }
+  function grindTxt(c) {
+    const g = grinder();
+    const v = grindVal(c);
+    if (g.clicks) return lang === "ko" ? `${v}클릭` : `${v} clicks`;
+    return lang === "ko" ? `다이얼 ${v}` : `dial ${v}`;
+  }
+  // Smallest reference-click move that visibly changes this grinder's number
+  function grindStep(c, dir) {
+    for (let n = 1; n <= 3; n++) if (grindVal(c + dir * n) !== grindVal(c)) return n;
+    return 1;
+  }
+
   let mode = "hot";
   let beanId = "house";
   let methodId = "tuned";
   let cups = 1;
   let customAttrs = { roast: "light", process: "washed" };
   let procOverride = null; // preset beans: the bag's actual process, when it differs from the preset's native one
+  let grinderId = "comandante"; // how grind settings are displayed; recipes are stored in reference clicks
   try {
     mode = localStorage.getItem("brew.mode") || "hot";
     beanId = localStorage.getItem("brew.bean") || "house";
@@ -1929,6 +2030,8 @@
     if (ca && ROAST_LABEL[ca.roast] && PROC_LABEL[ca.process]) customAttrs = ca;
     const po = localStorage.getItem("brew.procOv");
     if (po && PROC_TRAITS[po]) procOverride = po;
+    const gr = localStorage.getItem("brew.grinder");
+    if (gr && GRINDERS.some(g => g.id === gr)) grinderId = gr;
     if (mode !== "hot" && mode !== "iced") mode = "hot";
     if (!BUILDERS[methodId]) methodId = "tuned";
     if (lang !== "en" && lang !== "ko") lang = "en";
@@ -2007,20 +2110,22 @@
   function fbAdvice(verdict, rec) {
     const ko = lang === "ko";
     const { clicks, dose, water } = rec;
+    const finer = grindTxt(clicks - grindStep(clicks, -1));
+    const coarser = grindTxt(clicks + grindStep(clicks, 1));
     if (verdict === "sour") {
       return ko
-        ? `다음엔 <em>${clicks - 1}클릭</em>(1 더 가늘게) 또는 물 <em>+2°C</em> — 시큼함은 과소추출 신호입니다.`
-        : `Next time try <em>${clicks - 1} clicks</em> (1 finer) or <em>+2°C</em> water — sourness means under-extraction.`;
+        ? `다음엔 <em>${finer}</em>(한 단계 가늘게) 또는 물 <em>+2°C</em> — 시큼함은 과소추출 신호입니다.`
+        : `Next time try <em>${finer}</em> (one step finer) or <em>+2°C</em> water — sourness means under-extraction.`;
     }
     if (verdict === "bitter") {
       return ko
-        ? `다음엔 <em>${clicks + 1}클릭</em>(1 더 굵게) 또는 물 <em>−2°C</em> — 쓴맛·떫음은 과다추출 신호입니다.`
-        : `Next time try <em>${clicks + 1} clicks</em> (1 coarser) or <em>−2°C</em> water — bitter or harsh means over-extraction.`;
+        ? `다음엔 <em>${coarser}</em>(한 단계 굵게) 또는 물 <em>−2°C</em> — 쓴맛·떫음은 과다추출 신호입니다.`
+        : `Next time try <em>${coarser}</em> (one step coarser) or <em>−2°C</em> water — bitter or harsh means over-extraction.`;
     }
     if (verdict === "weak") {
       return ko
-        ? `다음엔 커피 <em>${dose + 1}g</em> 또는 <em>${clicks - 1}클릭</em>(1 더 가늘게) — 묽은 바디는 물 대비 커피가 부족하다는 신호입니다.`
-        : `Next time try <em>${dose + 1}g</em> coffee or <em>${clicks - 1} clicks</em> (1 finer) — a thin, watery cup means too little coffee for the water.`;
+        ? `다음엔 커피 <em>${dose + 1}g</em> 또는 <em>${finer}</em>(한 단계 가늘게) — 묽은 바디는 물 대비 커피가 부족하다는 신호입니다.`
+        : `Next time try <em>${dose + 1}g</em> coffee or <em>${finer}</em> (one step finer) — a thin, watery cup means too little coffee for the water.`;
     }
     if (verdict === "strong") {
       return ko
@@ -2057,8 +2162,13 @@
     if (!lever) return;
     const all = adjLoad();
     const cur = all[fbKey()] || { clicks: 0, temp: 0 };
-    cur.clicks = Math.max(-3, Math.min(3, (cur.clicks || 0) + (lever.clicks || 0)));
-    cur.temp = Math.max(-4, Math.min(4, (cur.temp || 0) + (lever.temp || 0)));
+    if (lever.clicks) {
+      // One visible step on the current grinder, whatever its resolution
+      const c = recipe().clicks;
+      const dir = Math.sign(lever.clicks);
+      cur.clicks = Math.max(-4, Math.min(4, (cur.clicks || 0) + dir * grindStep(c, dir)));
+    }
+    if (lever.temp) cur.temp = Math.max(-4, Math.min(4, (cur.temp || 0) + lever.temp));
     all[fbKey()] = cur;
     adjStore(all);
   }
@@ -2068,8 +2178,9 @@
     adjStore(all);
   }
   function adjDeltaText(adj) {
+    const ko = lang === "ko";
     const p = [];
-    if (adj.clicks) p.push(`${adj.clicks > 0 ? "+" : ""}${adj.clicks} ${lang === "ko" ? "클릭" : adj.clicks === 1 || adj.clicks === -1 ? "click" : "clicks"}`);
+    if (adj.clicks) p.push(ko ? `분쇄 ${adj.clicks > 0 ? "굵게" : "가늘게"}` : `grind ${adj.clicks > 0 ? "coarser" : "finer"}`);
     if (adj.temp) p.push(`${adj.temp > 0 ? "+" : ""}${adj.temp}°C`);
     return p.join(", ");
   }
@@ -2098,8 +2209,8 @@
       ? (lang === "ko" ? `얼음 ${serverIce}g 서버에 먼저` : `${serverIce}g ice in server first`)
       : "";
     const prep = lang === "ko"
-      ? [`커피 ${r.dose}g`, `분쇄 ${clicks}클릭`, `물 ${temp}°C`, icePrep].filter(Boolean).join(" · ")
-      : [`${r.dose}g coffee`, `${clicks} clicks`, `${temp}°C`, icePrep].filter(Boolean).join(" · ");
+      ? [`커피 ${r.dose}g`, `분쇄 ${grindTxt(clicks)}`, `물 ${temp}°C`, icePrep].filter(Boolean).join(" · ")
+      : [`${r.dose}g coffee`, grindTxt(clicks), `${temp}°C`, icePrep].filter(Boolean).join(" · ");
     return {
       total: r.total,
       dose: r.dose, water: r.water, ice: r.ice, iceSplit: r.iceSplit,
@@ -2107,7 +2218,7 @@
       agitation: tx(r.agitation), why: tx(r.why),
       stats: [
         { v: r.dose + "g", l: ui("statCoffee") },
-        { v: String(clicks), l: ui("statClicks") },
+        { v: grindVal(clicks), l: grinder().clicks ? ui("statClicks") : ui("statDial") },
         { v: temp + "°", l: ui("statWater") },
         { v: r.water + "g", l: ui("statWaterWt") },
       ],
@@ -2204,7 +2315,7 @@
 
     const rows = [
       [ui("rRatio"), ratioCell],
-      [ui("rGrind"), (ko ? `${rec.clicks}클릭` : `${rec.clicks} clicks`) + rec.grindNote],
+      [ui("rGrind"), grindTxt(rec.clicks) + rec.grindNote],
       [ui("rWater"), `${rec.temp}°C`],
       [ui("rBloom"), bloomCell],
       [ui("rPours"), poursCell],
@@ -2409,6 +2520,10 @@
         : `Brew with ⭐ ${methodName(recc.best)} →`}</button>`;
     $("beanCardGo").onclick = () => { if (methodId !== recc.best) { methodId = recc.best; persist(); } switchTab("methods"); buildStatics(); reset(); };
 
+    $("lblGrinder").textContent = ui("lblGrinder");
+    $("grinderSel").innerHTML = GRINDERS
+      .map(g => `<option value="${g.id}"${g.id === grinderId ? " selected" : ""}>${tx(g.name)}</option>`).join("");
+
     buildMethod();
 
     $("recipe").innerHTML = rec.stats
@@ -2462,7 +2577,7 @@
           </div>`;
       } else if (adjAppliedThisBrew) {
         // rec is already rebuilt with the applied adjustment
-        $("dialin").innerHTML = `<div class="dialin-note">🔧 ${ui("adjApplied")} <em>${rec.clicks}${ko ? "클릭" : " clicks"} · ${rec.temp}°C</em>.<br>${ui("fbSaved")}</div>`;
+        $("dialin").innerHTML = `<div class="dialin-note">🔧 ${ui("adjApplied")} <em>${grindTxt(rec.clicks)} · ${rec.temp}°C</em>.<br>${ui("fbSaved")}</div>`;
       } else {
         const v = (fbLoad()[fbKey()] || {}).v || "good";
         const applyBtn = ADJ_LEVER[v]
@@ -2512,7 +2627,7 @@
         : `Pour to <em>${rec.phases[0].g1}g</em>`;
       $("targetHint").textContent = rec.prep;
       const adjLine = rec.adj
-        ? `<div class="dialin-note">🔧 ${ui("adjActive")}: <em>${rec.clicks}${ko ? "클릭" : " clicks"} · ${rec.temp}°C</em> (${adjDeltaText(rec.adj)}) · <button class="adjreset" data-adjreset>${ui("adjReset")}</button></div>`
+        ? `<div class="dialin-note">🔧 ${ui("adjActive")}: <em>${grindTxt(rec.clicks)} · ${rec.temp}°C</em> (${adjDeltaText(rec.adj)}) · <button class="adjreset" data-adjreset>${ui("adjReset")}</button></div>`
         : "";
       const key = histEntryKey({ beanId, methodId, mode, cups, custom: beanId === "custom" ? customAttrs : null, procOv: procOverride });
       const lastH = histLoad().find(x => histEntryKey(x) === key);
@@ -2522,7 +2637,7 @@
         const detail = [
           `${b.dose}g : ${b.water}g`,
           `${b.temp}°C`,
-          ko ? `${b.clicks}클릭` : `${b.clicks} clicks`,
+          grindTxt(b.clicks),
         ].join(" · ");
         // With an applied adjustment the stats already ARE the advice —
         // repeating "try N clicks" would fight the dialed-in line above.
@@ -2672,6 +2787,7 @@
       localStorage.setItem("brew.lang", lang);
       localStorage.setItem("brew.custom", JSON.stringify(customAttrs));
       localStorage.setItem("brew.procOv", procOverride || "");
+      localStorage.setItem("brew.grinder", grinderId);
     } catch (e) {}
   }
 
@@ -2722,6 +2838,13 @@
     lang = lang === "ko" ? "en" : "ko";
     persist();
     // Language switch must not reset a running brew — rebuild text only.
+    buildStatics();
+    render();
+  });
+
+  $("grinderSel").addEventListener("change", (e) => {
+    if (GRINDERS.some(g => g.id === e.target.value)) grinderId = e.target.value;
+    persist();
     buildStatics();
     render();
   });

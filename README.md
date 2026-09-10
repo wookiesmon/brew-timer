@@ -5,7 +5,8 @@ A bilingual (English/한국어) pour-over brew timer for iPhone and any phone br
 **Use it:** https://wookiesmon.github.io/brew-timer/
 
 - 20 bean profiles across popular origins (Ethiopia, Kenya, Rwanda, Colombia, Peru, Mexico, Nicaragua, Brazil, Honduras, Guatemala, Costa Rica, Indonesia — Sumatra, Sulawesi, Java, Bali — Gesha, anaerobic, blends + custom)
-- 5 brew methods: Bean-tuned, 4:6 (Tetsu Kasuya), Hoffmann, 점드립 (Korean jeom-drip), and Momos Coffee's official store recipe
+- 10 brew methods: Bean-tuned, 4:6 (Tetsu Kasuya), Hoffmann, 점드립 (Korean jeom-drip), Momos Coffee's store recipe, Osmotic Flow, Kalita 3-pour, Chad Wang, Winton 5-pour (Matt Winton), and Rao
+- Grinder-aware grind settings: pick your grinder (Comandante, Timemore, 1Zpresso, Hario, Baratza Encore, Fellow Ode, or a numbered 1–18 dial with no clicks) and every recipe, advice line, and history entry speaks its scale
 - HOT and ICED modes, phase-by-phase pour targets, audio chimes, screen wake-lock
 - Post-brew taste feedback (6 verdicts → concrete grind/temp/dose advice) and a brew history logging bean, method, and full recipe details for every brew
 - Process override on any origin preset: mark your bag as washed / natural / anaerobic (or the bean's native honey, wet-hulled, semi-washed) and the recipe shifts temperature, bloom, and agitation to match — the label scanner sets it automatically
