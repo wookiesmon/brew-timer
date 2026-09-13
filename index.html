@@ -1031,6 +1031,10 @@
     scanLoading: ["Loading scanner (first time only, ~4MB)…", "스캐너 로딩 중 (최초 1회, 약 4MB)…"],
     scanReading: ["Reading the label…", "라벨을 읽는 중…"],
     scanFailLoad: ["Scanner couldn't load — check your internet connection and try again.", "스캐너를 불러오지 못했어요 — 인터넷 연결을 확인하고 다시 시도하세요."],
+    scanFailImage: ["Couldn't read that photo — try another shot of the label.", "사진을 읽지 못했어요 — 라벨을 다시 찍어보세요."],
+    scanFailRead: ["Reading the label failed — try again.", "라벨 읽기에 실패했어요 — 다시 시도해 주세요."],
+    scanRetry: ["Try again", "다시 시도"],
+    scanEngOnly: ["Korean recognition data didn't load, so only English was read.", "한국어 인식 데이터를 불러오지 못해 영어만 읽었어요."],
     scanNoMatch: ["Couldn't read enough from the label — pick roast & process below instead.", "라벨에서 충분히 읽지 못했어요 — 아래에서 로스팅·가공을 직접 선택하세요."],
     scanFound: ["Label read", "라벨 인식 완료"],
     scanPicked: ["selected", "선택됨"],
@@ -3017,20 +3021,32 @@
     // are often stored rotated); grayscale + contrast helps OCR.
     const url = URL.createObjectURL(file);
     try {
-      const img = await new Promise((res, rej) => {
-        const i = new Image();
-        i.onload = () => res(i);
-        i.onerror = rej;
-        i.src = url;
-      });
+      let src, w, h;
+      try {
+        src = await new Promise((res, rej) => {
+          const i = new Image();
+          i.onload = () => res(i);
+          i.onerror = () => rej(new Error("img-decode"));
+          i.src = url;
+        });
+        w = src.naturalWidth;
+        h = src.naturalHeight;
+      } catch (e) {
+        // Some camera formats decode through createImageBitmap but not <img>
+        src = await createImageBitmap(file);
+        w = src.width;
+        h = src.height;
+      }
+      if (!w || !h) throw new Error("img-empty");
       const max = 2000;
-      const k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+      const k = Math.min(1, max / Math.max(w, h));
       const c = document.createElement("canvas");
-      c.width = Math.round(img.naturalWidth * k);
-      c.height = Math.round(img.naturalHeight * k);
+      c.width = Math.round(w * k);
+      c.height = Math.round(h * k);
       const x = c.getContext("2d");
       x.filter = "grayscale(1) contrast(1.25)";
-      x.drawImage(img, 0, 0, c.width, c.height);
+      x.drawImage(src, 0, 0, c.width, c.height);
+      if (src.close) src.close();
       return c.toDataURL("image/jpeg", 0.9);
     } finally {
       URL.revokeObjectURL(url);
@@ -3131,16 +3147,56 @@
     return { bean, method: recc.best, alts: recc.alts, reason: tx(recc.reason), tags, procOv, brand: detectBrand(text) };
   }
 
+  // One worker per session: language data is fetched once, not per scan.
+  // Korean data is large, so a failure there falls back to English-only
+  // rather than killing the whole scan.
+  let workerP = null;
+  let ocrLangs = "";
+  function withTimeout(p, ms, tag) {
+    let done = false;
+    return Promise.race([
+      p.then(v => { done = true; return v; }),
+      new Promise((_, rej) => setTimeout(() => {
+        if (!done) {
+          rej(new Error(tag));
+          // a worker that turns up late would otherwise leak
+          Promise.resolve(p).then(w => { try { w && w.terminate && w.terminate(); } catch (e) {} }, () => {});
+        }
+      }, ms)),
+    ]);
+  }
+  function getWorker() {
+    if (workerP) return workerP;
+    workerP = (async () => {
+      try {
+        const w = await withTimeout(Tesseract.createWorker(["eng", "kor"]), 90000, "lang-timeout");
+        ocrLangs = "eng+kor";
+        return w;
+      } catch (e) {
+        const w = await withTimeout(Tesseract.createWorker("eng"), 60000, "lang-timeout");
+        ocrLangs = "eng";
+        return w;
+      }
+    })();
+    workerP.catch(() => { workerP = null; }); // a failed load must not poison later scans
+    return workerP;
+  }
+
+  let lastScanFile = null;
   async function runScan(file) {
+    lastScanFile = file;
+    let stage = "load";
     try {
       switchTab("brew");
       scanNote(ui("scanLoading"));
       await loadTesseract();
-      scanNote(ui("scanReading"));
+      stage = "image";
       const src = await downscale(file);
-      const worker = await Tesseract.createWorker(["eng", "kor"]);
-      const { data } = await worker.recognize(src);
-      await worker.terminate();
+      stage = "lang";
+      const worker = await getWorker();
+      stage = "read";
+      scanNote(ui("scanReading") + (ocrLangs === "eng" ? `<br><span style="opacity:.7">${ui("scanEngOnly")}</span>` : ""));
+      const { data } = await withTimeout(worker.recognize(src), 120000, "read-timeout");
       const hit = interpretLabel(data.text || "");
       if (!hit) {
         beanId = "custom";
@@ -3148,9 +3204,12 @@
         refresh(true);
         const excerpt = (data.text || "").replace(/\s+/g, " ").trim().slice(0, 90)
           .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        scanNote(ui("scanNoMatch") + (excerpt
-          ? `<br><span style="opacity:.65">${lang === "ko" ? "읽은 내용" : "what I read"}: “${excerpt}…”</span>`
-          : ""));
+        scanNote(ui("scanNoMatch")
+          + (ocrLangs === "eng" ? `<br><span style="opacity:.7">${ui("scanEngOnly")}</span>` : "")
+          + (excerpt
+            ? `<br><span style="opacity:.65">${lang === "ko" ? "읽은 내용" : "what I read"}: “${excerpt}…”</span>`
+            : "")
+          + `<br><button class="chip" data-scanretry="1" style="margin-top:8px">↻ ${ui("scanRetry")}</button>`);
         return;
       }
       beanId = hit.bean;
@@ -3165,9 +3224,17 @@
         ? `✅ <b>${ui("scanFound")}</b>: ${hit.tags.join(" · ")} → <b>${tx(b.chip)}</b><br>⭐ 추천 추출법: <b>${methodName(hit.method)}</b> — ${hit.reason}<br><span style="opacity:.7">대안: ${altNames}</span>`
         : `✅ <b>${ui("scanFound")}</b>: ${hit.tags.join(" · ")} → <b>${tx(b.chip)}</b><br>⭐ Best method: <b>${methodName(hit.method)}</b> — ${hit.reason}<br><span style="opacity:.7">Also good: ${altNames}</span>`);
     } catch (e) {
-      scanNote(ui("scanFailLoad"));
+      const msg = stage === "image" ? ui("scanFailImage")
+        : stage === "load" || stage === "lang" ? ui("scanFailLoad")
+        : ui("scanFailRead");
+      scanNote(`${msg}<br><button class="chip" data-scanretry="1" style="margin-top:8px">↻ ${ui("scanRetry")}</button>`
+        + `<br><span style="opacity:.55;font-size:11px">${esc(String((e && e.message) || e).slice(0, 60))}</span>`);
     }
   }
+
+  $("scanNote").addEventListener("click", (e) => {
+    if (e.target.closest("[data-scanretry]") && lastScanFile) runScan(lastScanFile);
+  });
 
   $("scanInput").addEventListener("change", () => {
     const f = $("scanInput").files && $("scanInput").files[0];
