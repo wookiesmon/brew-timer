@@ -290,8 +290,7 @@
     text-overflow: ellipsis;
   }
   .histrow .hr-rate { display: block; font-size: 13px; margin-top: 3px; }
-  .hr-rate .st { color: var(--accent); letter-spacing: 1px; }
-  .hr-rate .st .off { opacity: 0.25; }
+  .hr-rate .st { display: inline-flex; vertical-align: -2px; }
   .rate-row {
     display: flex;
     align-items: center;
@@ -313,16 +312,38 @@
     appearance: none;
     border: 0;
     background: transparent;
-    font-size: 25px;
-    line-height: 1;
-    padding: 0 2px;
-    min-width: 40px;
+    padding: 0 1px;
+    min-width: 38px;
     min-height: 44px;
-    color: var(--track);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
   }
-  .stars .star.on { color: var(--accent); }
   .stars .star:active { transform: scale(0.92); }
+  .glyph {
+    position: relative;
+    display: inline-block;
+    font-size: 25px;
+    line-height: 1;
+    color: var(--track);
+  }
+  .glyph .fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    overflow: hidden;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .rate-val {
+    font: 700 15px/1 var(--display);
+    color: var(--accent);
+    min-width: 26px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .hr-rate .st .glyph { font-size: 14px; color: var(--line); }
 
   .histrow .hr-when {
     flex: 0 0 auto;
@@ -2185,16 +2206,26 @@
       buildHistory();
     }
   }
-  function starsHTML(n) {
+  // Half steps: each star fills 0%, 50% or 100% depending on the score
+  function starGlyphs(v, interactive) {
     let out = "";
     for (let i = 1; i <= 5; i++) {
-      out += `<button class="star${i <= n ? " on" : ""}" data-star="${i}" aria-label="${i}/5">★</button>`;
+      const pct = v >= i ? 100 : (v >= i - 0.5 ? 50 : 0);
+      const glyph = `<span class="glyph">★<span class="fill" style="width:${pct}%">★</span></span>`;
+      out += interactive
+        ? `<button class="star" data-star="${i}" aria-label="${i}/5">${glyph}</button>`
+        : glyph;
     }
-    return `<div class="rate-row"><span class="rate-label">${ui("rateOverall")}</span><span class="stars">${out}</span></div>`;
+    return out;
+  }
+  function starsHTML(n) {
+    const val = n ? `<span class="rate-val">${n % 1 ? n.toFixed(1) : n}</span>` : "";
+    return `<div class="rate-row"><span class="rate-label">${ui("rateOverall")}</span>` +
+      `<span class="stars">${starGlyphs(n, true)}</span>${val}</div>`;
   }
   function starsRead(n) {
     if (!n) return "";
-    return `<span class="st">${"★".repeat(n)}<span class="off">${"★".repeat(5 - n)}</span></span>`;
+    return `<span class="st">${starGlyphs(n, false)}</span>`;
   }
 
   // Each verdict maps to a different lever: grind/temp for extraction faults,
@@ -2867,7 +2898,9 @@
     }
     const star = e.target.closest("button[data-star]");
     if (star && finished) {
-      starSave(Number(star.dataset.star));
+      const r = star.getBoundingClientRect();
+      const half = e.clientX > 0 && (e.clientX - r.left) < r.width / 2;
+      starSave(Number(star.dataset.star) - (half ? 0.5 : 0));
       render();
       return;
     }
