@@ -277,6 +277,53 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  .histrow .hr-brand {
+    display: block;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .histrow .hr-rate { display: block; font-size: 13px; margin-top: 3px; }
+  .hr-rate .st { color: var(--accent); letter-spacing: 1px; }
+  .hr-rate .st .off { opacity: 0.25; }
+  .rate-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 11px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+  }
+  .rate-row .rate-label {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .stars { display: flex; }
+  .stars .star {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    font-size: 25px;
+    line-height: 1;
+    padding: 0 2px;
+    min-width: 40px;
+    min-height: 44px;
+    color: var(--track);
+    cursor: pointer;
+  }
+  .stars .star.on { color: var(--accent); }
+  .stars .star:active { transform: scale(0.92); }
+
   .histrow .hr-when {
     flex: 0 0 auto;
     font-size: 12px;
@@ -935,6 +982,7 @@
     fbWeak: ["Weak / watery", "밍밍·묽음"],
     fbStrong: ["Too strong", "너무 진함"],
     fbFlat: ["Flat / dull", "밋밋함"],
+    rateOverall: ["Overall rating", "전체 평점"],
     fbSaved: ["Saved — I'll remind you next brew.", "저장했어요 — 다음 추출 때 알려드릴게요."],
     adjApply: ["Apply for next brew", "다음 추출에 적용"],
     adjApplied: ["Applied — next brew uses", "적용 완료 — 다음 추출은"],
@@ -1887,6 +1935,12 @@
   }
   function methodName(id) { return tx(METHODS.find(x => x.id === id).chip); }
 
+  // Scanned label text is rendered as markup, so escape it first
+  function esc(v) {
+    return String(v == null ? "" : v)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
   // ---- Brew history: saved setups so you never re-scan the same bean ----
   function histLoad() {
     try { return JSON.parse(localStorage.getItem("brew.history") || "[]"); } catch (e) { return []; }
@@ -1895,7 +1949,7 @@
     return `${e.beanId}|${e.methodId}|${e.mode}|${e.cups}|${e.beanId === "custom" && e.custom ? e.custom.roast + e.custom.process : ""}${e.procOv ? "|" + e.procOv : ""}`;
   }
   function histSave(brew) {
-    const e = { beanId, methodId, mode, cups, custom: beanId === "custom" ? { ...customAttrs } : null, procOv: procOverride || null, t: Date.now() };
+    const e = { beanId, methodId, mode, cups, custom: beanId === "custom" ? { ...customAttrs } : null, procOv: procOverride || null, brand: beanBrand || null, t: Date.now() };
     const old = histLoad();
     // A re-save without fresh details (scan, tap-to-reuse) keeps the last brew's log
     const prev = old.find(x => histEntryKey(x) === histEntryKey(e));
@@ -1908,14 +1962,19 @@
   }
   function histBrewDetail(brew) {
     if (!brew) return "";
-    const ko = lang === "ko";
-    const verdict = brew.v ? ` · ${FB_EMOJI[brew.v] || ""} ${fbVerdictLabel(brew.v)}` : "";
     return [
       `${brew.dose}g : ${brew.water}g`,
       brew.ice ? `🧊${brew.ice}g` : "",
       `${brew.temp}°C`,
       grindTxt(brew.clicks),
-    ].filter(Boolean).join(" · ") + verdict;
+    ].filter(Boolean).join(" · ");
+  }
+  function histRating(brew) {
+    if (!brew) return "";
+    const verdict = brew.v ? `${FB_EMOJI[brew.v] || ""} ${fbVerdictLabel(brew.v)}` : "";
+    const stars = starsRead(brew.stars);
+    if (!verdict && !stars) return "";
+    return `<span class="hr-rate">${[verdict, stars].filter(Boolean).join(" ")}</span>`;
   }
   function histBeanLabel(e) {
     if (e.beanId === "custom" && e.custom) {
@@ -1951,9 +2010,11 @@
       return `<button class="histrow" data-hist="${i}">
         <span class="hr-icon">${e.mode === "iced" ? "🧊" : "🔥"}</span>
         <span class="hr-main">
+          ${e.brand ? `<span class="hr-brand">${esc(e.brand)}</span>` : ""}
           <span class="hr-bean">${histBeanLabel(e)}${e.procOv && PROC_LABEL[e.procOv] ? ` · ${tx(PROC_LABEL[e.procOv])}` : ""}</span>
           <span class="hr-sub">${tx(m.chip)} · ${modeTxt} · ${cupsTxt}</span>
           ${detail ? `<span class="hr-sub">${detail}</span>` : ""}
+          ${histRating(e.brew)}
         </span>
         <span class="hr-when">${histWhen(e.t)}</span>
         <span class="hr-go">›</span>
@@ -1970,6 +2031,7 @@
     cups = e.cups === 2 ? 2 : 1;
     if (e.custom) customAttrs = { ...e.custom };
     procOverride = e.procOv && PROC_TRAITS[e.procOv] ? e.procOv : null;
+    beanBrand = e.brand || null;
     $("btnHot").classList.toggle("on", mode === "hot");
     $("btnIced").classList.toggle("on", mode === "iced");
     $("btnHot").setAttribute("aria-selected", mode === "hot");
@@ -2020,6 +2082,7 @@
   let customAttrs = { roast: "light", process: "washed" };
   let procOverride = null; // preset beans: the bag's actual process, when it differs from the preset's native one
   let grinderId = "comandante"; // how grind settings are displayed; recipes are stored in reference clicks
+  let beanBrand = null; // roaster read off a scanned bag, so the same bag is recognisable later
   try {
     mode = localStorage.getItem("brew.mode") || "hot";
     beanId = localStorage.getItem("brew.bean") || "house";
@@ -2032,6 +2095,7 @@
     if (po && PROC_TRAITS[po]) procOverride = po;
     const gr = localStorage.getItem("brew.grinder");
     if (gr && GRINDERS.some(g => g.id === gr)) grinderId = gr;
+    beanBrand = localStorage.getItem("brew.brand") || null;
     if (mode !== "hot" && mode !== "iced") mode = "hot";
     if (!BUILDERS[methodId]) methodId = "tuned";
     if (lang !== "en" && lang !== "ko") lang = "en";
@@ -2092,7 +2156,7 @@
   function fbSave(verdict) {
     try {
       const all = fbLoad();
-      all[fbKey()] = { v: verdict, t: Date.now() };
+      all[fbKey()] = { ...(all[fbKey()] || {}), v: verdict, t: Date.now() };
       localStorage.setItem("brew.feedback", JSON.stringify(all));
     } catch (e) {}
     // Attach the verdict to this setup's logged brew details
@@ -2105,6 +2169,34 @@
       buildHistory();
     }
   }
+  // Overall 1–5 rating, kept alongside the taste verdict and on the brew log
+  function starSave(n) {
+    try {
+      const all = fbLoad();
+      all[fbKey()] = { ...(all[fbKey()] || {}), stars: n, t: Date.now() };
+      localStorage.setItem("brew.feedback", JSON.stringify(all));
+    } catch (e) {}
+    const key = histEntryKey({ beanId, methodId, mode, cups, custom: beanId === "custom" ? customAttrs : null, procOv: procOverride });
+    const h = histLoad();
+    const e = h.find(x => histEntryKey(x) === key);
+    if (e && e.brew) {
+      e.brew.stars = n;
+      try { localStorage.setItem("brew.history", JSON.stringify(h)); } catch (err) {}
+      buildHistory();
+    }
+  }
+  function starsHTML(n) {
+    let out = "";
+    for (let i = 1; i <= 5; i++) {
+      out += `<button class="star${i <= n ? " on" : ""}" data-star="${i}" aria-label="${i}/5">★</button>`;
+    }
+    return `<div class="rate-row"><span class="rate-label">${ui("rateOverall")}</span><span class="stars">${out}</span></div>`;
+  }
+  function starsRead(n) {
+    if (!n) return "";
+    return `<span class="st">${"★".repeat(n)}<span class="off">${"★".repeat(5 - n)}</span></span>`;
+  }
+
   // Each verdict maps to a different lever: grind/temp for extraction faults,
   // dose/water for concentration faults, heat/agitation for muted cups.
   function fbAdvice(verdict, rec) {
@@ -2494,10 +2586,11 @@
     }
 
     const ko2 = lang === "ko";
-    const eyebrow = b.id === "blend" ? (ko2 ? "블렌드" : "Blend")
+    const kind = b.id === "blend" ? (ko2 ? "블렌드" : "Blend")
       : b.id === "custom" ? (ko2 ? "커스텀" : "Custom")
       : b.id === "house" ? (ko2 ? "하우스 레시피" : "House recipe")
       : (ko2 ? "싱글 오리진" : "Single origin");
+    const eyebrow = beanBrand ? `${esc(beanBrand)} · ${kind}` : kind;
     const hero = tx(b.notes).split(/,\s*/).map(n => n.trim())
       .join('<span class="sep"> · </span>');
     const dots = { light: 1, medium: 2, dark: 3 }[b.roast] || 2;
@@ -2563,6 +2656,7 @@
       $("subclock").innerHTML = "&nbsp;";
       $("targetBig").innerHTML = ko ? `총 <em>${rec.water}g</em>` : `<em>${rec.water}g</em> total`;
       $("targetHint").textContent = rec.finish;
+      const stars = starsHTML((fbLoad()[fbKey()] || {}).stars || 0);
       if (!feedbackGiven) {
         $("dialin").innerHTML = `<div class="dialin-note" style="border-top:0;padding-top:2px">${ui("fbPrompt")}</div>
           <div class="dialin-row">
@@ -2574,16 +2668,16 @@
             <button data-fb="weak"><b>💧</b>${ui("fbWeak")}</button>
             <button data-fb="strong"><b>💪</b>${ui("fbStrong")}</button>
             <button data-fb="flat"><b>😐</b>${ui("fbFlat")}</button>
-          </div>`;
+          </div>${stars}`;
       } else if (adjAppliedThisBrew) {
         // rec is already rebuilt with the applied adjustment
-        $("dialin").innerHTML = `<div class="dialin-note">🔧 ${ui("adjApplied")} <em>${grindTxt(rec.clicks)} · ${rec.temp}°C</em>.<br>${ui("fbSaved")}</div>`;
+        $("dialin").innerHTML = `<div class="dialin-note">🔧 ${ui("adjApplied")} <em>${grindTxt(rec.clicks)} · ${rec.temp}°C</em>.<br>${ui("fbSaved")}</div>${stars}`;
       } else {
         const v = (fbLoad()[fbKey()] || {}).v || "good";
         const applyBtn = ADJ_LEVER[v]
           ? `<div class="dialin-row"><button data-adjapply="${v}"><b>🔧</b>${ui("adjApply")}</button></div>`
           : "";
-        $("dialin").innerHTML = `<div class="dialin-note">${fbAdvice(v, rec)}<br>${ui("fbSaved")}</div>${applyBtn}`;
+        $("dialin").innerHTML = `<div class="dialin-note">${fbAdvice(v, rec)}<br>${ui("fbSaved")}</div>${applyBtn}${stars}`;
       }
       rec.phases.forEach((_, j) => { const el = $("step" + j); if (el) { el.classList.remove("active"); el.classList.add("done"); } });
       return;
@@ -2771,6 +2865,12 @@
       render();
       return;
     }
+    const star = e.target.closest("button[data-star]");
+    if (star && finished) {
+      starSave(Number(star.dataset.star));
+      render();
+      return;
+    }
     const btn = e.target.closest("button[data-fb]");
     if (!btn || !finished) return;
     fbSave(btn.dataset.fb);
@@ -2788,6 +2888,7 @@
       localStorage.setItem("brew.custom", JSON.stringify(customAttrs));
       localStorage.setItem("brew.procOv", procOverride || "");
       localStorage.setItem("brew.grinder", grinderId);
+      localStorage.setItem("brew.brand", beanBrand || "");
     } catch (e) {}
   }
 
@@ -2808,6 +2909,7 @@
     refresh(false);
   }
   function setBean(id) {
+    if (id !== beanId) beanBrand = null; // picked by hand, so the scanned bag no longer applies
     if (beanId === id) {
       if (id === "custom") setMethodOpen(true);
       return;
@@ -2902,6 +3004,37 @@
     }
   }
 
+  // Roasters printed on bags we can name outright; anything else falls back to
+  // the most brand-looking line the OCR returned.
+  const ROASTERS = [
+    "blue bottle", "stumptown", "intelligentsia", "onyx coffee", "counter culture",
+    "verve coffee", "coava", "la colombe", "sightglass", "ritual coffee", "four barrel",
+    "george howell", "tim wendelboe", "square mile", "gardelli", "sey coffee",
+    "passenger coffee", "prodigal", "black & white", "sweet bloom", "ruby coffee",
+    "methodical", "dak coffee", "peet's", "peets", "starbucks", "lavazza", "illy",
+    "모모스", "커피리브레", "리브레", "프릳츠", "프릳츠커피", "앤트러사이트", "테라로사",
+    "나무사이로", "빈브라더스", "커피몽타주", "펠트커피", "로우키", "센터커피",
+    "딥블루레이크", "엘카페", "헬카페", "커피템플", "프로토콜",
+  ];
+  function detectBrand(text) {
+    const lines = text.split(/[\n\r]+/).map(l => l.replace(/\s+/g, " ").trim())
+      .filter(l => l.length >= 2 && l.length <= 32);
+    const low = text.toLowerCase();
+    for (const r of ROASTERS) {
+      if (low.includes(r)) {
+        const line = lines.find(l => l.toLowerCase().includes(r));
+        return line || r.replace(/\b\w/g, c => c.toUpperCase());
+      }
+    }
+    // "<name> Coffee Roasters" / "<이름> 로스터스" style lock-ups
+    const m = text.match(/([A-Za-z가-힣&'’.\-]{2,20}(?:[ ][A-Za-z가-힣&'’.\-]{2,20})?)[ ]*(coffee roasters|coffee roasting|coffee co\.?|coffee company|roasters|roastery|로스터스|로스터리|커피로스터스)/i);
+    if (m) return (m[1] + " " + m[2]).replace(/\s+/g, " ").trim().slice(0, 32);
+    // Otherwise the first line that isn't obviously origin/process/roast wording
+    const noise = /(washed|natural|anaerobic|honey|light|medium|dark|roast|blend|filter|espresso|ethiopia|kenya|colombia|brazil|guatemala|honduras|peru|mexico|rwanda|sumatra|costa|gesha|geisha|net wt|oz|kg|워시드|내추럴|무산소|허니|라이트|미디엄|다크|로스팅|블렌드|원두|에티오피아|케냐|콜롬비아|브라질)/i;
+    const cand = lines.find(l => !noise.test(l) && /[A-Za-z가-힣]{2,}/.test(l) && !/^[\d\W]+$/.test(l));
+    return cand || null;
+  }
+
   function interpretLabel(text) {
     const raw = text.toLowerCase();
     // Korean OCR often inserts spaces between syllables — match a
@@ -2962,7 +3095,7 @@
 
     const beanObj = allBeans().find(x => x.id === bean);
     const recc = recommendFor(beanObj, roast, process);
-    return { bean, method: recc.best, alts: recc.alts, reason: tx(recc.reason), tags, procOv };
+    return { bean, method: recc.best, alts: recc.alts, reason: tx(recc.reason), tags, procOv, brand: detectBrand(text) };
   }
 
   async function runScan(file) {
@@ -2990,6 +3123,7 @@
       beanId = hit.bean;
       methodId = hit.method;
       procOverride = hit.procOv || null;
+      beanBrand = hit.brand || null;
       refresh(true);
       histSave();
       const b = allBeans().find(x => x.id === hit.bean);
