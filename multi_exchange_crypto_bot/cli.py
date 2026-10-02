@@ -62,8 +62,15 @@ def setup_logging(level: str, settings: Optional[Settings]) -> None:
         secrets = [s.get_secret_value() for s in (settings.coinbase_api_key, settings.coinbase_api_secret,
                                                   settings.hyperliquid_private_key) if s is not None]
         handler.addFilter(RedactSecrets(secrets))
+    handlers: list[logging.Handler] = [handler]
+    if settings is not None and settings.log_file is not None:
+        file_handler = logging.FileHandler(settings.log_file, encoding="utf-8")
+        file_handler.setFormatter(handler.formatter)
+        for f in handler.filters:
+            file_handler.addFilter(f)
+        handlers.append(file_handler)
     root = logging.getLogger()
-    root.handlers[:] = [handler]
+    root.handlers[:] = handlers
     root.setLevel(level.upper())
     for noisy in ("urllib3", "websocket"):
         logging.getLogger(noisy).setLevel(logging.WARNING)
@@ -85,12 +92,16 @@ def build_parser() -> argparse.ArgumentParser:
     actions.add_argument("--cancel-open", action="store_true", help="cancel open orders for the product")
     actions.add_argument("--reset-paper", action="store_true", help="delete paper state for the product")
     actions.add_argument("--clear-halt", action="store_true", help="clear a daily-loss halt after review")
+    actions.add_argument("--check", action="store_true", help="pre-flight report (config, data, keys); never trades")
+    actions.add_argument("--preview", action="store_true", help="Coinbase: validate planned orders without placing")
     p.add_argument("--equity", help="account equity in USD (default ACCOUNT_EQUITY_USD)")
     p.add_argument("--max-allocation", help="maximum USD to deploy (capped by MAX_ALLOCATION_PCT)")
     p.add_argument("--max-loss", help="maximum planned loss in USD (capped by MAX_PLANNED_LOSS_PCT)")
     p.add_argument("--risk-pct", help="optional risk percentage of equity (<= MAX_PLANNED_LOSS_PCT)")
     p.add_argument("--ask", action="store_true", help="prompt for equity, allocation and loss")
     p.add_argument("--once", action="store_true", help="paper/live: run a single step and exit")
+    p.add_argument("--max-runs", type=int, default=1,
+                   help="paper/live: trade up to N plans in this session (default 1)")
     p.add_argument("--candles", type=int, default=1000, help="backtest: number of candles to fetch")
     p.add_argument("--yes", action="store_true", help="skip the --cancel-open confirmation")
     p.add_argument("--env-file", default=".env")
@@ -281,10 +292,10 @@ def make_sim(db: Database, meta: MarketMeta, settings: Settings, inputs: RiskInp
     )
 
 
-def paper_tick(adapter, sim, db: Database, engine: TradingEngine, settings: Settings, now: datetime):
+def paper_tick(adapter, sim, db: Database, session, settings: Settings, now: datetime):
     from execution import candle_row
 
-    key = f"sim_cursor:{engine.venue}:{engine.product}"
+    key = f"sim_cursor:{session.meta.venue.value}:{session.meta.symbol}"
     cursor = db.get_state(key)
     df = adapter.get_candles(settings.candle_interval, 50, now)
     fills = []
@@ -297,7 +308,7 @@ def paper_tick(adapter, sim, db: Database, engine: TradingEngine, settings: Sett
     for f in fills:
         print(f"  [SIMULATED FILL] {f['side']} {fmt(f['quantity'])} @ {fmt(f['price'])} fee {fmt(f['fee'], 4)}")
     last_price = Decimal(str(df["close"].iloc[-1]))
-    return engine.step(last_price, now)
+    return session.step(last_price, now)
 
 
 def print_report(report) -> None:
@@ -322,63 +333,121 @@ def cmd_analyze(args, settings, venue, product, input_fn) -> int:
     return EXIT_OK
 
 
-def _run_loop(step: Callable[[datetime], object], settings: Settings, once: bool, label: str) -> int:
+MAX_CONSECUTIVE_ERRORS = 10
+
+
+def transient_errors() -> tuple:
+    errors: list = [requests.exceptions.RequestException, InvalidMetadata, InsufficientHistory]
+    try:
+        from hyperliquid.utils.error import Error as HyperliquidError
+
+        errors.append(HyperliquidError)
+    except ImportError:  # pragma: no cover
+        pass
+    return tuple(errors)
+
+
+def _run_loop(step: Callable[[datetime], object], settings: Settings, once: bool, label: str,
+              sleep: Callable[[float], None] = time.sleep) -> int:
+    """Poll until the session is done. Temporary API/network failures are logged and retried;
+    orders already resting on the exchange (including the protective stop) keep working."""
+    retryable = transient_errors()
+    failures = 0
     while True:
         now = datetime.now(timezone.utc)
         try:
             report = step(now)
+            failures = 0
+        except KeyboardInterrupt:
+            print("\nStopped by user. Open orders REMAIN on the venue; use --status or --cancel-open.")
+            return EXIT_OK
         except KillSwitchTriggered as exc:
             print(f"\nKILL SWITCH: {exc}")
             return EXIT_KILLED
         except FatalRiskError as exc:
             print(f"\nHALTED: {exc}\nThe bot will not restart on its own. Review, then run --clear-halt.")
             return EXIT_HALTED
-        print(f"[{now:%Y-%m-%d %H:%M:%S}Z] {label}")
-        print_report(report)
-        if report.status == "CLOSED":
-            print("Run closed.")
-            return EXIT_OK
-        if once:
-            return EXIT_OK
+        except retryable as exc:
+            failures += 1
+            log.error("step failed (%s); attempt %d/%d", type(exc).__name__, failures, MAX_CONSECUTIVE_ERRORS)
+            print(f"[{now:%Y-%m-%d %H:%M:%S}Z] {label}: temporary error {type(exc).__name__} "
+                  f"({failures}/{MAX_CONSECUTIVE_ERRORS}); resting orders keep working")
+            if once or failures >= MAX_CONSECUTIVE_ERRORS:
+                print("Giving up. Open orders REMAIN on the venue; check --status and the exchange UI.")
+                return EXIT_ERROR
+        else:
+            print(f"[{now:%Y-%m-%d %H:%M:%S}Z] {label}")
+            print_report(report)
+            if report.status == "DONE":
+                print("Session complete.")
+                return EXIT_OK
+            if once:
+                return EXIT_OK
         try:
-            time.sleep(settings.poll_seconds)
+            sleep(settings.poll_seconds)
         except KeyboardInterrupt:
             print("\nStopped by user. Open orders REMAIN on the venue; use --status or --cancel-open.")
             return EXIT_OK
 
 
+def make_plan_factory(adapter, meta: MarketMeta, settings: Settings, inputs_fn: Callable[[], RiskInputs],
+                      *, verbose: bool, balance_check: Optional[Callable[[TradePlan, RiskInputs], Optional[str]]] = None):
+    """Fresh analysis -> plan for each new run. Returns None (with a printed reason) if refused."""
+
+    def factory(now: datetime) -> Optional[TradePlan]:
+        analysis = analyze_market(adapter, meta, settings, now)
+        inputs = inputs_fn()
+        plan = build_plan(analysis, meta, inputs, now)
+        if verbose or not plan.refused:
+            print_analysis(analysis)
+            print_plan(plan, meta)
+            print_intended_orders(plan, meta.venue)
+        if not plan.refused and balance_check is not None:
+            problem = balance_check(plan, inputs)
+            if problem:
+                plan.refused = True
+                plan.refusal_reasons.append(problem)
+        return plan
+
+    return factory
+
+
 def cmd_paper(args, settings, venue, product, input_fn) -> int:
+    from execution import RunSession
+
     adapter = make_adapter(venue, product, settings, authenticated=False)
     meta = load_meta(adapter)
     db = Database(settings.paper_database_path)
     now = datetime.now(timezone.utc)
     clock = {"now": now}
+    inputs = gather_risk_inputs(args, settings, venue, input_fn)
+    factory = make_plan_factory(adapter, meta, settings, lambda: inputs, verbose=False)
     active = db.active_run(venue.value, meta.symbol, Mode.PAPER.value)
     if active is not None:
-        plan = db.run_plan(active["run_id"])
-        inputs = gather_risk_inputs(args, settings, venue, input_fn)
         run_id = active["run_id"]
         print(f"Resuming paper run {run_id} (state reconciled; no duplicate orders will be created).")
     else:
         print_meta(meta)
-        analysis = analyze_market(adapter, meta, settings, now)
-        print_analysis(analysis)
-        inputs = gather_risk_inputs(args, settings, venue, input_fn)
-        plan = build_plan(analysis, meta, inputs, now)
-        print_plan(plan, meta)
-        print_intended_orders(plan, venue)
+        plan = factory(now)
         if plan.refused:
-            print("\nPlan refused; nothing to paper-trade.")
-            return EXIT_REFUSED
-        run_id = create_run(db, plan, Mode.PAPER, now)
+            print("\nPlan refused:")
+            for reason in plan.refusal_reasons:
+                print(f"  - {reason}")
+            if args.max_runs <= 1:
+                return EXIT_REFUSED
+            run_id = None
+            print("Waiting for an allowed setup (--max-runs > 1).")
+        else:
+            run_id = create_run(db, plan, Mode.PAPER, now)
     sim = make_sim(db, meta, settings, inputs, lambda: clock["now"])
-    engine = TradingEngine(db=db, gateway=sim, meta=meta, settings=settings, mode=Mode.PAPER, run_id=run_id)
+    session = RunSession(db=db, gateway=sim, meta=meta, settings=settings, mode=Mode.PAPER,
+                         plan_factory=factory, run_id=run_id, max_runs=args.max_runs)
     print(f"\nPAPER MODE: orders are simulated and stored in {settings.paper_database_path}. "
           "No order endpoint is ever called.")
 
     def step(now):
         clock["now"] = now
-        return paper_tick(adapter, sim, db, engine, settings, now)
+        return paper_tick(adapter, sim, db, session, settings, now)
 
     return _run_loop(step, settings, args.once, "paper step (SIMULATED)")
 
@@ -400,10 +469,21 @@ def confirm(prompt: str, expected: str, input_fn: Callable[[str], str]) -> bool:
         return False
 
 
+def preflight_credentials(adapter, venue: Venue) -> None:
+    """Refuse keys that could move funds out of the account."""
+    if venue == Venue.COINBASE:
+        adapter.check_key_permissions()
+    else:
+        adapter.check_api_wallet()
+
+
 def cmd_live(args, settings, venue, product, input_fn) -> int:
+    from execution import RunSession
+
     check_live_gates(settings, venue)
     verify_sdk(venue)
     adapter = make_adapter(venue, product, settings, authenticated=True)
+    preflight_credentials(adapter, venue)
     meta = load_meta(adapter)
     if meta.post_only:
         raise LiveTradingDisabled(f"{meta.symbol} is post-only; stop-limit orders would be rejected")
@@ -414,29 +494,38 @@ def cmd_live(args, settings, venue, product, input_fn) -> int:
     now = datetime.now(timezone.utc)
     print_meta(meta)
 
-    live_equity = adapter.account_equity() if venue == Venue.HYPERLIQUID else None
-    inputs = gather_risk_inputs(args, settings, venue, input_fn, live_equity=live_equity)
+    base_inputs = gather_risk_inputs(args, settings, venue, input_fn)
+
+    def current_inputs() -> RiskInputs:
+        if venue == Venue.HYPERLIQUID:  # never size from more than the account actually holds
+            equity = min(base_inputs.account_equity, adapter.account_equity())
+            return risk_inputs_from_settings(
+                settings, venue, equity=equity, max_allocation_usd=base_inputs.max_allocation_usd,
+                max_planned_loss_usd=base_inputs.max_planned_loss_usd)
+        return base_inputs
+
+    def balance_check(plan: TradePlan, inputs: RiskInputs) -> Optional[str]:
+        available = adapter.available_quote()
+        needed = plan.capital_deployed * (1 + inputs.fee_pct / 100) / plan.leverage
+        print(f"\n  available {meta.quote_asset}: {fmt(available, 2)}   required for entries: {fmt(needed, 2)}")
+        return None if available >= needed else "available balance does not cover the planned entries"
+
+    factory = make_plan_factory(adapter, meta, settings, current_inputs, verbose=False, balance_check=balance_check)
     active = db.active_run(venue.value, meta.symbol, Mode.LIVE.value)
     if active is not None:
         run_id = active["run_id"]
         plan = db.run_plan(run_id)
         print(f"\nAn active live run {run_id} exists; it will be reconciled and resumed, never duplicated.")
+        print_plan(plan, meta)
+        print_intended_orders(plan, venue)
     else:
         run_id = None
-        analysis = analyze_market(adapter, meta, settings, now)
-        print_analysis(analysis)
-        plan = build_plan(analysis, meta, inputs, now)
-    print_plan(plan, meta)
-    print_intended_orders(plan, venue)
-    if plan.refused and active is None:
-        print("\nPlan refused by risk rules; nothing will be submitted.")
-        return EXIT_REFUSED
-
-    available_quote = adapter.available_quote()
-    needed = plan.capital_deployed * (1 + inputs.fee_pct / 100) / plan.leverage
-    print(f"\n  available {meta.quote_asset}: {fmt(available_quote, 2)}   required for entries: {fmt(needed, 2)}")
-    if active is None and available_quote < needed:
-        raise LiveTradingDisabled("available balance does not cover the planned entries")
+        plan = factory(now)
+        if plan.refused:
+            print("\nPlan refused; nothing will be submitted:")
+            for reason in plan.refusal_reasons:
+                print(f"  - {reason}")
+            return EXIT_REFUSED
 
     if venue == Venue.HYPERLIQUID and settings.hyperliquid_leverage > 1:
         print(f"\n!!! Leverage {settings.hyperliquid_leverage}x: losses are multiplied and liquidation can "
@@ -445,6 +534,9 @@ def cmd_live(args, settings, venue, product, input_fn) -> int:
             print("Leverage not confirmed. Nothing submitted.")
             return EXIT_REFUSED
     print("\nLIVE TRADING submits real orders with real funds. Stop-limit orders may not fill.")
+    if args.max_runs > 1:
+        print(f"This session may start up to {args.max_runs} runs. Each new plan follows the same rules and "
+              "limits and is submitted WITHOUT asking again. MAX_DAILY_LOSS_USD still halts everything.")
     if not confirm(f"Type {CONFIRM_TEXT} to enable live trading: ", CONFIRM_TEXT, input_fn):
         print("Confirmation not given. Nothing submitted; run --paper instead.")
         return EXIT_REFUSED
@@ -453,22 +545,119 @@ def cmd_live(args, settings, venue, product, input_fn) -> int:
         adapter.prepare_live(settings.hyperliquid_leverage)
     if run_id is None:
         run_id = create_run(db, plan, Mode.LIVE, now)
-    engine = TradingEngine(db=db, gateway=adapter, meta=meta, settings=settings, mode=Mode.LIVE, run_id=run_id)
+    session = RunSession(db=db, gateway=adapter, meta=meta, settings=settings, mode=Mode.LIVE,
+                         plan_factory=factory, run_id=run_id, max_runs=args.max_runs)
 
     def step(now):
         snapshot = adapter.get_market_meta()
         last = snapshot.mark_price or snapshot.last_price
         if last is None:
-            raise LiveTradingDisabled("no current price available")
-        report = engine.step(last, now)
-        if venue == Venue.HYPERLIQUID and report.position > 0:
+            raise InvalidMetadata("no current price available")
+        report = session.step(last, now)
+        if venue == Venue.HYPERLIQUID and report.position > 0 and session.plan is not None:
             liq = adapter.exchange_liquidation_price()
-            if liq is not None and liq >= plan.stop_limit:
-                log.critical("exchange liquidation price %s is at/above the stop-limit %s", liq, plan.stop_limit)
-                report.messages.append(f"WARNING: exchange liquidation price {liq} >= stop-limit {plan.stop_limit}")
+            if liq is not None and liq >= session.plan.stop_limit:
+                log.critical("exchange liquidation price %s is at/above the stop-limit %s", liq, session.plan.stop_limit)
+                report.messages.append(f"WARNING: exchange liquidation price {liq} >= stop-limit {session.plan.stop_limit}")
         return report
 
     return _run_loop(step, settings, args.once, "live step")
+
+
+def cmd_preview(args, settings, venue, product, input_fn) -> int:
+    """Validate the planned entries with Coinbase's order-preview endpoint. Never places orders."""
+    if venue != Venue.COINBASE:
+        print("Hyperliquid has no order preview. Rehearse with HYPERLIQUID_TESTNET=true and a testnet API wallet.")
+        return EXIT_REFUSED
+    verify_sdk(venue)
+    adapter = make_adapter(venue, product, settings, authenticated=True)
+    preflight_credentials(adapter, venue)
+    meta = load_meta(adapter)
+    now = datetime.now(timezone.utc)
+    analysis = analyze_market(adapter, meta, settings, now)
+    plan = build_plan(analysis, meta, gather_risk_inputs(args, settings, venue, input_fn), now)
+    print_plan(plan, meta)
+    if plan.refused:
+        print("\nPlan refused; previewing anyway so you can see what Coinbase would say.")
+    print("\n=== Coinbase order preview (nothing is placed) ===")
+    ok = True
+    for entry in plan.entries:
+        if entry.quantity <= 0:
+            continue
+        result = adapter.preview_limit_buy(entry.quantity, entry.price)
+        status = "OK" if not result["errors"] else "REJECTED"
+        ok = ok and not result["errors"]
+        print(f"  {entry.leg} BUY {fmt(entry.quantity)} @ {fmt(entry.price)}: {status} "
+              f"total {result['order_total']} fees {result['commission_total']}")
+        for err in result["errors"]:
+            print(f"    error: {err}")
+        for warning in result["warnings"]:
+            print(f"    warning: {warning}")
+    print("  Exits are sells of coins you will only hold after fills, so they cannot be previewed now.")
+    return EXIT_OK if ok else EXIT_REFUSED
+
+
+def cmd_check(args, settings, venue, product, input_fn) -> int:
+    """Pre-flight report: configuration, SDK, market data, credentials, live gates. Never trades."""
+    results: list[tuple[str, str, str]] = []
+
+    def check(name: str, fn: Callable[[], str]) -> None:
+        try:
+            results.append(("PASS", name, fn() or ""))
+        except Exception as exc:  # noqa: BLE001 - the report shows every failure
+            results.append(("FAIL", name, f"{type(exc).__name__}: {exc}"[:200]))
+
+    def skip(name: str, why: str) -> None:
+        results.append(("SKIP", name, why))
+
+    check("installed SDK has every method used", lambda: verify_sdk(venue) or "")
+    public = make_adapter(venue, product, settings, authenticated=False)
+    meta_box: dict = {}
+
+    def market() -> str:
+        meta_box["meta"] = load_meta(public)
+        m = meta_box["meta"]
+        return f"{m.symbol} {m.product_type} tradable, last {fmt(m.last_price)}"
+
+    check("market listed and tradable", market)
+    if "meta" in meta_box:
+        check("candle history", lambda: f"{len(public.get_candles(settings.candle_interval, TARGET_CANDLES))} "
+                                        f"closed {settings.candle_interval} candles")
+    if _has_credentials(settings, venue):
+        auth = make_adapter(venue, product, settings, authenticated=True)
+        if venue == Venue.COINBASE:
+            def perms() -> str:
+                auth.check_key_permissions()
+                p = auth.key_permissions()
+                return f"view={p.get('can_view')} trade={p.get('can_trade')} transfer={p.get('can_transfer')}"
+
+            check("API key is trade-only (no transfer)", perms)
+        else:
+            check("API wallet (cannot withdraw) is used", lambda: auth.check_api_wallet() or
+                  f"signer {auth.signer_address()[:8]}... trades for {settings.hyperliquid_account_address[:8]}...")
+            check("account equity", lambda: f"{fmt(auth.account_equity(), 2)} USDC")
+        if "meta" in meta_box:
+            check("available balance", lambda: f"quote {fmt(auth.available_quote(), 2)}, "
+                                               f"base/position {fmt(auth.available_position())}")
+    else:
+        skip("credentials", "not configured (only needed for --live, --preview and --status)")
+    flag = "COINBASE_LIVE_TRADING" if venue == Venue.COINBASE else "HYPERLIQUID_LIVE_TRADING"
+    results.append(("INFO", flag, str(settings.live_flag(venue.value)).lower()))
+    results.append(("INFO", "DRY_RUN", str(settings.dry_run).lower()))
+    results.append(("INFO", "kill switch", "ACTIVE" if kill_switch_active(settings.stop_file) else "not present"))
+    db = Database(settings.database_path)
+    results.append(("INFO", "live halt", db.halt_reason(venue.value, Mode.LIVE.value) or "none"))
+    db.close()
+    results.append(("INFO", "risk limits",
+                    f"equity {settings.account_equity_usd}, alloc {settings.max_allocation_pct}%, "
+                    f"loss/trade {settings.max_planned_loss_pct}%, daily loss {settings.max_daily_loss_usd}, "
+                    f"max notional {settings.max_position_notional_usd}, leverage {settings.hyperliquid_leverage}x"))
+    print(f"\n=== Pre-flight check: {venue.value} {product.upper()} ===")
+    for status, name, detail in results:
+        print(f"  [{status}] {name}" + (f": {detail}" if detail else ""))
+    failed = any(status == "FAIL" for status, _, _ in results)
+    print("\nResult: " + ("problems found (see FAIL lines)." if failed else "no blocking problems found."))
+    return EXIT_ERROR if failed else EXIT_OK
 
 
 def cmd_backtest(args, settings, venue, product, input_fn) -> int:
@@ -600,7 +789,7 @@ def cmd_clear_halt(args, settings, venue, product, input_fn) -> int:
 COMMANDS = {
     "analyze": cmd_analyze, "paper": cmd_paper, "backtest": cmd_backtest, "live": cmd_live,
     "status": cmd_status, "cancel_open": cmd_cancel_open, "reset_paper": cmd_reset_paper,
-    "clear_halt": cmd_clear_halt,
+    "clear_halt": cmd_clear_halt, "check": cmd_check, "preview": cmd_preview,
 }
 
 
@@ -617,6 +806,8 @@ def main(argv: Optional[list[str]] = None, input_fn: Callable[[str], str] = inpu
     setup_logging(args.log_level, settings)
     if not args.venue or not args.product:
         parser.error("--venue and --product are required")
+    if args.max_runs < 1:
+        parser.error("--max-runs must be at least 1")
     venue = Venue(args.venue)
     command = next(name for name in COMMANDS if getattr(args, name))
     try:

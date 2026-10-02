@@ -30,7 +30,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional
 
 import pandas as pd
 
@@ -70,6 +70,7 @@ log = logging.getLogger("bot.engine")
 
 TP_LEGS = ("TP1", "TP2", "TP3")
 STOP_LEG = "SL"
+MAX_EXIT_REJECTIONS = 3
 SUBMIT_LOOKUP_GRACE = timedelta(minutes=2)
 
 
@@ -350,6 +351,9 @@ class TradingEngine:
         for leg, (quantity, level) in desired_tps.items():
             if self._orders(leg=leg, open_only=True):
                 continue
+            if sum(1 for r in self._orders(leg=leg) if r.status == OrderStatus.REJECTED) >= MAX_EXIT_REJECTIONS:
+                self._note(f"{leg} rejected {MAX_EXIT_REJECTIONS} times; not retrying (the stop still protects)")
+                continue
             if self.gateway.exits_share_balance and quantity > self.gateway.available_position():
                 self._note(f"{leg} waiting: base balance not yet released by the exchange")
                 continue
@@ -369,8 +373,27 @@ class TradingEngine:
                 if not meets_minimums(self.meta, stop_qty, self.plan.stop_limit):
                     self._note("stop waiting: base balance not yet available")
                     return
+        self._halt_if_stop_keeps_failing(now)
+        if last_price <= self.plan.stop_trigger:
+            # A stop order below the market would be rejected (or trigger at once). Place what a
+            # triggered stop-limit becomes: a limit sell at the stop-limit price.
+            self._note("price is already at or below the stop trigger: protecting with a limit sell "
+                       "at the stop-limit price (what a triggered stop-limit becomes)")
+            self.submit(STOP_LEG, OrderRole.STOP, Side.SELL, OrderType.LIMIT, stop_qty, self.plan.stop_limit, now)
+            return
         self.submit(STOP_LEG, OrderRole.STOP, Side.SELL, OrderType.STOP_LIMIT, stop_qty,
                     self.plan.stop_limit, now, trigger=self.plan.stop_trigger)
+
+    def _halt_if_stop_keeps_failing(self, now: datetime) -> None:
+        rejected = [r for r in self._orders(leg=STOP_LEG) if r.status == OrderStatus.REJECTED]
+        if len(rejected) >= MAX_EXIT_REJECTIONS:
+            reason = (f"protective stop rejected {len(rejected)} times (last: {rejected[-1].error}); "
+                      "the position needs manual attention")
+            self.emergency_cancel(now, keep_stop=True)
+            self.db.set_halt(self.venue, self.mode.value, reason)
+            self.db.set_run_status(self.run_id, "HALTED", now)
+            log.critical(event("halt", reason=repr(reason)))
+            raise FatalRiskError(reason)
 
     def check_daily_loss(self, now: datetime, last_price: Decimal) -> None:
         position, avg_cost = self.db.position(self.run_id)
@@ -429,6 +452,59 @@ class TradingEngine:
             open_orders=len(open_orders),
             messages=list(self.messages),
         )
+
+
+class RunSession:
+    """Drives one run at a time. When a run closes and ``max_runs`` allows, the next plan
+    comes from ``plan_factory`` (which returns None while no setup is allowed)."""
+
+    def __init__(self, *, db: Database, gateway: OrderGateway, meta: MarketMeta, settings: Settings, mode: Mode,
+                 plan_factory: Callable[[datetime], Optional[TradePlan]], run_id: Optional[str] = None,
+                 max_runs: int = 1, stop_file: Optional[Path] = None):
+        if max_runs < 1:
+            raise ValueError("max_runs must be at least 1")
+        self.db, self.gateway, self.meta, self.settings, self.mode = db, gateway, meta, settings, mode
+        self.plan_factory = plan_factory
+        self.max_runs = max_runs
+        self.stop_file = stop_file
+        self.engine: Optional[TradingEngine] = None
+        self.runs_started = 0
+        if run_id is not None:
+            self._attach(run_id)
+
+    def _attach(self, run_id: str) -> None:
+        self.engine = TradingEngine(db=self.db, gateway=self.gateway, meta=self.meta, settings=self.settings,
+                                    mode=self.mode, run_id=run_id, stop_file=self.stop_file)
+        self.runs_started += 1
+
+    @property
+    def plan(self) -> Optional[TradePlan]:
+        return self.engine.plan if self.engine else None
+
+    def _idle_report(self, status: str, message: str) -> StepReport:
+        return StepReport(status=status, position=Decimal(0), avg_cost=Decimal(0), realized=Decimal(0),
+                          unrealized=Decimal(0), open_orders=0, messages=[message])
+
+    def step(self, last_price: Decimal, now: datetime) -> StepReport:
+        if self.engine is None:
+            if self.runs_started >= self.max_runs:
+                return self._idle_report("DONE", f"{self.runs_started} run(s) completed")
+            if kill_switch_active(Path(self.stop_file or self.settings.stop_file)):
+                raise KillSwitchTriggered("STOP file found; no new run started")
+            halted = self.db.halt_reason(self.meta.venue.value, self.mode.value)
+            if halted:
+                raise FatalRiskError(f"bot is halted: {halted}. Review, then run --clear-halt.")
+            plan = self.plan_factory(now)
+            if plan is None or plan.refused:
+                reason = "; ".join(plan.refusal_reasons) if plan else "no plan available"
+                return self._idle_report("WAITING", f"no new run: {reason}")
+            self._attach(create_run(self.db, plan, self.mode, now))
+        report = self.engine.step(last_price, now)
+        if report.status == "CLOSED":
+            self.engine = None
+            if self.runs_started >= self.max_runs:
+                report.status = "DONE"
+        return report
 
 
 # --------------------------------------------------------------- backtest

@@ -70,7 +70,14 @@ REQUIRED_SDK = {
     "limit_order_gtc_sell": {"client_order_id", "product_id", "base_size", "limit_price", "post_only"},
     "stop_limit_order_gtc_sell": {"client_order_id", "product_id", "base_size", "limit_price", "stop_price", "stop_direction"},
     "cancel_orders": {"order_ids"},
+    "get_api_key_permissions": set(),
+    "preview_limit_order_gtc_buy": {"product_id", "base_size", "limit_price"},
 }
+
+
+def dstr(value: Decimal) -> str:
+    """Plain decimal string; str(Decimal) can produce '5E-7', which order APIs reject."""
+    return format(value, "f")
 
 
 def to_plain(obj: Any) -> Any:
@@ -284,7 +291,7 @@ class CoinbaseAdapter:
         # Never retried: see retry.py.
         return self._order_id_from_create(self.client.limit_order_gtc_buy(
             client_order_id=client_order_id, product_id=self.product_id,
-            base_size=str(quantity), limit_price=str(price), post_only=False,
+            base_size=dstr(quantity), limit_price=dstr(price), post_only=False,
         ))
 
     def place_limit_sell(self, client_order_id: str, quantity: Decimal, price: Decimal, reduce_only: bool) -> str:
@@ -294,7 +301,7 @@ class CoinbaseAdapter:
             raise LiveTradingDisabled("unauthenticated adapter cannot place orders")
         return self._order_id_from_create(self.client.limit_order_gtc_sell(
             client_order_id=client_order_id, product_id=self.product_id,
-            base_size=str(quantity), limit_price=str(price), post_only=False,
+            base_size=dstr(quantity), limit_price=dstr(price), post_only=False,
         ))
 
     def place_stop_limit_sell(self, client_order_id: str, quantity: Decimal, trigger_price: Decimal,
@@ -302,8 +309,8 @@ class CoinbaseAdapter:
         if not self.authenticated:
             raise LiveTradingDisabled("unauthenticated adapter cannot place orders")
         return self._order_id_from_create(self.client.stop_limit_order_gtc_sell(
-            client_order_id=client_order_id, product_id=self.product_id, base_size=str(quantity),
-            limit_price=str(limit_price), stop_price=str(trigger_price), stop_direction=STOP_DIRECTION_DOWN,
+            client_order_id=client_order_id, product_id=self.product_id, base_size=dstr(quantity),
+            limit_price=dstr(limit_price), stop_price=dstr(trigger_price), stop_direction=STOP_DIRECTION_DOWN,
         ))
 
     def _list_orders(self, **filters) -> list[dict]:
@@ -342,3 +349,34 @@ class CoinbaseAdapter:
                 if not item.get("success"):
                     log.warning("cancel failed order_id=%s reason=%s", item.get("order_id"), item.get("failure_reason"))
         return results
+
+    # ------------------------------------------------------------ pre-flight
+    def key_permissions(self) -> dict:
+        """{'can_view', 'can_trade', 'can_transfer', ...} for the configured CDP key."""
+        resp = to_plain(self.retrier.call(self.client.get_api_key_permissions))
+        if not isinstance(resp, dict) or "can_trade" not in resp:
+            raise InvalidMetadata("unexpected key-permissions response")
+        return resp
+
+    def check_key_permissions(self) -> None:
+        perms = self.key_permissions()
+        if not perms.get("can_trade"):
+            raise LiveTradingDisabled("the Coinbase API key cannot trade")
+        if perms.get("can_transfer"):
+            raise LiveTradingDisabled(
+                "the Coinbase API key has TRANSFER permission; create a key with View + Trade only")
+
+    def preview_limit_buy(self, quantity: Decimal, price: Decimal) -> dict:
+        """Ask Coinbase to validate an order without placing it. Returns errors/warnings/fees."""
+        resp = to_plain(self.retrier.call(
+            self.client.preview_limit_order_gtc_buy, product_id=self.product_id,
+            base_size=dstr(quantity), limit_price=dstr(price), post_only=False,
+        ))
+        if not isinstance(resp, dict):
+            raise InvalidMetadata("unexpected preview response")
+        return {
+            "errors": list(resp.get("errs") or []),
+            "warnings": list(resp.get("warning") or []),
+            "order_total": resp.get("order_total"),
+            "commission_total": resp.get("commission_total"),
+        }

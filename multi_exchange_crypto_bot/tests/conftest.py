@@ -121,6 +121,22 @@ class FakeAdapter:
     def available_quote(self):
         return Decimal(100000)
 
+    # pre-flight helpers used by --live/--preview/--check
+    permissions = {"can_view": True, "can_trade": True, "can_transfer": False}
+
+    def key_permissions(self):
+        return dict(self.permissions)
+
+    def check_key_permissions(self):
+        from models import LiveTradingDisabled
+
+        if not self.permissions.get("can_trade") or self.permissions.get("can_transfer"):
+            raise LiveTradingDisabled("key permissions not trade-only")
+
+    def preview_limit_buy(self, quantity, price):
+        self.placed_previews = getattr(self, "placed_previews", 0) + 1
+        return {"errors": [], "warnings": [], "order_total": str(quantity * price), "commission_total": "0"}
+
 
 @pytest.fixture
 def settings(tmp_path):

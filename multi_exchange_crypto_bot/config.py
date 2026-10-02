@@ -105,6 +105,7 @@ class Settings(BaseModel):
     sim_volume_participation_pct: Decimal = Decimal("20")
     database_path: Path = Path("trading_bot.sqlite3")
     stop_file: Path = Path("STOP")
+    log_file: Optional[Path] = None
 
     @model_validator(mode="after")
     def _validate(self) -> "Settings":
@@ -197,4 +198,5 @@ def _build(env: Mapping[str, str]) -> Settings:
         api_error_cooldown_seconds=_int(env, "API_ERROR_COOLDOWN_SECONDS", 120),
         sim_volume_participation_pct=_decimal(env, "SIM_VOLUME_PARTICIPATION_PCT", "20"),
         database_path=Path(_get(env, "DATABASE_PATH") or "trading_bot.sqlite3"),
+        log_file=Path(_get(env, "LOG_FILE")) if _get(env, "LOG_FILE") else None,
     )

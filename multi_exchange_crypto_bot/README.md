@@ -62,13 +62,17 @@ python -m main --venue coinbase    --product GTC-USD --cancel-open
 python -m main --venue hyperliquid --product BTC     --cancel-open
 python -m main --venue coinbase    --product GTC-USD --reset-paper
 python -m main --venue hyperliquid --product BTC     --reset-paper
+python -m main --venue coinbase    --product GTC-USD --check        # pre-flight report, never trades
+python -m main --venue coinbase    --product GTC-USD --preview      # Coinbase validates the orders, places none
 python -m main --venue coinbase    --product GTC-USD --live         # only after every gate below
 python -m main --venue coinbase    --product GTC-USD --clear-halt   # after reviewing a daily-loss halt
 ```
 
 Useful options: `--ask` (prompt for equity / allocation / max loss / risk %),
 `--equity`, `--max-allocation`, `--max-loss`, `--risk-pct`, `--once` (single step),
-`--candles N` (backtest length), `--log-level DEBUG`.
+`--max-runs N` (paper/live: after a run closes, wait for the next allowed setup and
+trade it, up to N runs; default 1), `--candles N` (backtest length), `--log-level DEBUG`.
+Set `LOG_FILE=bot.log` to keep an audit log (secrets are redacted).
 
 `--cancel-open` cancels **every** open order on that product, including orders you
 placed by hand and the protective stop. It asks you to type `CANCEL` first (`--yes` skips this).
@@ -116,11 +120,32 @@ textbook formula, and it keeps the printed worst-case loss within your budget.
 
 ## 4. Live trading
 
+### Going live, step by step
+Each step must pass before the next one:
+
+1. **Paper.** Run `--analyze`, then `--backtest`, then `--paper --max-runs 5` for at
+   least a few days on the product you plan to trade. Read `--status` and the log.
+2. **Pre-flight.** Add your keys to `.env` (see section 5) and run `--check`. Every
+   line must be `PASS`. It verifies the SDK, the market, the candle history, your key's
+   permissions (a Coinbase key that can **transfer** is refused, and so is a Hyperliquid
+   **main-wallet** key), your balance, and shows each live gate.
+3. **Rehearse the orders.**
+   - Coinbase: `--preview` sends the planned entries to Coinbase's order-preview
+     endpoint. Coinbase checks precision, minimums, balance and fees, and places nothing.
+   - Hyperliquid: set `HYPERLIQUID_TESTNET=true`, fund a testnet account, create a
+     testnet API wallet, and run `--live --once` against testnet first.
+4. **Small live run.** Set the live flag and `DRY_RUN=false`. Use a tiny
+   `ACCOUNT_EQUITY_USD` (or `--max-allocation 25`), then run `--live --once`. Check the
+   orders in the exchange UI and in `--status`.
+5. **Supervised live.** Run `--live` (optionally `--max-runs N`) under `tmux`/`screen`
+   or a service manager, with `LOG_FILE` set. Keep watching it.
+
 ### Gates (all required, otherwise nothing is submitted)
 1. `COINBASE_LIVE_TRADING=true` or `HYPERLIQUID_LIVE_TRADING=true` for that venue.
 2. `DRY_RUN=false`.
 3. No `STOP` file and no unresolved daily-loss halt.
-4. SDK method check passes.
+4. SDK method check passes, and the credentials cannot move funds out (a Coinbase key
+   without Transfer permission; a Hyperliquid API wallet rather than the main wallet key).
 5. Market verified tradable with complete precision/minimum metadata.
 6. Account balance retrieved and sufficient for the planned entries.
 7. The plan passes every risk rule.
@@ -137,6 +162,11 @@ textbook formula, and it keeps the printed worst-case loss within your budget.
   - **Hyperliquid:** take-profits and the stop are **reduce-only**, so they rest
     together and can never increase or flip the position. The stop is a trigger order
     with `isMarket=false` (a real stop-limit), `tpsl="sl"`.
+- If price is already at or below the stop trigger when the stop is due (e.g. the entries
+  filled during a fast drop), a stop order cannot be placed below the market. The bot
+  places what a triggered stop-limit becomes: a limit sell at the stop-limit price.
+- If the exchange rejects the protective stop 3 times, the bot cancels entries and TPs,
+  halts, and asks for manual attention instead of looping.
 - Once price reaches TP1 after a fill, or any exit fills, remaining entries are cancelled.
   Unfilled entries are also cancelled after `ENTRY_TTL_HOURS`.
 
@@ -149,6 +179,9 @@ up by client ID on the next step instead of being resent. On restart, the active
 loaded and reconciled with the exchange before anything new is placed. Order creation
 is never retried automatically. Reads and cancels use bounded exponential backoff, and
 any API error starts a cooldown (`API_ERROR_COOLDOWN_SECONDS`) with no new orders.
+If a whole polling step fails (network outage, exchange 5xx), the loop logs it and
+retries on the next poll. Orders already resting on the exchange, including the stop,
+keep working. After 10 consecutive failed steps the bot exits and says so.
 
 ### Kill switch and limits
 - **`STOP` file** in the working directory: every bot-managed order is cancelled and
@@ -165,6 +198,7 @@ any API error starts a cooldown (`API_ERROR_COOLDOWN_SECONDS`) with no new order
 - [ ] Ran `--analyze` and read every warning.
 - [ ] Paper-traded the same product with `--paper` and reviewed `--status`.
 - [ ] Ran `--backtest` and understood that past simulated results are not predictive.
+- [ ] `--check` shows no FAIL lines; Coinbase `--preview` (or Hyperliquid testnet) succeeded.
 - [ ] API key has trade permissions only, with **no withdraw/transfer**, and is IP-allowlisted.
 - [ ] Equity, allocation, loss budget and `MAX_DAILY_LOSS_USD` are amounts you can afford to lose.
 - [ ] Hyperliquid: leverage is 1x, and you understand funding and liquidation.

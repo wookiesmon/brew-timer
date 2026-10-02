@@ -402,3 +402,20 @@ class HyperliquidAdapter:
                 ok = False
             results[oid] = ok
         return results
+
+    # ------------------------------------------------------------ pre-flight
+    def signer_address(self) -> str:
+        from eth_account import Account
+
+        if not self.settings.hyperliquid_private_key:
+            raise LiveTradingDisabled("HYPERLIQUID_PRIVATE_KEY is required")
+        return Account.from_key(self.settings.hyperliquid_private_key.get_secret_value()).address
+
+    def check_api_wallet(self) -> None:
+        """Refuse the main wallet's key: only an API (agent) wallet is unable to withdraw."""
+        if not self.address:
+            raise LiveTradingDisabled("HYPERLIQUID_ACCOUNT_ADDRESS is required")
+        if self.signer_address().lower() == self.address.lower():
+            raise LiveTradingDisabled(
+                "HYPERLIQUID_PRIVATE_KEY is the main account's key, which can withdraw funds; "
+                "generate an API wallet and use its key instead")
