@@ -1,0 +1,12 @@
+# Exchange SDKs (versions verified while writing this project; re-verify before live use)
+coinbase-advanced-py==1.8.4
+hyperliquid-python-sdk==0.24.0
+
+# General
+python-dotenv>=1.0
+pandas>=2.1
+numpy>=1.26
+pydantic>=2.6
+
+# Tests
+pytest>=8.0
