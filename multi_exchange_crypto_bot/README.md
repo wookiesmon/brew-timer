@@ -145,8 +145,9 @@ things:
 
 Setup: create a free **Demo** API key at coingecko.com/en/api and set `COINGECKO_API_KEY`
 (`COINGECKO_PLAN=pro` for a paid key). Many coins share a ticker symbol, so pin the ones
-you trade, e.g. `COINGECKO_COIN_IDS=GTC=gitcoin`. Responses are cached (prices 5 min,
-exchange volume 1 h, symbol lookups 24 h) to stay inside the Demo plan's monthly call cap.
+you trade, e.g. `COINGECKO_COIN_IDS=GTC=gitcoin`. Responses are cached to stay inside the plan's call budget: Demo caches prices 5 min and
+exchange volume 1 h; paid (`COINGECKO_PLAN=pro`) caches prices 1 min and volume 15 min.
+Symbol lookups are cached 24 h on both.
 Coinbase's CoinGecko exchange id is `gdax` (`COINGECKO_COINBASE_EXCHANGE_ID`). For
 Hyperliquid perps, only the price and total-volume checks apply: CoinGecko's price is
 spot, so a small perp basis is normal.

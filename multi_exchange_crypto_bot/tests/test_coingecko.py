@@ -149,6 +149,20 @@ def test_responses_are_cached_to_respect_the_demo_call_cap(tmp_path):
     assert c.calls == 3  # price refreshed, volume still cached
 
 
+def test_paid_plan_refreshes_prices_every_minute(tmp_path):
+    now = {"t": 0.0}
+    settings = make_settings(tmp_path, coingecko_enabled=True, coingecko_coin_ids="GTC=gitcoin",
+                             coingecko_plan="pro", coingecko_api_key="CG-pro-key")
+    session = FakeSession({"/coins/markets": [market_row()], "/coins/gitcoin/tickers": tickers(2_000_000)})
+    c = CoinGeckoClient(settings, session=session, clock=lambda: now["t"])
+    check_market(c, gtc_meta(), settings, now=NOW)
+    now["t"] += 61
+    check_market(c, gtc_meta(), settings, now=NOW)
+    assert c.calls == 3  # price fetched twice, volume once
+    assert all(url.startswith("https://pro-api.coingecko.com/api/v3") for url, _, _ in session.calls)
+    assert all(h.get("x-cg-pro-api-key") == "CG-pro-key" for _, _, h in session.calls)
+
+
 # --------------------------------------------------------------- screening
 def test_screen_keeps_only_venue_listed_liquid_coins(tmp_path):
     top = [

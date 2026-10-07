@@ -37,6 +37,8 @@ USD_QUOTES = {"USD", "USDC", "USDT"}
 # polling every 30s would exhaust it in days without caching. Prices are cached briefly;
 # exchange volume and symbol lookups change slowly.
 CACHE_TTL = {"/search": 24 * 3600, "/coins/markets": 300, "/tickers": 3600}
+# Paid plans have far larger call budgets, so prices can be refreshed every minute.
+PRO_CACHE_TTL = {"/search": 24 * 3600, "/coins/markets": 60, "/tickers": 900}
 
 
 class CoinGeckoError(BotError):
@@ -78,12 +80,12 @@ class CoinGeckoClient:
         self.retrier = retrier or Retrier(settings.max_retries)
         self.overrides = parse_coin_id_overrides(settings.coingecko_coin_ids)
         self.clock = clock
+        self.cache_ttl = PRO_CACHE_TTL if pro else CACHE_TTL
         self._cache: dict[tuple, tuple[float, Any]] = {}
         self.calls = 0
 
-    @staticmethod
-    def _ttl(path: str) -> float:
-        for prefix, ttl in CACHE_TTL.items():
+    def _ttl(self, path: str) -> float:
+        for prefix, ttl in self.cache_ttl.items():
             if path.startswith(prefix) or path.endswith(prefix):
                 return ttl
         return 60
