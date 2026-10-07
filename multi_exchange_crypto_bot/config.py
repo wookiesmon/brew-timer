@@ -107,6 +107,16 @@ class Settings(BaseModel):
     stop_file: Path = Path("STOP")
     log_file: Optional[Path] = None
 
+    coingecko_enabled: bool = False
+    coingecko_api_key: Optional[SecretStr] = None
+    coingecko_plan: str = "demo"
+    coingecko_min_volume_usd: Decimal = Decimal("1000000")
+    coingecko_min_venue_volume_usd: Decimal = Decimal("250000")
+    coingecko_max_price_deviation_pct: Decimal = Decimal("2")
+    coingecko_max_volume_share_pct: Decimal = Decimal("1")
+    coingecko_coin_ids: str = ""
+    coingecko_coinbase_exchange_id: str = "gdax"
+
     @model_validator(mode="after")
     def _validate(self) -> "Settings":
         if self.account_equity_usd <= 0:
@@ -131,6 +141,14 @@ class Settings(BaseModel):
             raise ConfigError("MAX_RETRIES must be >= 0 and API_TIMEOUT_SECONDS > 0")
         if self.candle_interval not in SUPPORTED_INTERVALS:
             raise ConfigError(f"CANDLE_INTERVAL must be one of {', '.join(SUPPORTED_INTERVALS)}")
+        if self.coingecko_plan not in ("demo", "pro"):
+            raise ConfigError("COINGECKO_PLAN must be demo or pro")
+        for name in ("coingecko_min_volume_usd", "coingecko_min_venue_volume_usd"):
+            if getattr(self, name) < 0:
+                raise ConfigError(f"{name.upper()} must not be negative")
+        for name in ("coingecko_max_price_deviation_pct", "coingecko_max_volume_share_pct"):
+            if getattr(self, name) <= 0:
+                raise ConfigError(f"{name.upper()} must be positive")
         if not self.hyperliquid_isolated:
             raise ConfigError("HYPERLIQUID_ISOLATED must be true: cross margin is never used by this bot")
         if self.hyperliquid_leverage < 1:
@@ -199,4 +217,13 @@ def _build(env: Mapping[str, str]) -> Settings:
         sim_volume_participation_pct=_decimal(env, "SIM_VOLUME_PARTICIPATION_PCT", "20"),
         database_path=Path(_get(env, "DATABASE_PATH") or "trading_bot.sqlite3"),
         log_file=Path(_get(env, "LOG_FILE")) if _get(env, "LOG_FILE") else None,
+        coingecko_enabled=_bool(env, "COINGECKO_ENABLED", False),
+        coingecko_api_key=_secret(env, "COINGECKO_API_KEY"),
+        coingecko_plan=(_get(env, "COINGECKO_PLAN") or "demo").lower(),
+        coingecko_min_volume_usd=_decimal(env, "COINGECKO_MIN_VOLUME_USD", "1000000"),
+        coingecko_min_venue_volume_usd=_decimal(env, "COINGECKO_MIN_VENUE_VOLUME_USD", "250000"),
+        coingecko_max_price_deviation_pct=_decimal(env, "COINGECKO_MAX_PRICE_DEVIATION_PCT", "2"),
+        coingecko_max_volume_share_pct=_decimal(env, "COINGECKO_MAX_VOLUME_SHARE_PCT", "1"),
+        coingecko_coin_ids=_get(env, "COINGECKO_COIN_IDS") or "",
+        coingecko_coinbase_exchange_id=_get(env, "COINGECKO_COINBASE_EXCHANGE_ID") or "gdax",
     )

@@ -60,7 +60,8 @@ def setup_logging(level: str, settings: Optional[Settings]) -> None:
     handler.setFormatter(logging.Formatter("%(asctime)sZ %(levelname)s %(name)s %(message)s", "%Y-%m-%dT%H:%M:%S"))
     if settings is not None:
         secrets = [s.get_secret_value() for s in (settings.coinbase_api_key, settings.coinbase_api_secret,
-                                                  settings.hyperliquid_private_key) if s is not None]
+                                                  settings.hyperliquid_private_key, settings.coingecko_api_key)
+                   if s is not None]
         handler.addFilter(RedactSecrets(secrets))
     handlers: list[logging.Handler] = [handler]
     if settings is not None and settings.log_file is not None:
@@ -93,6 +94,8 @@ def build_parser() -> argparse.ArgumentParser:
     actions.add_argument("--reset-paper", action="store_true", help="delete paper state for the product")
     actions.add_argument("--clear-halt", action="store_true", help="clear a daily-loss halt after review")
     actions.add_argument("--check", action="store_true", help="pre-flight report (config, data, keys); never trades")
+    actions.add_argument("--screen", action="store_true",
+                         help="rank coins tradable on the venue by CoinGecko liquidity; never trades")
     actions.add_argument("--preview", action="store_true", help="Coinbase: validate planned orders without placing")
     p.add_argument("--equity", help="account equity in USD (default ACCOUNT_EQUITY_USD)")
     p.add_argument("--max-allocation", help="maximum USD to deploy (capped by MAX_ALLOCATION_PCT)")
@@ -103,6 +106,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--max-runs", type=int, default=1,
                    help="paper/live: trade up to N plans in this session (default 1)")
     p.add_argument("--candles", type=int, default=1000, help="backtest: number of candles to fetch")
+    p.add_argument("--limit", type=int, default=20, help="--screen: number of rows")
     p.add_argument("--yes", action="store_true", help="skip the --cancel-open confirmation")
     p.add_argument("--env-file", default=".env")
     p.add_argument("--log-level", default="INFO")
@@ -327,6 +331,7 @@ def cmd_analyze(args, settings, venue, product, input_fn) -> int:
     analysis = analyze_market(adapter, meta, settings, datetime.now(timezone.utc))
     print_analysis(analysis)
     plan = build_plan(analysis, meta, gather_risk_inputs(args, settings, venue, input_fn))
+    coingecko_gate(settings, meta, plan)
     print_plan(plan, meta)
     print_intended_orders(plan, venue)
     print("\nAnalysis only: no orders were created.")
@@ -390,6 +395,48 @@ def _run_loop(step: Callable[[datetime], object], settings: Settings, once: bool
             return EXIT_OK
 
 
+def print_market_check(check) -> None:
+    print("\n=== CoinGecko cross-check (data only) ===")
+    print(f"  coin id               {check.coin_id}")
+    print(f"  CoinGecko price       {fmt(check.reference_price)}   venue price {fmt(check.venue_price)}"
+          + (f"   deviation {check.deviation_pct:.2f}%" if check.deviation_pct is not None else ""))
+    print(f"  24h volume (all)      {fmt(check.total_volume_usd, 0)} USD   market cap {fmt(check.market_cap_usd, 0)} USD")
+    if check.venue_volume_usd is not None:
+        print(f"  24h volume (Coinbase) {fmt(check.venue_volume_usd, 0)} USD")
+    for note in check.notes:
+        print(f"  - {note}")
+    for problem in check.problems:
+        print(f"  ! {problem}")
+    print("  result                " + ("OK" if check.ok else "REFUSE new plans"))
+
+
+_COINGECKO_CLIENTS: dict[int, object] = {}
+
+
+def coingecko_client(settings: Settings):
+    """One client per settings object, so its response cache spans the whole session."""
+    from coingecko import CoinGeckoClient
+
+    if id(settings) not in _COINGECKO_CLIENTS:
+        _COINGECKO_CLIENTS[id(settings)] = CoinGeckoClient(settings)
+    return _COINGECKO_CLIENTS[id(settings)]
+
+
+def coingecko_gate(settings: Settings, meta: MarketMeta, plan: Optional[TradePlan]):
+    """When COINGECKO_ENABLED, refuse plans on thin or mispriced markets. Fails closed."""
+    if not settings.coingecko_enabled:
+        return None
+    from coingecko import check_market
+
+    check = check_market(coingecko_client(settings), meta, settings,
+                         planned_notional=plan.capital_deployed if plan else None)
+    print_market_check(check)
+    if plan is not None and not check.ok:
+        plan.refused = True
+        plan.refusal_reasons.extend(f"CoinGecko: {p}" for p in check.problems)
+    return check
+
+
 def make_plan_factory(adapter, meta: MarketMeta, settings: Settings, inputs_fn: Callable[[], RiskInputs],
                       *, verbose: bool, balance_check: Optional[Callable[[TradePlan, RiskInputs], Optional[str]]] = None):
     """Fresh analysis -> plan for each new run. Returns None (with a printed reason) if refused."""
@@ -398,6 +445,8 @@ def make_plan_factory(adapter, meta: MarketMeta, settings: Settings, inputs_fn: 
         analysis = analyze_market(adapter, meta, settings, now)
         inputs = inputs_fn()
         plan = build_plan(analysis, meta, inputs, now)
+        if not plan.refused:
+            coingecko_gate(settings, adapter.get_market_meta(), plan)
         if verbose or not plan.refused:
             print_analysis(analysis)
             print_plan(plan, meta)
@@ -576,6 +625,7 @@ def cmd_preview(args, settings, venue, product, input_fn) -> int:
     now = datetime.now(timezone.utc)
     analysis = analyze_market(adapter, meta, settings, now)
     plan = build_plan(analysis, meta, gather_risk_inputs(args, settings, venue, input_fn), now)
+    coingecko_gate(settings, meta, plan)
     print_plan(plan, meta)
     if plan.refused:
         print("\nPlan refused; previewing anyway so you can see what Coinbase would say.")
@@ -595,6 +645,32 @@ def cmd_preview(args, settings, venue, product, input_fn) -> int:
             print(f"    warning: {warning}")
     print("  Exits are sells of coins you will only hold after fills, so they cannot be previewed now.")
     return EXIT_OK if ok else EXIT_REFUSED
+
+
+def cmd_screen(args, settings, venue, product, input_fn) -> int:
+    """Rank coins tradable on the venue by liquidity using CoinGecko. Never trades."""
+    from coingecko import CoinGeckoClient, screen
+
+    adapter = make_adapter(venue, product or ("BTC-USD" if venue == Venue.COINBASE else "BTC"), settings,
+                           authenticated=False)
+    symbols = adapter.list_tradable_symbols()
+    print(f"{len(symbols)} {'USD spot products' if venue == Venue.COINBASE else 'active perps'} on {venue.value}; "
+          "ranking by CoinGecko 24h volume...")
+    rows = screen(CoinGeckoClient(settings), symbols, settings, limit=args.limit, venue=venue,
+                  progress=lambda sym: log.debug("fetching venue volume for %s", sym))
+    if not rows:
+        print("No tradable coin passed COINGECKO_MIN_VOLUME_USD.")
+        return EXIT_OK
+    venue_col = "Coinbase vol" if venue == Venue.COINBASE else ""
+    print(f"\n  {'#':>2} {'product':<12}{'price':>14}{'24h %':>9}{'24h vol (all)':>17}{'mkt cap':>17}  {venue_col}")
+    for i, r in enumerate(rows, 1):
+        change = f"{r.change_24h_pct:+.1f}" if r.change_24h_pct is not None else "n/a"
+        venue_vol = fmt(r.venue_volume_usd, 0) if r.venue_volume_usd is not None else ""
+        flag = "  (symbol shared by several coins; pin with COINGECKO_COIN_IDS)" if r.ambiguous else ""
+        print(f"  {i:>2} {r.venue_symbol:<12}{fmt(r.price):>14}{change:>9}{fmt(r.total_volume_usd, 0):>17}"
+              f"{fmt(r.market_cap_usd, 0):>17}  {venue_vol}{flag}")
+    print("\nA liquidity screen, not a recommendation. Run --analyze on a product before paper trading it.")
+    return EXIT_OK
 
 
 def cmd_check(args, settings, venue, product, input_fn) -> int:
@@ -623,6 +699,19 @@ def cmd_check(args, settings, venue, product, input_fn) -> int:
     if "meta" in meta_box:
         check("candle history", lambda: f"{len(public.get_candles(settings.candle_interval, TARGET_CANDLES))} "
                                         f"closed {settings.candle_interval} candles")
+    if settings.coingecko_enabled and "meta" in meta_box:
+        def gecko() -> str:
+            from coingecko import CoinGeckoClient, check_market
+
+            result = check_market(CoinGeckoClient(settings), meta_box["meta"], settings)
+            if not result.ok:
+                raise RuntimeError("; ".join(result.problems))
+            dev = f", deviation {result.deviation_pct:.2f}%" if result.deviation_pct is not None else ""
+            return f"{result.coin_id}: volume {fmt(result.total_volume_usd, 0)} USD{dev}"
+
+        check("CoinGecko cross-check (liquidity, price sanity)", gecko)
+    elif not settings.coingecko_enabled:
+        skip("CoinGecko cross-check", "COINGECKO_ENABLED=false")
     if _has_credentials(settings, venue):
         auth = make_adapter(venue, product, settings, authenticated=True)
         if venue == Venue.COINBASE:
@@ -789,7 +878,7 @@ def cmd_clear_halt(args, settings, venue, product, input_fn) -> int:
 COMMANDS = {
     "analyze": cmd_analyze, "paper": cmd_paper, "backtest": cmd_backtest, "live": cmd_live,
     "status": cmd_status, "cancel_open": cmd_cancel_open, "reset_paper": cmd_reset_paper,
-    "clear_halt": cmd_clear_halt, "check": cmd_check, "preview": cmd_preview,
+    "clear_halt": cmd_clear_halt, "check": cmd_check, "preview": cmd_preview, "screen": cmd_screen,
 }
 
 
@@ -804,7 +893,7 @@ def main(argv: Optional[list[str]] = None, input_fn: Callable[[str], str] = inpu
         print(f"Configuration error: {exc}", file=sys.stderr)
         return EXIT_ERROR
     setup_logging(args.log_level, settings)
-    if not args.venue or not args.product:
+    if not args.venue or (not args.product and not args.screen):
         parser.error("--venue and --product are required")
     if args.max_runs < 1:
         parser.error("--max-runs must be at least 1")

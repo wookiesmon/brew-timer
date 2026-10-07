@@ -62,6 +62,7 @@ python -m main --venue coinbase    --product GTC-USD --cancel-open
 python -m main --venue hyperliquid --product BTC     --cancel-open
 python -m main --venue coinbase    --product GTC-USD --reset-paper
 python -m main --venue hyperliquid --product BTC     --reset-paper
+python -m main --venue coinbase                      --screen       # rank tradable coins by CoinGecko liquidity
 python -m main --venue coinbase    --product GTC-USD --check        # pre-flight report, never trades
 python -m main --venue coinbase    --product GTC-USD --preview      # Coinbase validates the orders, places none
 python -m main --venue coinbase    --product GTC-USD --live         # only after every gate below
@@ -117,6 +118,38 @@ final size      = min(risk size, allocation size), split 40/35/25 and floored
 The risk size deliberately uses the worst case (stop-limit fill + fees + slippage)
 rather than just `avg entry − stop trigger`. That size is never larger than the
 textbook formula, and it keeps the printed worst-case loss within your budget.
+
+## 3b. CoinGecko checks (optional)
+CoinGecko is a market-data aggregator, **not** an exchange: it never places, sizes or
+prices orders. Entries, stops and fills always use the exchange's own data. It adds two
+things:
+
+- **`--screen`**: lists coins tradable on the venue, ranked by 24h volume across all
+  exchanges, with market cap, 24h change and (on Coinbase) Coinbase's own 24h volume.
+  Coins below `COINGECKO_MIN_VOLUME_USD` are dropped. It's a liquidity filter, not a
+  recommendation.
+- **Pre-trade check** (`COINGECKO_ENABLED=true`): before any new plan in `--analyze`,
+  `--paper`, `--preview` and `--live`, the plan is refused if any of these fail:
+  - The venue price differs from CoinGecko's cross-exchange price by more than
+    `COINGECKO_MAX_PRICE_DEVIATION_PCT` (default 2%). That usually means a stale feed or
+    a broken market. The comparison is skipped when CoinGecko's own price is over 15
+    minutes old.
+  - The coin's 24h volume across all exchanges is below `COINGECKO_MIN_VOLUME_USD`
+    (default $1M).
+  - Coinbase only: Coinbase's own 24h volume is below `COINGECKO_MIN_VENUE_VOLUME_USD`
+    (default $250k), or the planned position exceeds `COINGECKO_MAX_VOLUME_SHARE_PCT`
+    (default 1%) of it. Thin books are where stop-limits slip or fail to fill.
+
+  If CoinGecko can't be reached while the check is enabled, new plans are refused (it
+  fails closed). Runs already open keep being managed. `--check` shows the result.
+
+Setup: create a free **Demo** API key at coingecko.com/en/api and set `COINGECKO_API_KEY`
+(`COINGECKO_PLAN=pro` for a paid key). Many coins share a ticker symbol, so pin the ones
+you trade, e.g. `COINGECKO_COIN_IDS=GTC=gitcoin`. Responses are cached (prices 5 min,
+exchange volume 1 h, symbol lookups 24 h) to stay inside the Demo plan's monthly call cap.
+Coinbase's CoinGecko exchange id is `gdax` (`COINGECKO_COINBASE_EXCHANGE_ID`). For
+Hyperliquid perps, only the price and total-volume checks apply: CoinGecko's price is
+spot, so a small perp basis is normal.
 
 ## 4. Live trading
 
@@ -282,6 +315,7 @@ database.py            SQLite: runs, orders, fills, daily P/L, halt/cooldown sta
 analysis.py            indicators, swings, support/resistance zones
 risk.py                rounding, staged entries, stops, TPs, sizing, liquidation, limits
 retry.py               bounded exponential backoff for reads/cancels
+coingecko.py           optional CoinGecko screening and pre-trade market check
 simulator.py           paper exchange (same interface as the live adapters)
 coinbase_adapter.py    Coinbase Advanced Trade spot adapter
 hyperliquid_adapter.py Hyperliquid isolated-margin perp adapter

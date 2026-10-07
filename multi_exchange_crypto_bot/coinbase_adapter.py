@@ -62,6 +62,7 @@ STATUS_MAP = {
 
 REQUIRED_SDK = {
     "get_public_product": {"product_id"},
+    "get_public_products": {"product_type", "get_all_products"},
     "get_public_candles": {"product_id", "start", "end", "granularity", "limit"},
     "get_accounts": {"limit", "cursor"},
     "get_order": {"order_id"},
@@ -350,6 +351,9 @@ class CoinbaseAdapter:
                     log.warning("cancel failed order_id=%s reason=%s", item.get("order_id"), item.get("failure_reason"))
         return results
 
+    def list_tradable_symbols(self) -> dict[str, str]:
+        return list_spot_symbols(self.client, self.retrier)
+
     # ------------------------------------------------------------ pre-flight
     def key_permissions(self) -> dict:
         """{'can_view', 'can_trade', 'can_transfer', ...} for the configured CDP key."""
@@ -380,3 +384,20 @@ class CoinbaseAdapter:
             "order_total": resp.get("order_total"),
             "commission_total": resp.get("commission_total"),
         }
+
+
+def list_spot_symbols(client: Any, retrier: Optional[Retrier] = None) -> dict[str, str]:
+    """Tradable USD/USDC spot products: base asset -> product id (USD preferred over USDC)."""
+    retrier = retrier or Retrier(0)
+    resp = to_plain(retrier.call(client.get_public_products, product_type="SPOT", get_all_products=True))
+    out: dict[str, str] = {}
+    for p in (resp or {}).get("products") or []:
+        quote = str(p.get("quote_currency_id") or "")
+        if quote not in ("USD", "USDC") or str(p.get("status", "")).lower() != "online":
+            continue
+        if p.get("trading_disabled") or p.get("is_disabled") or p.get("view_only") or p.get("cancel_only"):
+            continue
+        base = str(p.get("base_currency_id") or "").upper()
+        if base and (base not in out or quote == "USD"):
+            out[base] = str(p["product_id"])
+    return out

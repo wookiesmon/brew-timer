@@ -403,6 +403,9 @@ class HyperliquidAdapter:
             results[oid] = ok
         return results
 
+    def list_tradable_symbols(self) -> dict[str, str]:
+        return list_perp_symbols(self.retrier.call(self.info.meta_and_asset_ctxs))
+
     # ------------------------------------------------------------ pre-flight
     def signer_address(self) -> str:
         from eth_account import Account
@@ -419,3 +422,17 @@ class HyperliquidAdapter:
             raise LiveTradingDisabled(
                 "HYPERLIQUID_PRIVATE_KEY is the main account's key, which can withdraw funds; "
                 "generate an API wallet and use its key instead")
+
+
+def list_perp_symbols(meta_and_ctxs: Any) -> dict[str, str]:
+    """Active Hyperliquid perps: coin -> coin."""
+    if not (isinstance(meta_and_ctxs, list) and len(meta_and_ctxs) == 2):
+        raise InvalidMetadata("unexpected metaAndAssetCtxs response")
+    meta, ctxs = meta_and_ctxs
+    out = {}
+    for idx, asset in enumerate((meta or {}).get("universe") or []):
+        ctx = ctxs[idx] if idx < len(ctxs) else {}
+        if asset.get("isDelisted") or ctx.get("markPx") in (None, ""):
+            continue
+        out[str(asset["name"]).upper()] = str(asset["name"])
+    return out
