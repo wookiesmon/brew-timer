@@ -106,6 +106,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--max-runs", type=int, default=1,
                    help="paper/live: trade up to N plans in this session (default 1)")
     p.add_argument("--candles", type=int, default=1000, help="backtest: number of candles to fetch")
+    p.add_argument("--products", help="backtest: comma-separated products, e.g. BTC-USD,ETH-USD,SOL-USD")
+    p.add_argument("--compare", action="store_true",
+                   help="backtest: compare trend filters and exit rules, ranked by out-of-sample results")
+    p.add_argument("--fee-pct", help="backtest: fee %% per order to assume, or a list like 1.2,0.6,0.045")
     p.add_argument("--limit", type=int, default=20, help="--screen: number of rows")
     p.add_argument("--yes", action="store_true", help="skip the --cancel-open confirmation")
     p.add_argument("--env-file", default=".env")
@@ -749,24 +753,133 @@ def cmd_check(args, settings, venue, product, input_fn) -> int:
     return EXIT_ERROR if failed else EXIT_OK
 
 
-def cmd_backtest(args, settings, venue, product, input_fn) -> int:
-    adapter = make_adapter(venue, product, settings, authenticated=False)
-    meta = load_meta(adapter)
-    df = adapter.get_candles(settings.candle_interval, max(args.candles, 200), datetime.now(timezone.utc))
-    inputs = gather_risk_inputs(args, settings, venue, input_fn)
-    result = run_backtest(df, meta, settings, inputs, interval=settings.candle_interval)
-    print(f"\n=== Walk-forward backtest (SIMULATED) {meta.symbol} {settings.candle_interval} x {result.candles} ===")
-    print("  Past simulated results do not predict future results. Funding and liquidation are not simulated.")
-    for r in result.runs:
-        print(f"  {r['run_id']} {r['created_at'][:16]} {r['status']:<7} bought {fmt(r['bought'])} "
-              f"realized {fmt(r['realized'], 2)} open {fmt(r['open_position'])}")
-    print(f"  runs: {len(result.runs)}   total realized: {fmt(result.total_realized, 2)}   "
-          f"open position: {fmt(result.open_position)} (unrealized {fmt(result.unrealized, 2)})")
-    print(f"  max drawdown (equity, simulated): {fmt(result.max_drawdown, 2)}")
-    if result.skipped_plans:
+COMPARE_GRID = (  # (trend filter, breakeven after TP1, trailing stop in ATR)
+    ("off", False, Decimal(0)),
+    ("ema", False, Decimal(0)),
+    ("ema200", False, Decimal(0)),
+    ("off", True, Decimal(2)),
+    ("ema", True, Decimal(2)),
+    ("ema200", True, Decimal(2)),
+)
+
+
+def _signed(value: Optional[Decimal], places: int = 2) -> str:
+    return "n/a" if value is None else f"{value:+.{places}f}"
+
+
+def _pf(stats) -> str:
+    if stats.profit_factor is not None:
+        return f"{stats.profit_factor:.2f}"
+    return "inf" if stats.wins else "n/a"
+
+
+def config_label(trend: str, breakeven: bool, trail: Decimal) -> str:
+    exits = "fixed TPs" if not breakeven and not trail else (
+        ("breakeven" if breakeven else "") + ("+" if breakeven and trail else "") + (f"trail {trail}ATR" if trail else ""))
+    return f"trend={trend:<6} exits={exits}"
+
+
+def print_backtest_report(r, interval: str, label: str = "") -> None:
+    s = r.stats
+    print(f"\n=== Walk-forward backtest (SIMULATED) {r.symbol} {interval} x {r.candles} candles {label}===")
+    print(f"  trades            {s.trades} (wins {s.wins}, losses {s.losses})   win rate "
+          f"{'n/a' if s.win_rate is None else f'{s.win_rate:.1f}%'}   profit factor {_pf(s)}")
+    print(f"  avg trade         {_signed(s.expectancy)}   avg win {_signed(s.avg_win)}   avg loss {_signed(s.avg_loss)}"
+          f"   fees paid {fmt(s.fees, 2)}")
+    print(f"  net P/L           {_signed(s.net_pnl)} ({r.return_pct:+.2f}% of equity incl. open position)   "
+          f"max drawdown {fmt(r.max_drawdown, 2)} ({r.max_drawdown_pct:.2f}%)   time in market {r.exposure_pct:.0f}%")
+    for name, part in (("in-sample (70%)", r.in_sample), ("out-of-sample (30%)", r.out_of_sample)):
+        print(f"  {name:<21}{part.trades} trades, net {_signed(part.net_pnl)}, profit factor {_pf(part)}")
+    print(f"  buy & hold        {_signed(r.buy_hold_pnl)} holding the same max allocation "
+          f"(asset {r.asset_change_pct:+.1f}% over the period)")
+    if r.open_position > 0:
+        print(f"  open at end       {fmt(r.open_position)} units, P/L so far {_signed(r.unrealized)} (not counted as a trade)")
+    if not s.enough_trades:
+        print(f"  ! only {s.trades} closed trades: too few to tell skill from luck (want 30+)")
+    if r.skipped_plans:
         print("  candles where no plan was allowed:")
-        for reason, n in sorted(result.skipped_plans.items(), key=lambda kv: -kv[1]):
+        for reason, n in sorted(r.skipped_plans.items(), key=lambda kv: -kv[1])[:5]:
             print(f"    {n:>5} x {reason}")
+
+
+def _fee_list(raw: Optional[str]) -> list[Optional[Decimal]]:
+    if not raw:
+        return [None]
+    out = []
+    for part in raw.split(","):
+        value = _decimal_arg(part.strip(), "--fee-pct")
+        out.append(value)
+    return out
+
+
+def cmd_backtest(args, settings, venue, product, input_fn) -> int:
+    import dataclasses
+
+    from metrics import MIN_MEANINGFUL_TRADES, merge
+
+    products = [p.strip() for p in (args.products or product or "").split(",") if p.strip()]
+    if not products:
+        raise ConfigError("give --product or --products")
+    base_inputs = gather_risk_inputs(args, settings, venue, input_fn)
+    data = []
+    for name in products:
+        try:
+            adapter = make_adapter(venue, name, settings, authenticated=False)
+            meta = load_meta(adapter)
+            df = adapter.get_candles(settings.candle_interval, max(args.candles, 200), datetime.now(timezone.utc))
+        except (MarketUnavailable, InvalidMetadata, InsufficientHistory) as exc:
+            print(f"Skipping {name}: {exc}")
+            continue
+        data.append((meta, df))
+    if not data:
+        return EXIT_UNAVAILABLE
+
+    configs = COMPARE_GRID if args.compare else (
+        (settings.trend_filter, settings.breakeven_after_tp1, settings.trail_atr_multiple),)
+    rows = []
+    for fee in _fee_list(args.fee_pct):
+        for trend, breakeven, trail in configs:
+            run_settings = settings.model_copy(update={
+                "trend_filter": trend, "breakeven_after_tp1": breakeven, "trail_atr_multiple": trail,
+                **({"coinbase_fee_pct": fee, "hyperliquid_fee_pct": fee} if fee is not None else {}),
+            })
+            inputs = dataclasses.replace(base_inputs, trend_filter=trend,
+                                         fee_pct=fee if fee is not None else base_inputs.fee_pct)
+            label = config_label(trend, breakeven, trail) + f" fee={inputs.fee_pct}%"
+            if args.compare:
+                print(f"  running {label} ...", flush=True)
+            results = [run_backtest(df, meta, run_settings, inputs, interval=settings.candle_interval)
+                       for meta, df in data]
+            if not args.compare:
+                for r in results:
+                    print_backtest_report(r, settings.candle_interval, f"[{label}] ")
+            rows.append((label, results))
+
+    print("\nPast simulated results do not predict future results. Funding and liquidation are not simulated.")
+    if not args.compare and len(data) == 1:
+        return EXIT_OK
+
+    print(f"\n=== {'Comparison' if args.compare else 'Summary'} across {', '.join(m.symbol for m, _ in data)} "
+          f"({settings.candle_interval}, SIMULATED) ===")
+    print("  Choose rules by the OUT-OF-SAMPLE columns (data the rules were not picked on), and only")
+    print(f"  trust rows with {MIN_MEANINGFUL_TRADES}+ trades. Compare net P/L with buy & hold.")
+    header = (f"  {'rules':<56}{'trades':>7}{'win%':>7}{'PF':>6}{'avg':>9}{'net':>10}"
+              f"{'OOS tr':>8}{'OOS PF':>8}{'OOS net':>10}{'maxDD%':>8}{'B&H':>10}")
+    print(header)
+    summary = []
+    for label, results in rows:
+        allstats = merge(r.stats for r in results)
+        oos = merge(r.out_of_sample for r in results)
+        dd = max(r.max_drawdown_pct for r in results)
+        bh = sum((r.buy_hold_pnl for r in results), Decimal(0))
+        summary.append((oos.net_pnl, label, allstats, oos, dd, bh))
+    for _, label, st, oos, dd, bh in sorted(summary, key=lambda x: x[0], reverse=True):
+        flag = "" if st.enough_trades else "  (few trades)"
+        win = "n/a" if st.win_rate is None else f"{st.win_rate:.0f}"
+        print(f"  {label:<56}{st.trades:>7}{win:>7}{_pf(st):>6}{_signed(st.expectancy):>9}{_signed(st.net_pnl):>10}"
+              f"{oos.trades:>8}{_pf(oos):>8}{_signed(oos.net_pnl):>10}{dd:>8.1f}{_signed(bh):>10}{flag}")
+    print("\n  PF = profit factor (gains / losses after fees; above 1.0 is profitable). avg = net P/L per trade.")
+    print("  To adopt a row, set TREND_FILTER, BREAKEVEN_AFTER_TP1 and TRAIL_ATR_MULTIPLE in .env, then paper-trade it.")
     return EXIT_OK
 
 
@@ -893,7 +1006,7 @@ def main(argv: Optional[list[str]] = None, input_fn: Callable[[str], str] = inpu
         print(f"Configuration error: {exc}", file=sys.stderr)
         return EXIT_ERROR
     setup_logging(args.log_level, settings)
-    if not args.venue or (not args.product and not args.screen):
+    if not args.venue or (not args.product and not args.screen and not (args.backtest and args.products)):
         parser.error("--venue and --product are required")
     if args.max_runs < 1:
         parser.error("--max-runs must be at least 1")

@@ -36,7 +36,7 @@ def fake_analysis(price: float = 100.0, atr: float = 2.0, resistances=None, **ov
     fields = dict(
         symbol="TEST-USD", interval="1h", candle_count=300, missing_candles=0, first_time=NOW, last_time=NOW,
         last_close=price, change_lookback_pct=0.0, change_24h_pct=0.0, high=price * 1.1, low=price * 0.9,
-        atr=atr, ema20=price, ema50=price, rsi=50.0, volatility_per_candle_pct=1.0,
+        atr=atr, ema20=price, ema50=price, ema200=price, rsi=50.0, volatility_per_candle_pct=1.0,
         volatility_annualized_pct=90.0, avg_volume=1000.0, volume_ratio=1.0, supports=[],
         resistances=resistances or [], extended=False, illiquid=False,
     )

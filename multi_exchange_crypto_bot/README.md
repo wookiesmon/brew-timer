@@ -119,6 +119,44 @@ The risk size deliberately uses the worst case (stop-limit fill + fees + slippag
 rather than just `avg entry − stop trigger`. That size is never larger than the
 textbook formula, and it keeps the printed worst-case loss within your budget.
 
+## 3a. Finding out whether there is an edge
+A strategy is only worth running if it makes money **after fees** on data it wasn't tuned
+on. The backtest reports exactly that.
+
+```bash
+# One product, current .env rules
+python -m main --venue coinbase --product BTC-USD --backtest --candles 2000
+
+# Several products, every rule combination, two fee levels
+python -m main --venue coinbase --backtest --products BTC-USD,ETH-USD,SOL-USD \
+    --compare --fee-pct 1.2,0.045 --candles 2000
+```
+
+The report shows trades, win rate, **profit factor** (gains ÷ losses after fees; above
+1.0 is profitable), **average net P/L per trade**, fees paid, max drawdown, time in the
+market, and **buy & hold** with the same allocation. Trades are also split into
+**in-sample** (first 70% of the period) and **out-of-sample** (last 30%).
+
+`--compare` runs each trend filter (off / ema / ema200), with and without breakeven +
+trailing exits, at every fee level in `--fee-pct`. Rows are ranked by out-of-sample net P/L.
+How to read it:
+- Pick rules by the **out-of-sample** columns. Choosing by the whole period overfits.
+- Ignore rows with fewer than 30 trades: they're noise.
+- If no row beats buy & hold out-of-sample after realistic fees, the honest conclusion is
+  "don't run this strategy". That's a valid and useful result.
+- Fees dominate. At Coinbase's 1.2% taker fee a round trip costs about 2.4%. Compare with
+  `--fee-pct 0.045` (roughly Hyperliquid's taker fee) to see how much of the result is fees.
+
+To adopt a row, set `TREND_FILTER`, `BREAKEVEN_AFTER_TP1` and `TRAIL_ATR_MULTIPLE` in
+`.env`, then paper-trade it before going live.
+
+Exit rules:
+- **Breakeven** (`BREAKEVEN_AFTER_TP1=true`): once TP1 fills, the stop rises to the average
+  entry plus fees, so a trade that has reached TP1 can't become a real loss (barring gaps).
+- **Trailing** (`TRAIL_ATR_MULTIPLE=2`): after TP1, the stop follows the highest price by
+  2×ATR, and the final third rides it instead of a fixed TP3. The stop only ever moves up.
+  It is replaced when it would rise by at least ¼ ATR, which limits order churn.
+
 ## 3b. CoinGecko checks (optional)
 CoinGecko is a market-data aggregator, **not** an exchange: it never places, sizes or
 prices orders. Entries, stops and fills always use the exchange's own data. It adds two
@@ -317,6 +355,7 @@ analysis.py            indicators, swings, support/resistance zones
 risk.py                rounding, staged entries, stops, TPs, sizing, liquidation, limits
 retry.py               bounded exponential backoff for reads/cancels
 coingecko.py           optional CoinGecko screening and pre-trade market check
+metrics.py             backtest statistics (profit factor, expectancy, drawdown)
 simulator.py           paper exchange (same interface as the live adapters)
 coinbase_adapter.py    Coinbase Advanced Trade spot adapter
 hyperliquid_adapter.py Hyperliquid isolated-margin perp adapter

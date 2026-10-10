@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 from pydantic import BaseModel, ConfigDict, SecretStr, ValidationError, model_validator
 
 SUPPORTED_INTERVALS = ("1m", "5m", "15m", "30m", "1h", "2h", "1d")
+TREND_FILTERS = ("off", "ema", "ema200")
 
 _TRUE = {"true", "1", "yes", "on"}
 _FALSE = {"false", "0", "no", "off", ""}
@@ -107,6 +108,10 @@ class Settings(BaseModel):
     stop_file: Path = Path("STOP")
     log_file: Optional[Path] = None
 
+    trend_filter: str = "off"  # off | ema | ema200
+    breakeven_after_tp1: bool = False
+    trail_atr_multiple: Decimal = Decimal("0")  # 0 = no trailing stop
+
     coingecko_enabled: bool = False
     coingecko_api_key: Optional[SecretStr] = None
     coingecko_plan: str = "demo"
@@ -141,6 +146,10 @@ class Settings(BaseModel):
             raise ConfigError("MAX_RETRIES must be >= 0 and API_TIMEOUT_SECONDS > 0")
         if self.candle_interval not in SUPPORTED_INTERVALS:
             raise ConfigError(f"CANDLE_INTERVAL must be one of {', '.join(SUPPORTED_INTERVALS)}")
+        if self.trend_filter not in TREND_FILTERS:
+            raise ConfigError(f"TREND_FILTER must be one of {', '.join(TREND_FILTERS)}")
+        if self.trail_atr_multiple < 0:
+            raise ConfigError("TRAIL_ATR_MULTIPLE must not be negative")
         if self.coingecko_plan not in ("demo", "pro"):
             raise ConfigError("COINGECKO_PLAN must be demo or pro")
         for name in ("coingecko_min_volume_usd", "coingecko_min_venue_volume_usd"):
@@ -217,6 +226,9 @@ def _build(env: Mapping[str, str]) -> Settings:
         sim_volume_participation_pct=_decimal(env, "SIM_VOLUME_PARTICIPATION_PCT", "20"),
         database_path=Path(_get(env, "DATABASE_PATH") or "trading_bot.sqlite3"),
         log_file=Path(_get(env, "LOG_FILE")) if _get(env, "LOG_FILE") else None,
+        trend_filter=(_get(env, "TREND_FILTER") or "off").lower(),
+        breakeven_after_tp1=_bool(env, "BREAKEVEN_AFTER_TP1", False),
+        trail_atr_multiple=_decimal(env, "TRAIL_ATR_MULTIPLE", "0"),
         coingecko_enabled=_bool(env, "COINGECKO_ENABLED", False),
         coingecko_api_key=_secret(env, "COINGECKO_API_KEY"),
         coingecko_plan=(_get(env, "COINGECKO_PLAN") or "demo").lower(),

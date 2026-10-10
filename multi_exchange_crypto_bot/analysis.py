@@ -52,6 +52,7 @@ class MarketAnalysis:
     atr: float
     ema20: float
     ema50: float
+    ema200: Optional[float]
     rsi: float
     volatility_per_candle_pct: float
     volatility_annualized_pct: float
@@ -175,6 +176,7 @@ def analyze(
     atr_series = atr(df)
     ema20_series = ema(close, 20)
     ema50_series = ema(close, 50)
+    ema200_value = float(ema(close, 200).iloc[-1]) if len(close) >= 200 else float("nan")
     rsi_series = rsi(close)
     last_close = float(close.iloc[-1])
     last_atr = float(atr_series.iloc[-1])
@@ -256,6 +258,7 @@ def analyze(
         atr=last_atr,
         ema20=last_ema20,
         ema50=last_ema50,
+        ema200=ema200_value if np.isfinite(ema200_value) else None,
         rsi=last_rsi,
         volatility_per_candle_pct=vol_per_candle * 100,
         volatility_annualized_pct=vol_annual * 100,

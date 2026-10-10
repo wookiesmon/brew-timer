@@ -415,5 +415,5 @@ def test_backtest_runs_walk_forward(tmp_path):
     meta = cb_meta(price_increment=Decimal("0.01"))
     result = run_backtest(make_candles(n=400), meta, settings, inputs, interval="1h")
     assert result.candles == 400
-    assert result.runs, "expected at least one simulated run"
-    assert all(r["bought"] >= 0 for r in result.runs)
+    assert result.stats.trades + (1 if result.open_position else 0) >= 1, "expected at least one simulated trade"
+    assert result.stats.trades == result.in_sample.trades + result.out_of_sample.trades

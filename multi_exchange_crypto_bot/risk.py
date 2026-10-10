@@ -90,6 +90,7 @@ class RiskInputs:
     slippage_pct: Decimal
     stop_buffer_pct: Decimal
     leverage: int = 1
+    trend_filter: str = "off"
 
 
 def risk_inputs_from_settings(
@@ -121,6 +122,7 @@ def risk_inputs_from_settings(
         slippage_pct=settings.slippage_pct,
         stop_buffer_pct=settings.stop_buffer_pct,
         leverage=settings.hyperliquid_leverage if venue == Venue.HYPERLIQUID else 1,
+        trend_filter=settings.trend_filter,
     )
 
 
@@ -164,6 +166,21 @@ def approx_isolated_long_liquidation(avg_entry: Decimal, leverage: int, max_leve
     return max(liq, Decimal(0))
 
 
+def trend_filter_reasons(analysis: MarketAnalysis, trend_filter: str) -> list[str]:
+    """Only buy dips in an uptrend. 'ema': EMA20 > EMA50. 'ema200': also close > EMA200."""
+    if trend_filter == "off":
+        return []
+    reasons = []
+    if analysis.ema20 <= analysis.ema50:
+        reasons.append("Trend filter: EMA20 is not above EMA50 (no uptrend).")
+    if trend_filter == "ema200":
+        if analysis.ema200 is None:
+            reasons.append("Trend filter: fewer than 200 candles, EMA200 unavailable.")
+        elif analysis.last_close <= analysis.ema200:
+            reasons.append("Trend filter: price is not above EMA200 (long-term trend down).")
+    return reasons
+
+
 def split_quantity(total: Decimal, weights: tuple[Decimal, ...], meta: MarketMeta) -> list[Decimal]:
     """Split ``total`` by weights, flooring each part; the last part takes the remainder."""
     parts = [round_size(meta, total * w) for w in weights[:-1]]
@@ -183,6 +200,7 @@ def build_plan(analysis: MarketAnalysis, meta: MarketMeta, inputs: RiskInputs, n
 
     if analysis.extended:
         reasons.append("Market is extended; no automatic market entry will be created.")
+    reasons.extend(trend_filter_reasons(analysis, inputs.trend_filter))
     if analysis.illiquid:
         reasons.append("Market looks illiquid; no entry plan will be created.")
     if atr_value <= 0:

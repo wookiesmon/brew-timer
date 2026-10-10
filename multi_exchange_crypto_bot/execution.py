@@ -37,6 +37,7 @@ import pandas as pd
 from analysis import INTERVAL_SECONDS, MIN_CANDLES, analyze
 from config import Settings
 from database import Database, iso
+from metrics import TradeStats, max_drawdown, trade_stats
 from models import (
     FatalRiskError,
     InsufficientHistory,
@@ -62,6 +63,7 @@ from risk import (
     daily_loss_breached,
     kill_switch_active,
     meets_minimums,
+    round_price,
     round_size,
     split_quantity,
 )
@@ -317,12 +319,38 @@ class TradingEngine:
             need = round_size(self.meta, min(tranche - sold, budget))
             if need <= 0 or not meets_minimums(self.meta, need, level):
                 continue
+            if leg == TP_LEGS[-1] and self.settings.trail_atr_multiple > 0:
+                continue  # the last tranche rides the trailing stop instead of a fixed target
             is_open = bool(self._orders(leg=leg, open_only=True))
             if self.gateway.exits_share_balance and last_price < level and not is_open:
                 continue  # Coinbase: only free the stop's balance once the level is reached
             desired[leg] = (need, level)
             budget -= need
         return desired
+
+    def stop_levels(self, last_price: Decimal) -> tuple[Decimal, Decimal]:
+        """Current protective stop as (trigger, limit). It starts at the plan's stop and only ever
+        moves up: to breakeven after TP1 fills (BREAKEVEN_AFTER_TP1), then trailing the highest
+        price since by TRAIL_ATR_MULTIPLE x ATR. The trigger-to-limit buffer stays the plan's."""
+        trigger = self.plan.stop_trigger
+        buffer = self.plan.stop_trigger - self.plan.stop_limit
+        if any(r.filled_quantity > 0 for r in self._orders(leg=TP_LEGS[0])):
+            if self.settings.breakeven_after_tp1:
+                _, avg_cost = self.db.position(self.run_id)
+                trigger = max(trigger, avg_cost * (1 + self.fee))  # also covers the exit fee
+            if self.settings.trail_atr_multiple > 0:
+                high_key = f"trail_high:{self.run_id}"
+                high = max(Decimal(self.db.get_state(high_key) or "0"), last_price)
+                self.db.set_state(high_key, str(high))
+                trigger = max(trigger, high - self.settings.trail_atr_multiple * self.plan.atr)
+        stop_key = f"stop_trigger:{self.run_id}"
+        stored = self.db.get_state(stop_key)
+        if stored is not None:
+            trigger = max(trigger, Decimal(stored))
+        self.db.set_state(stop_key, str(trigger))
+        trigger = round_price(self.meta, trigger)
+        limit = round_price(self.meta, trigger - buffer) if trigger - buffer > 0 else self.plan.stop_limit
+        return trigger, min(limit, trigger)
 
     def manage_exits(self, now: datetime, last_price: Decimal) -> None:
         position, _ = self.db.position(self.run_id)
@@ -333,6 +361,7 @@ class TradingEngine:
             return
 
         desired_tps = self.desired_take_profits(position, last_price)
+        stop_trigger, stop_limit = self.stop_levels(last_price)
         tp_total = sum((q for q, _ in desired_tps.values()), Decimal(0))
         stop_qty = round_size(self.meta, position - tp_total if self.gateway.exits_share_balance else position)
         inc = self.meta.size_increment
@@ -343,7 +372,11 @@ class TradingEngine:
                 self.cancel_and_confirm([record], now)
         stops = [r for r in open_exits if r.role == OrderRole.STOP]
         for record in stops:
-            if abs(record.remaining - stop_qty) >= inc:
+            raised = (record.order_type == OrderType.STOP_LIMIT and record.trigger_price is not None
+                      and stop_trigger - record.trigger_price >= self.plan.atr / 4)
+            if abs(record.remaining - stop_qty) >= inc or raised:
+                if raised:
+                    self._note(f"raising stop trigger {record.trigger_price} -> {stop_trigger}")
                 if not self.cancel_and_confirm([record], now):
                     self._note("stop resize pending: old stop not yet confirmed cancelled")
                     return
@@ -363,26 +396,26 @@ class TradingEngine:
             return
         if stop_qty <= 0:
             return
-        if not meets_minimums(self.meta, stop_qty, self.plan.stop_limit):
+        if not meets_minimums(self.meta, stop_qty, stop_limit):
             self._note(f"residual {stop_qty} is below the exchange minimum and cannot carry a stop order")
             return
         if self.gateway.exits_share_balance:
             available = self.gateway.available_position()
             if stop_qty > available:
                 stop_qty = round_size(self.meta, available)
-                if not meets_minimums(self.meta, stop_qty, self.plan.stop_limit):
+                if not meets_minimums(self.meta, stop_qty, stop_limit):
                     self._note("stop waiting: base balance not yet available")
                     return
         self._halt_if_stop_keeps_failing(now)
-        if last_price <= self.plan.stop_trigger:
+        if last_price <= stop_trigger:
             # A stop order below the market would be rejected (or trigger at once). Place what a
             # triggered stop-limit becomes: a limit sell at the stop-limit price.
             self._note("price is already at or below the stop trigger: protecting with a limit sell "
                        "at the stop-limit price (what a triggered stop-limit becomes)")
-            self.submit(STOP_LEG, OrderRole.STOP, Side.SELL, OrderType.LIMIT, stop_qty, self.plan.stop_limit, now)
+            self.submit(STOP_LEG, OrderRole.STOP, Side.SELL, OrderType.LIMIT, stop_qty, stop_limit, now)
             return
         self.submit(STOP_LEG, OrderRole.STOP, Side.SELL, OrderType.STOP_LIMIT, stop_qty,
-                    self.plan.stop_limit, now, trigger=self.plan.stop_trigger)
+                    stop_limit, now, trigger=stop_trigger)
 
     def _halt_if_stop_keeps_failing(self, now: datetime) -> None:
         rejected = [r for r in self._orders(leg=STOP_LEG) if r.status == OrderStatus.REJECTED]
@@ -508,15 +541,35 @@ class RunSession:
 
 
 # --------------------------------------------------------------- backtest
+OUT_OF_SAMPLE_FRACTION = Decimal("0.3")
+
+
 @dataclass
 class BacktestResult:
-    runs: list[dict]
-    total_realized: Decimal
+    symbol: str
+    candles: int
+    trades: list[dict]  # closed runs: run_id, created_at, pnl (net of fees), fees, sample
+    stats: TradeStats  # all closed trades
+    in_sample: TradeStats  # first 70% of the period
+    out_of_sample: TradeStats  # last 30%: the honest test when comparing settings
     open_position: Decimal
     unrealized: Decimal
+    starting_equity: Decimal
+    ending_equity: Decimal
     max_drawdown: Decimal
-    candles: int
+    max_drawdown_pct: Decimal
+    exposure_pct: Decimal  # share of the period with a position open
+    asset_change_pct: Decimal
+    buy_hold_pnl: Decimal  # holding the max allocation for the whole period, after fees
     skipped_plans: dict[str, int]
+
+    @property
+    def total_realized(self) -> Decimal:
+        return self.stats.net_pnl
+
+    @property
+    def return_pct(self) -> Decimal:
+        return (self.ending_equity / self.starting_equity - 1) * 100
 
 
 def candle_row(ts: pd.Timestamp, row) -> dict:
@@ -528,7 +581,8 @@ def run_backtest(
     warmup: int = MIN_CANDLES, stop_file: Optional[Path] = None,
 ) -> BacktestResult:
     """Walk-forward replay: at each closed candle the plan is built from past candles
-    only, then the simulator matches orders against the *next* candle."""
+    only, then the simulator matches orders against the *next* candle. Exit rules
+    (breakeven, trailing) and the trend filter come from ``settings``/``inputs``."""
     from simulator import SimulatedExchange
 
     if len(df) <= warmup + 1:
@@ -544,8 +598,11 @@ def run_backtest(
     stop_file = stop_file or Path("__backtest_has_no_kill_switch__")
     engine: Optional[TradingEngine] = None
     skipped: dict[str, int] = {}
-    equity_curve: list[Decimal] = []
+    equity_curve: list[Decimal] = [inputs.account_equity]
+    in_market = 0
     counter = 0
+    split_index = warmup + int((len(df) - 1 - warmup) * (1 - OUT_OF_SAMPLE_FRACTION))
+    split_time = (df.index[split_index] + pd.Timedelta(seconds=seconds)).to_pydatetime()
     for i in range(warmup, len(df) - 1):
         ts = df.index[i]
         now = (ts + pd.Timedelta(seconds=seconds)).to_pydatetime()
@@ -577,24 +634,50 @@ def run_backtest(
         nxt = df.index[i + 1]
         sim.process_candle(candle_row(nxt, df.iloc[i + 1]))
         quote, base = sim.balances()
+        in_market += base > 0
         equity_curve.append(quote + base * Decimal(str(df["close"].iloc[i + 1])))
 
+    first_close = Decimal(str(df["close"].iloc[warmup]))
     last_close = Decimal(str(df["close"].iloc[-1]))
-    runs, total = [], Decimal(0)
+    trades: list[dict] = []
     open_position = unrealized = Decimal(0)
     for row in db.runs(meta.venue.value, meta.symbol, Mode.BACKTEST.value):
         position, avg_cost = db.position(row["run_id"])
+        fills = db.fills_for_run(row["run_id"])
+        if not fills:
+            continue  # entries never filled: no trade
         realized = db.realized_for_run(row["run_id"])
-        total += realized
         if position > 0:
             open_position += position
-            unrealized += position * (last_close - avg_cost)
-        runs.append({"run_id": row["run_id"], "created_at": row["created_at"], "status": row["status"],
-                     "bought": db.total_bought(row["run_id"]), "realized": realized, "open_position": position})
-    peak, max_dd = Decimal(0), Decimal(0)
-    for value in equity_curve:
-        peak = max(peak, value)
-        max_dd = max(max_dd, peak - value)
+            unrealized += realized + position * (last_close - avg_cost)
+            continue
+        created = datetime.fromisoformat(row["created_at"])
+        trades.append({
+            "run_id": row["run_id"], "created_at": row["created_at"], "pnl": realized,
+            "fees": sum((Decimal(f["fee"]) for f in fills), Decimal(0)),
+            "sample": "in" if created < split_time else "out",
+        })
+    dd, dd_pct = max_drawdown(equity_curve)
+    allocation = min(inputs.max_allocation_usd, inputs.max_position_notional_usd)
+    fee = inputs.fee_pct / 100
+    buy_hold = allocation * (last_close / first_close - 1) - allocation * fee - allocation * (last_close / first_close) * fee
     db.close()
-    return BacktestResult(runs=runs, total_realized=total, open_position=open_position, unrealized=unrealized,
-                          max_drawdown=max_dd, candles=len(df), skipped_plans=skipped)
+    pick = lambda sample: [t for t in trades if sample is None or t["sample"] == sample]  # noqa: E731
+    return BacktestResult(
+        symbol=meta.symbol,
+        candles=len(df),
+        trades=trades,
+        stats=trade_stats([t["pnl"] for t in pick(None)], [t["fees"] for t in pick(None)]),
+        in_sample=trade_stats([t["pnl"] for t in pick("in")], [t["fees"] for t in pick("in")]),
+        out_of_sample=trade_stats([t["pnl"] for t in pick("out")], [t["fees"] for t in pick("out")]),
+        open_position=open_position,
+        unrealized=unrealized,
+        starting_equity=inputs.account_equity,
+        ending_equity=equity_curve[-1],
+        max_drawdown=dd,
+        max_drawdown_pct=dd_pct,
+        exposure_pct=Decimal(in_market) / max(len(equity_curve) - 1, 1) * 100,
+        asset_change_pct=(last_close / first_close - 1) * 100,
+        buy_hold_pnl=buy_hold,
+        skipped_plans=skipped,
+    )
