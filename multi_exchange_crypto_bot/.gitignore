@@ -1,0 +1,8 @@
+.env
+*.sqlite3
+*.sqlite3-journal
+STOP
+.venv/
+__pycache__/
+.pytest_cache/
+*.log
