@@ -562,6 +562,9 @@ class BacktestResult:
     asset_change_pct: Decimal
     buy_hold_pnl: Decimal  # holding the max allocation for the whole period, after fees
     skipped_plans: dict[str, int]
+    equity_times: list = field(default_factory=list)  # candle times matching equity_curve
+    equity_curve: list = field(default_factory=list)
+    buy_hold_curve: list = field(default_factory=list)  # equity if the max allocation were held
 
     @property
     def total_realized(self) -> Decimal:
@@ -599,6 +602,7 @@ def run_backtest(
     engine: Optional[TradingEngine] = None
     skipped: dict[str, int] = {}
     equity_curve: list[Decimal] = [inputs.account_equity]
+    equity_times = [df.index[warmup].to_pydatetime()]
     in_market = 0
     counter = 0
     split_index = warmup + int((len(df) - 1 - warmup) * (1 - OUT_OF_SAMPLE_FRACTION))
@@ -636,6 +640,7 @@ def run_backtest(
         quote, base = sim.balances()
         in_market += base > 0
         equity_curve.append(quote + base * Decimal(str(df["close"].iloc[i + 1])))
+        equity_times.append(nxt.to_pydatetime())
 
     first_close = Decimal(str(df["close"].iloc[warmup]))
     last_close = Decimal(str(df["close"].iloc[-1]))
@@ -661,6 +666,8 @@ def run_backtest(
     allocation = min(inputs.max_allocation_usd, inputs.max_position_notional_usd)
     fee = inputs.fee_pct / 100
     buy_hold = allocation * (last_close / first_close - 1) - allocation * fee - allocation * (last_close / first_close) * fee
+    closes = [Decimal(str(c)) for c in df["close"].iloc[warmup:]]
+    buy_hold_curve = [inputs.account_equity - allocation * fee + allocation * (c / first_close - 1) for c in closes]
     db.close()
     pick = lambda sample: [t for t in trades if sample is None or t["sample"] == sample]  # noqa: E731
     return BacktestResult(
@@ -680,4 +687,7 @@ def run_backtest(
         asset_change_pct=(last_close / first_close - 1) * 100,
         buy_hold_pnl=buy_hold,
         skipped_plans=skipped,
+        equity_times=equity_times,
+        equity_curve=equity_curve,
+        buy_hold_curve=buy_hold_curve,
     )

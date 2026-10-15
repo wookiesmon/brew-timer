@@ -147,6 +147,10 @@ How to read it:
 - Fees dominate. At Coinbase's 1.2% taker fee a round trip costs about 2.4%. Compare with
   `--fee-pct 0.045` (roughly Hyperliquid's taker fee) to see how much of the result is fees.
 
+Add `--export results/` to write `compare.csv`, `equity.csv` and `trades.csv`: the
+data behind the dashboard (account value vs buy & hold, fee impact, every trade, and
+the full comparison table). They also open in any spreadsheet.
+
 To adopt a row, set `TREND_FILTER`, `BREAKEVEN_AFTER_TP1` and `TRAIL_ATR_MULTIPLE` in
 `.env`, then paper-trade it before going live.
 

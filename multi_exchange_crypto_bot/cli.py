@@ -109,6 +109,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--products", help="backtest: comma-separated products, e.g. BTC-USD,ETH-USD,SOL-USD")
     p.add_argument("--compare", action="store_true",
                    help="backtest: compare trend filters and exit rules, ranked by out-of-sample results")
+    p.add_argument("--export", help="backtest: write compare/equity/trades CSV files to this folder")
     p.add_argument("--fee-pct", help="backtest: fee %% per order to assume, or a list like 1.2,0.6,0.045")
     p.add_argument("--limit", type=int, default=20, help="--screen: number of rows")
     p.add_argument("--yes", action="store_true", help="skip the --cancel-open confirmation")
@@ -812,6 +813,58 @@ def _fee_list(raw: Optional[str]) -> list[Optional[Decimal]]:
     return out
 
 
+def export_backtest(directory: str, rows: list, interval: str, every: int = 6) -> None:
+    """Write compare.csv, equity.csv and trades.csv for the dashboard (or a spreadsheet)."""
+    import csv
+    from pathlib import Path
+
+    from metrics import merge
+
+    out = Path(directory)
+    out.mkdir(parents=True, exist_ok=True)
+    num = lambda d, places=4: "" if d is None else f"{d:.{places}f}"  # noqa: E731
+    with open(out / "compare.csv", "w", newline="") as fh:
+        w = csv.writer(fh)
+        w.writerow(["config", "rules", "fee_pct", "products", "interval", "trades", "win_rate_pct", "profit_factor",
+                    "avg_trade", "net_pnl", "fees_paid", "is_trades", "is_net", "oos_trades", "oos_profit_factor",
+                    "oos_net", "max_drawdown_pct", "buy_hold_pnl", "enough_trades"])
+        for label, results in rows:
+            st, oos, ins = (merge(r.stats for r in results), merge(r.out_of_sample for r in results),
+                            merge(r.in_sample for r in results))
+            rules, fee = label.rsplit(" fee=", 1)
+            w.writerow([label, " ".join(rules.split()), fee.rstrip("%"), "+".join(r.symbol for r in results), interval,
+                        st.trades, num(st.win_rate, 1), num(st.profit_factor, 3), num(st.expectancy, 2),
+                        num(st.net_pnl, 2), num(st.fees, 2), ins.trades, num(ins.net_pnl, 2), oos.trades,
+                        num(oos.profit_factor, 3), num(oos.net_pnl, 2),
+                        num(max(r.max_drawdown_pct for r in results), 2),
+                        num(sum((r.buy_hold_pnl for r in results), Decimal(0)), 2), int(st.enough_trades)])
+    with open(out / "equity.csv", "w", newline="") as fh:
+        w = csv.writer(fh)
+        w.writerow(["time", "config", "series", "equity"])
+        held = set()
+        for label, results in rows:
+            n = min(len(r.equity_curve) for r in results)
+            times = results[0].equity_times
+            fee = label.rsplit(" fee=", 1)[1]
+            for i in list(range(0, n, every)) + ([n - 1] if (n - 1) % every else []):
+                t = times[i].strftime("%Y-%m-%dT%H:%M:%SZ")
+                w.writerow([t, label, "strategy", num(sum((r.equity_curve[i] for r in results), Decimal(0)), 2)])
+                if fee not in held:
+                    w.writerow([t, f"buy & hold fee={fee}", "buy & hold",
+                                num(sum((r.buy_hold_curve[min(i, len(r.buy_hold_curve) - 1)] for r in results),
+                                        Decimal(0)), 2)])
+            held.add(fee)
+    with open(out / "trades.csv", "w", newline="") as fh:
+        w = csv.writer(fh)
+        w.writerow(["trade_id", "config", "product", "opened", "pnl", "fees", "sample"])
+        for label, results in rows:
+            for r in results:
+                for t in r.trades:
+                    w.writerow([f"{label}|{r.symbol}|{t['run_id']}", label, r.symbol, t["created_at"][:19] + "Z",
+                                num(t["pnl"], 2), num(t["fees"], 2), t["sample"]])
+    print(f"\nExported compare.csv, equity.csv and trades.csv to {out}")
+
+
 def cmd_backtest(args, settings, venue, product, input_fn) -> int:
     import dataclasses
 
@@ -856,6 +909,8 @@ def cmd_backtest(args, settings, venue, product, input_fn) -> int:
             rows.append((label, results))
 
     print("\nPast simulated results do not predict future results. Funding and liquidation are not simulated.")
+    if args.export:
+        export_backtest(args.export, rows, settings.candle_interval)
     if not args.compare and len(data) == 1:
         return EXIT_OK
 

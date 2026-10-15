@@ -117,3 +117,20 @@ def test_single_backtest_report(tmp_path, monkeypatch, capsys):
     assert cli.main(["--venue", "coinbase", "--product", "TEST-USD", "--backtest"], settings=settings) == cli.EXIT_OK
     out = capsys.readouterr().out
     assert "profit factor" in out and "buy & hold" in out and "out-of-sample" in out
+
+
+def test_backtest_export_writes_dashboard_files(tmp_path, monkeypatch):
+    import csv
+
+    settings = make_settings(tmp_path)
+    monkeypatch.setattr(cli, "make_adapter", lambda venue, product, s, authenticated: FakeAdapter(
+        cb_meta(symbol=product, price_increment=Decimal("0.01")), make_candles(n=260, seed=3)))
+    monkeypatch.setattr(cli, "COMPARE_GRID", cli.COMPARE_GRID[:1])
+    out = tmp_path / "export"
+    assert cli.main(["--venue", "coinbase", "--backtest", "--products", "A-USD", "--compare", "--candles", "260",
+                     "--export", str(out)], settings=settings) == cli.EXIT_OK
+    compare = list(csv.DictReader(open(out / "compare.csv")))
+    equity = list(csv.DictReader(open(out / "equity.csv")))
+    assert len(compare) == 1 and compare[0]["fee_pct"] == "1.2"
+    assert {r["series"] for r in equity} == {"strategy", "buy & hold"}
+    assert (out / "trades.csv").exists()
