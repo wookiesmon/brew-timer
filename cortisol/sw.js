@@ -3,7 +3,7 @@
 // BUILD_STAMP_DEV is replaced per deploy so each deploy updates the worker.
 const VERSION = "BUILD_STAMP_DEV";
 const CACHE = "ebb-" + VERSION;
-const SHELL = ["./", "./manifest.json", "./icon.svg"];
+const SHELL = ["./", "./manifest.json", "./icon.svg", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -25,17 +25,21 @@ self.addEventListener("fetch", (e) => {
     e.respondWith(
       fetch(req)
         .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put("./", copy));
+          // Only the app page itself becomes the offline copy; never a 404,
+          // a .md doc, or another page that happens to be in scope.
+          if (res.ok && new URL(req.url).pathname === new URL("./", location).pathname) {
+            const copy = res.clone();
+            caches.open(CACHE).then((c) => c.put("./", copy));
+          }
           return res;
         })
-        .catch(() => caches.match("./"))
+        .catch(() => caches.open(CACHE).then((c) => c.match("./")))
     );
     return;
   }
 
   e.respondWith(
-    caches.match(req).then((hit) => hit || fetch(req).then((res) => {
+    caches.open(CACHE).then((c) => c.match(req)).then((hit) => hit || fetch(req).then((res) => {
       const copy = res.clone();
       caches.open(CACHE).then((c) => c.put(req, copy));
       return res;
