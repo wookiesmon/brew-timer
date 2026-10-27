@@ -21,7 +21,7 @@ jobs:
       - name: Stamp build version into the page and service worker
         run: |
           sed -i "s/BUILD_STAMP_DEV/$(git rev-parse --short HEAD) · $(date -u '+%Y-%m-%d %H:%M UTC')/" index.html
-          sed -i "s/BUILD_STAMP_DEV/$(git rev-parse --short HEAD)/" sw.js
+          sed -i "s/BUILD_STAMP_DEV/$(git rev-parse --short HEAD)/" sw.js cortisol/sw.js
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
