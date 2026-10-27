@@ -4,19 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ebb — Calm Core Program</title>
-<meta name="description" content="A private, offline 12-week program to lower stress and shrink belly fat.">
+<meta name="description" content="A private, offline 12-week stress-reset and waistline habit plan.">
 <meta name="theme-color" content="#3F6B52" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#121915" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Ebb">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon.svg">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{
+:root{color-scheme:light;
   --bg:#F7F4EE;--surface:#FFFDF9;--surface-2:#EFEAE0;--border:#E2DBCD;
   --text:#1F2A24;--muted:#5C6B62;
   --primary:#3F6B52;--primary-strong:#2F5640;--primary-soft:#DCE8DF;--on-primary:#FFFFFF;
@@ -30,7 +30,7 @@
   --sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
 }
 @media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
+  :root:not([data-theme="light"]){color-scheme:dark;
     --bg:#121915;--surface:#1A231E;--surface-2:#223029;--border:#2E3D35;
     --text:#ECE7DD;--muted:#A3B0A7;
     --primary:#8DBA9C;--primary-strong:#A8CFB4;--primary-soft:#23382B;--on-primary:#121915;
@@ -41,7 +41,7 @@
     --info:#8DB3CF;--info-soft:#1E2C37;--shadow:none;
   }
 }
-:root[data-theme="dark"]{
+:root[data-theme="dark"]{color-scheme:dark;
   --bg:#121915;--surface:#1A231E;--surface-2:#223029;--border:#2E3D35;
   --text:#ECE7DD;--muted:#A3B0A7;
   --primary:#8DBA9C;--primary-strong:#A8CFB4;--primary-soft:#23382B;--on-primary:#121915;
@@ -115,7 +115,7 @@ label.f{display:block;margin:14px 0 6px;font-weight:500}
 input[type=number],input[type=date],input[type=text],select,textarea{width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:var(--surface);min-height:44px}
 input[type=range]{width:100%;height:32px;accent-color:var(--primary)}
 .seg{display:flex;gap:6px;background:var(--surface-2);padding:4px;border-radius:14px}
-.seg button{flex:1;border:0;background:none;border-radius:10px;min-height:40px;font-weight:500;color:var(--muted)}
+.seg button{flex:1;border:0;background:none;border-radius:10px;min-height:44px;font-weight:500;color:var(--muted)}
 .seg button[aria-pressed="true"]{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
 .picks{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .picks button{border:1px solid var(--border);background:var(--surface);border-radius:12px;min-height:48px;font-size:12.5px;padding:4px 2px}
@@ -139,7 +139,7 @@ input[type=range]{width:100%;height:32px;accent-color:var(--primary)}
 /* plan */
 details{border-top:1px solid var(--border);padding:10px 0}
 details:first-of-type{border-top:0}
-summary{cursor:pointer;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center;min-height:32px}
+summary{cursor:pointer;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center;min-height:44px}
 summary::after{content:"+";color:var(--muted);font-size:20px}
 details[open] summary::after{content:"–"}
 ul.tight{margin:6px 0;padding-left:20px}ul.tight li{margin:4px 0}
@@ -161,7 +161,7 @@ table.t th{font-size:12px;color:var(--muted);font-weight:600}
 .pss-q{padding:12px 0;border-bottom:1px solid var(--border)}
 .pss-q .picks{grid-template-columns:repeat(5,1fr)}
 .flag{display:flex;align-items:center;gap:10px;min-height:44px;padding:4px 0}
-.flag input{width:22px;height:22px;accent-color:var(--primary)}
+.flag input{width:22px;height:22px;flex:none;accent-color:var(--primary)}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -172,17 +172,17 @@ table.t th{font-size:12px;color:var(--muted);font-weight:600}
   <div class="wrap" style="padding-top:calc(24px + env(safe-area-inset-top))">
     <div class="eyebrow">Welcome</div>
     <h1 id="obTitle" style="margin:4px 0 8px">Ebb</h1>
-    <p class="muted">A 12-week plan to calm your stress system and shrink your waist. Everything stays on this device.</p>
+    <p class="muted">A 12-week habit plan for stress recovery and a healthier waistline. Everything stays on this device. For adults 18+.</p>
     <div class="card warn small"><b>Not medical advice.</b> The Calm Score reflects your habits and how you feel. It is not a cortisol test. Check supplements and big diet or exercise changes with your doctor, especially if you take medication.</div>
     <label class="f" for="obStart">Program start date</label>
     <input type="date" id="obStart">
     <div class="grid2">
-      <div><label class="f" for="obHeight">Height (cm)</label><input type="number" id="obHeight" inputmode="decimal" placeholder="e.g. 172"></div>
+      <div><label class="f" for="obHeight">Height (cm)</label><input type="number" id="obHeight" inputmode="decimal" min="120" max="230" placeholder="e.g. 172"></div>
       <div><label class="f" for="obSex">Sex</label><select id="obSex"><option value="">Prefer not to say</option><option value="m">Male</option><option value="f">Female</option></select></div>
     </div>
     <div class="grid2">
-      <div><label class="f" for="obWaist">Waist now (cm)</label><input type="number" id="obWaist" inputmode="decimal" placeholder="at navel"></div>
-      <div><label class="f" for="obWeight">Weight now (kg)</label><input type="number" id="obWeight" inputmode="decimal"></div>
+      <div><label class="f" for="obWaist">Waist now (cm)</label><input type="number" id="obWaist" inputmode="decimal" min="40" max="200" placeholder="at navel"></div>
+      <div><label class="f" for="obWeight">Weight now (kg)</label><input type="number" id="obWeight" inputmode="decimal" min="30" max="300"></div>
     </div>
     <label class="f" for="obWake">Usual wake time</label>
     <input type="time" id="obWake" value="06:30" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:var(--surface);min-height:44px">
@@ -253,14 +253,14 @@ table.t th{font-size:12px;color:var(--muted);font-weight:600}
     <label class="f" for="ciStress">Stress <span class="muted" id="ciStressVal">5</span></label>
     <input type="range" id="ciStress" min="1" max="10" value="5" aria-describedby="stressEnds">
     <div class="spread small muted" id="stressEnds"><span>At ease</span><span>Overwhelmed</span></div>
-    <label class="f">Energy</label><div class="picks" id="ciEnergy"></div>
-    <label class="f">Mood</label><div class="picks" id="ciMood"></div>
+    <div class="f" style="font-weight:500;margin:14px 0 6px" id="lEnergy">Energy</div><div class="picks" id="ciEnergy" role="group" aria-labelledby="lEnergy"></div>
+    <div class="f" style="font-weight:500;margin:14px 0 6px" id="lMood">Mood</div><div class="picks" id="ciMood" role="group" aria-labelledby="lMood"></div>
     <div class="grid2">
       <div><label class="f" for="ciSleep">Sleep (hours)</label><input type="number" id="ciSleep" step="0.25" min="0" max="14" inputmode="decimal"></div>
       <div><label class="f" for="ciSteps">Steps</label><input type="number" id="ciSteps" step="100" min="0" inputmode="numeric"></div>
     </div>
-    <label class="f">What drove stress today?</label>
-    <div id="ciTags" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+    <div style="font-weight:500;margin:14px 0 6px" id="lTags">What drove stress today?</div>
+    <div id="ciTags" role="group" aria-labelledby="lTags" style="display:flex;flex-wrap:wrap;gap:6px"></div>
     <label class="f" for="ciNote">Note</label><textarea id="ciNote" rows="2" placeholder="Optional"></textarea>
     <button class="btn block" id="ciSave" style="margin-top:16px">Save check-in</button>
   </div>
@@ -298,7 +298,7 @@ table.t th{font-size:12px;color:var(--muted);font-weight:600}
   <div class="card"><div class="spread"><h3>Waist (cm)</h3><span class="chip sand" id="whtr"></span></div><svg class="chart" id="chWaist"></svg></div>
   <div class="card"><h3>Stress, 1–10 (lower is calmer)</h3><svg class="chart" id="chStress"></svg></div>
   <div class="card"><h3>Sleep (hours)</h3><svg class="chart" id="chSleep"></svg></div>
-  <div class="card"><h3>Habits, last 12 weeks</h3><div class="small muted">Each column is a week. Darker means more of the plan done.</div><div class="heat" id="heat"></div></div>
+  <div class="card"><h3>Habits, weeks 1–12</h3><div class="small muted">Each column is a program week; rows are its 7 days. Darker means more of the plan done; the outlined square is today.</div><div class="heat" id="heat"></div></div>
   <div id="insights"></div>
   <div class="card"><h3>Stress test (PSS-10)</h3><div id="pssHist" class="small"></div></div>
 </section>
@@ -318,7 +318,7 @@ table.t th{font-size:12px;color:var(--muted);font-weight:600}
     <label class="flag" style="margin-top:12px"><input type="checkbox" id="setTier2"> My doctor/pharmacist cleared Tier 2 supplements</label>
     <div id="setFlags"></div>
     <div class="grid2" style="margin-top:14px"><button class="btn line" id="exp">Export data</button><button class="btn line" id="impBtn">Import data</button></div>
-    <input type="file" id="imp" accept="application/json" hidden>
+    <input type="file" id="imp" accept=".json,application/json" hidden>
     <button class="btn danger block" id="reset" style="margin-top:10px">Erase everything</button>
   </div>
 </section>
@@ -339,7 +339,34 @@ table.t th{font-size:12px;color:var(--muted);font-weight:600}
 const KEY = "ebb.v1";
 let S;
 function blank(){ return {settings:{start:null,height:null,sex:"",wake:"06:30",theme:"",tier2:false,flags:{}},days:{},weekly:{},pss:{},breath:[]}; }
-function load(){ try{ S = JSON.parse(localStorage.getItem(KEY)) || blank(); }catch(e){ S = blank(); } S = Object.assign(blank(), S); S.settings = Object.assign(blank().settings, S.settings); }
+const KEY_RE = /^\d{4}-\d{2}-\d{2}$/;
+const numOrNull = v => (typeof v==="number" && isFinite(v)) ? v : null;
+const obj = v => v && typeof v==="object" && !Array.isArray(v) ? v : {};
+const TAG_LIST = ["Work","Sleep","Family","Money","Caffeine","Alcohol","Illness","Traffic"];
+// Coerce stored or imported data into the expected shape, so a hand-edited or
+// hostile backup can't break rendering or inject markup.
+function normalize(d){
+  const o = Object.assign(blank(), obj(d));
+  o.settings = Object.assign(blank().settings, obj(o.settings)); o.settings.flags = obj(o.settings.flags);
+  if (o.settings.start && !KEY_RE.test(o.settings.start)) o.settings.start = null;
+  if (!/^\d{2}:\d{2}$/.test(o.settings.wake)) o.settings.wake = "06:30";
+  if (!["","light","dark"].includes(o.settings.theme)) o.settings.theme = "";
+  o.settings.height = numOrNull(o.settings.height); o.settings.tier2 = !!o.settings.tier2;
+  const days = {};
+  for (const [k,v] of Object.entries(obj(o.days))) if (KEY_RE.test(k)) {
+    const c = obj(v).checkin, done = {};
+    for (const [h,b] of Object.entries(obj(obj(v).done))) if (b===true) done[h] = true;
+    days[k] = {done, checkin: c && typeof c==="object" ? {stress:numOrNull(c.stress)??5, energy:numOrNull(c.energy), mood:numOrNull(c.mood), sleep:numOrNull(c.sleep), steps:numOrNull(c.steps), tags:Array.isArray(c.tags)?c.tags.filter(t=>TAG_LIST.includes(t)):[], note:String(c.note||"")} : null};
+  }
+  o.days = days;
+  const weekly = {};
+  for (const [k,v] of Object.entries(obj(o.weekly))) if (KEY_RE.test(k)) { const m=obj(v); weekly[k] = {waist:numOrNull(m.waist), weight:numOrNull(m.weight), hrv:numOrNull(m.hrv), rhr:numOrNull(m.rhr)}; }
+  o.weekly = weekly;
+  const pss = {}; for (const [k,v] of Object.entries(obj(o.pss))) if (KEY_RE.test(k) && numOrNull(v)!=null) pss[k] = v; o.pss = pss;
+  o.breath = Array.isArray(o.breath) ? o.breath.filter(b => b && numOrNull(b.t)!=null && numOrNull(b.s)!=null) : [];
+  return o;
+}
+function load(){ try{ S = normalize(JSON.parse(localStorage.getItem(KEY))); }catch(e){ S = blank(); } }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){ toast("Couldn't save. Is private browsing on?"); } }
 load();
 
@@ -347,7 +374,8 @@ load();
 const pad = n => String(n).padStart(2,"0");
 const keyOf = d => d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
 const parseKey = k => { const [y,m,d] = k.split("-").map(Number); return new Date(y, m-1, d); };
-const todayKey = () => keyOf(new Date());
+const DAY_START_H = 5; // the Night slot runs until 05:00, so the app day does too
+const todayKey = () => keyOf(new Date(Date.now() - DAY_START_H*36e5));
 const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
 function dayNum(k){ if(!S.settings.start) return 1; return Math.round((parseKey(k)-parseKey(S.settings.start))/864e5)+1; }
 function weekOf(k){ return Math.min(12, Math.max(1, Math.ceil(dayNum(k)/7))); }
@@ -367,18 +395,18 @@ const FLAGS = [
   ["heart","Heart disease, arrhythmia, or uncontrolled blood pressure"]
 ];
 const PHASES = [
-  {n:1, name:"Reset", weeks:[1,4], goal:"Fix the foundations that drive cortisol: sleep, light, walking, and food quality.",
+  {n:1, name:"Reset", weeks:[1,4], goal:"Build the foundations of stress recovery: sleep, light, walking, and food quality.",
    focus:["Same wake time every day, 7–9 h sleep window","10–20 min outdoor light within an hour of waking","8,000 steps + 10-min walk after meals","Protein at each meal (1.2–1.6 g/kg/day), 25–30 g fiber","Tier 1 supplements only","Gentle 12 h eating window, kitchen closes 3 h before bed","Strength 2×/week + Zone 2 cardio"],
-   new:"Get baseline labs and measurements. Remove sugary drinks and cut alcohol to zero or near zero."},
+   new:"Take baseline measurements and ask your doctor about baseline blood tests. Remove sugary drinks and cut alcohol to zero or near zero. PSS-10 retest at the end of week 4."},
   {n:2, name:"Build", weeks:[5,8], goal:"Add training volume and, if cleared, one Tier 2 supplement at a time.",
    focus:["Strength 3×/week, Zone 2 150+ min/week","1 HIIT session/week (skip it on low-HRV or bad-sleep days)","Eating window 10–11 h","Sauna 2–3×/week if your heart is healthy","Add Tier 2 supplements one every 1–2 weeks if cleared","Week 8 is a lighter week: about 60% of normal training"],
-   new:"PSS-10 retest at week 4. Recheck liver tests (ALT) and TSH at weeks 6–8 if you started ashwagandha."},
+   new:"PSS-10 retest at the end of week 8. If you started ashwagandha, ask your doctor whether liver or thyroid checks make sense."},
   {n:3, name:"Settle", weeks:[9,12], goal:"Lock in the routine, push cardio to 200–300 min/week, and retest.",
    focus:["HIIT up to 2×/week if recovery allows","200–300 min/week total cardio, 8–10k steps","Keep strength 3×/week to protect muscle","Daily 5-min breathing + 1 nature session/week","End ashwagandha by week 12, then 4 weeks off","Week 12: repeat labs, PSS-10, photos, and measurements"],
    new:"Compare with baseline. Plan your maintenance version: keep about 80% of the habits."}
 ];
 const WEEKLY_FOCUS = ["Sleep and wake times. Baseline measurements and labs.","Morning light + walk after every meal.","Protein and fiber at every meal. Add the first HIIT session if sleep is good.","Lighter training week. PSS-10 retest. Phase 1 recap.",
- "3rd strength day. Optional Tier 2 #1.","Sauna or nature twice. Recheck ALT/TSH if on ashwagandha.","Optional Tier 2 #2. Tighten the eating window to about 10.5 h.","Lighter week. PSS-10 retest. Phase 2 recap.",
+ "3rd strength day. Optional Tier 2 #1.","Sauna or nature twice. On ashwagandha? Ask your doctor about checks.","Optional Tier 2 #2. Tighten the eating window to about 10.5 h.","Lighter week. PSS-10 retest. Phase 2 recap.",
  "Cardio up to 200+ min.","Up to 2 HIIT sessions if HRV is steady.","Dial in the habits that moved your numbers.","Retest labs, PSS-10, photos. Plan maintenance."];
 // exercise by weekday (0=Sun)
 function workout(k){
@@ -388,7 +416,8 @@ function workout(k){
     1:["Strength A","Squat · push · row · carry, 40 min"],
     2:["Zone 2 cardio","40–50 min at a pace you can still talk"],
     3:["Strength B","Hinge · pull · press · core, 40 min"],
-    4: w>=3 ? ["Intervals","4–6 × 1 min hard / 2 min easy. Swap for Zone 2 if stressed or slept badly"] : ["Zone 2 cardio","40 min easy"],
+    4: (S.settings.flags||{}).heart ? ["Zone 2 cardio","40 min easy. Intervals are off because of your heart answer; ask your doctor before hard efforts"]
+       : w>=3 ? ["Intervals","4–6 × 1 min hard / 2 min easy. Swap for Zone 2 if stressed or slept badly"] : ["Zone 2 cardio","40 min easy"],
     5: w>=5 ? ["Strength C + yoga","Full body 30 min + 15 min yoga"] : ["Zone 2 + yoga","30 min easy + 15 min yoga"],
     6:["Long Zone 2","60–90 min hike, ideally in a forest or park"]
   }[dow];
@@ -403,19 +432,21 @@ const SUPPS = [
   {id:"s_psy2",slot:"evening",tier:1,label:"Psyllium before dinner",sub:"3→5 g in a big glass of water",avoid:[]},
   {id:"s_o3",slot:"evening",tier:1,label:"Omega-3",sub:"2 g EPA+DHA with dinner",avoid:["thinner"]},
   {id:"s_mg",slot:"night",tier:1,label:"Magnesium glycinate",sub:"200 mg elemental (300 mg from week 3), 1 h before bed",avoid:["kidney"]},
-  {id:"s_ash",slot:"morning",tier:2,label:"Ashwagandha KSM-66",sub:"300 mg breakfast + 300 mg dinner · 8 weeks max · ALT/TSH check",avoid:["preg","thyroid","liver","autoimmune","sedative"]},
+  {id:"s_ash",slot:"morning",tier:2,label:"Ashwagandha KSM-66",sub:"300 mg breakfast + 300 mg dinner · 8 weeks max · ask your doctor about liver/thyroid checks",avoid:["preg","thyroid","liver","autoimmune","sedative","diabetes"]},
   {id:"s_pro",slot:"morning",tier:2,label:"Probiotic",sub:"L. helveticus R0052 + B. longum R0175, 3 billion CFU",avoid:["autoimmune"]},
   {id:"s_saf",slot:"morning",tier:2,label:"Saffron (affron)",sub:"14 mg breakfast + 14 mg dinner",avoid:["ssri","preg","thinner"]},
   {id:"s_gly",slot:"night",tier:2,label:"Glycine",sub:"3 g before bed",avoid:["preg"]}
 ];
+// Safety: does this supplement clash with the user's answers? (time-independent)
+function suppSafe(s){
+  const f = S.settings.flags||{};
+  if (s.avoid.some(a => f[a])) return false;
+  if (f.preg && !["s_d3","s_psy1","s_psy2"].includes(s.id)) return false; // pregnancy: minimal, OB-approved only
+  return true;
+}
 function supps(){
-  const f = S.settings.flags||{}, w = weekOf(todayKey());
-  return SUPPS.filter(s => {
-    if (s.avoid.some(a => f[a])) return false;
-    if (f.preg && s.tier===1 && s.id!=="s_d3" && s.id!=="s_psy1" && s.id!=="s_psy2") return false; // pregnancy: minimal, OB-approved only
-    if (s.tier===2) return S.settings.tier2 && w>=5;
-    return true;
-  });
+  const k = todayKey(), w = weekOf(k), dn = dayNum(k);
+  return SUPPS.filter(s => suppSafe(s) && (s.tier!==2 || (S.settings.tier2 && w>=5 && dn<=84)));
 }
 function habits(k){
   const w = workout(k), wake = S.settings.wake||"06:30";
@@ -431,7 +462,7 @@ function habits(k){
     {id:"dinner",slot:"evening",label:"Plate: ½ veg, ¼ protein, ¼ slow carbs",sub:"Small bowl of japgokbap, not a big bowl of white rice"},
     {id:"walk_d",slot:"evening",label:"10-min walk after dinner",sub:""},
     {id:"kitchen",slot:"evening",label:"Kitchen closed 3 h before bed",sub:"Eating window about 12 h (10–11 h from phase 2)"},
-    {id:"noalc",slot:"evening",label:"No alcohol today",sub:"Alcohol raises cortisol and wrecks sleep"},
+    {id:"noalc",slot:"evening",label:"No alcohol today",sub:"Alcohol disrupts sleep and recovery"},
     {id:"dim",slot:"night",label:"Dim lights + screens down",sub:"From 21:00"},
     {id:"journal",slot:"night",label:"Brain-dump journal, 5 min",sub:"Write tomorrow's worries down so they stop looping"},
     {id:"bed",slot:"night",label:"Lights out by 22:30",sub:"Cool, dark, quiet room"}
@@ -446,7 +477,8 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 let toastT;
 function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("on"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("on"),2600); }
-function applyTheme(){ const t=S.settings.theme; if(t) document.documentElement.dataset.theme=t; else delete document.documentElement.dataset.theme; }
+function applyTheme(){ const t=S.settings.theme; if(t) document.documentElement.dataset.theme=t; else delete document.documentElement.dataset.theme;
+  document.querySelectorAll('meta[name="theme-color"]').forEach(m=>{ if(!m.dataset.media) m.dataset.media=m.media; m.media = t ? (m.content==="#121915")===(t==="dark") ? "all" : "not all" : m.dataset.media; }); }
 function currentSlot(){ let h=new Date().getHours(); if(h<5) h+=24; return (SLOTS.find(s=>h>=s[2]&&h<s[3])||SLOTS[0])[0]; }
 
 /* ---------- score ---------- */
@@ -470,9 +502,9 @@ function miniRing(p,label){ const c=2*Math.PI*13; return `<div class="mini"><svg
 function renderToday(){
   const k = todayKey(), w = weekOf(k), ph = PHASES.find(p=>w>=p.weeks[0]&&w<=p.weeks[1]), d = day(k);
   const dn = dayNum(k);
-  $("#phaseEyebrow").textContent = dn<1 ? "Starts "+S.settings.start : `Phase ${ph.n} · ${ph.name}`;
-  $("#weekChip").textContent = dn>84 ? "Program complete" : `Week ${w} of 12 · Day ${Math.max(1,dn)}`;
-  $("#dateLine").textContent = new Date().toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
+  $("#phaseEyebrow").textContent = dn<1 ? "Starts "+parseKey(S.settings.start).toLocaleDateString(undefined,{month:"short",day:"numeric"}) : `Phase ${ph.n} · ${ph.name}`;
+  $("#weekChip").textContent = dn<1 ? `Starts in ${1-dn} day${dn===0?"":"s"}` : dn>84 ? "Program complete" : `Week ${w} of 12 · Day ${dn}`;
+  $("#dateLine").textContent = parseKey(k).toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
   $("#segbar").innerHTML = Array.from({length:12},(_,i)=>`<i class="${i+1<w?"done":i+1===w?"now":""}"></i>`).join("");
   const sc = scoreFor(k);
   $("#score").textContent = sc.score;
@@ -481,12 +513,13 @@ function renderToday(){
   $("#minis").innerHTML = miniRing(sc.sleep,"Sleep")+miniRing(sc.move,"Move")+miniRing(sc.calm,"Calm");
   const c = d.checkin;
   $("#scoreLine").textContent = c && c.stress>=8 ? "Rough day. A 1-minute sigh session on the Breathe tab helps right now."
+    : !c ? "Habits fill 60 points. Check in to unlock the last 40."
     : sc.score>=70 ? "Solid day. That's what moves the numbers." : sc.score>=40 ? "Steady. The evening downshift lifts it most." : "Fresh start. Pick one easy win below.";
   $("#checkinSummary").textContent = c ? `Stress ${c.stress} · Energy ${c.energy||"–"}/5 · Slept ${c.sleep||"–"} h` : "30-second check-in";
   // measurement day = same weekday as start
   const startDow = S.settings.start ? parseKey(S.settings.start).getDay() : 0;
-  $("#measureCard").style.display = (new Date().getDay()===startDow && !S.weekly[k]) ? "" : "none";
-  const cp = {1:"Day 1 baseline: measure waist and weight, take progress photos, do the PSS-10, and book baseline blood tests.",28:"Checkpoint 1 (end of Phase 1): PSS-10 retest, photos, and a Phase 1 recap on the Progress tab.",56:"Checkpoint 2 (end of Phase 2): PSS-10, photos. If you take ashwagandha, ALT and TSH should be rechecked by now.",84:"Final checkpoint: repeat blood tests, PSS-10, photos and measurements, then compare with day 1."}[dn];
+  $("#measureCard").style.display = (parseKey(k).getDay()===startDow && !S.weekly[k]) ? "" : "none";
+  const cp = {1:"Day 1 baseline: measure waist and weight, take progress photos, do the PSS-10, and ask your doctor about baseline blood tests.",28:"Checkpoint 1 (end of Phase 1): PSS-10 retest, photos, and a Phase 1 recap on the Progress tab.",56:"Checkpoint 2 (end of Phase 2): PSS-10, photos. If you take ashwagandha, ask your doctor whether a liver or thyroid check makes sense.",84:"Final checkpoint: repeat blood tests, PSS-10, photos and measurements, then compare with day 1."}[dn];
   $("#checkpointCard").style.display = cp ? "" : "none";
   if (cp) $("#checkpointCard").innerHTML = `<b>Checkpoint</b><div class="small">${cp}</div><button class="btn ghost" style="margin-top:10px" onclick="openPSS()">Take PSS-10</button>`;
   // slots
@@ -503,16 +536,16 @@ function renderToday(){
   else $("#nextCard").style.display="none";
 }
 document.addEventListener("click", e => {
-  const hb = e.target.closest(".habit"); if (hb){ const d=day(todayKey()), id=hb.dataset.h; d.done[id]=!d.done[id]; save(); renderToday(); return; }
+  const hb = e.target.closest(".habit"); if (hb){ const d=day(todayKey()), id=hb.dataset.h; d.done[id]=!d.done[id]; save(); renderToday(); const again=document.querySelector(`.habit[data-h="${id}"]`); if(again) again.focus(); return; }
   const go = e.target.closest("[data-go]"); if (go){ if(go.id==="nextBtn"&&!go.dataset.go){ day(todayKey()).done[go.dataset.h]=true; save(); renderToday(); toast("Nice. One more done."); return; } if(go.dataset.go){ show(go.dataset.go); if(go.dataset.mode) setMode(go.dataset.mode); } }
 });
 
 /* ---------- CHECK-IN ---------- */
-const ENERGY=["Drained","Low","OK","Good","Bright"], MOOD=["Heavy","Flat","Neutral","Good","Great"], TAGS=["Work","Sleep","Family","Money","Caffeine","Alcohol","Illness","Traffic"];
+const ENERGY=["Drained","Low","OK","Good","Bright"], MOOD=["Heavy","Flat","Neutral","Good","Great"], TAGS=TAG_LIST;
 let ci = {energy:0,mood:0,tags:[]};
-function picks(el,arr,key){ $(el).innerHTML = arr.map((t,i)=>`<button type="button" data-v="${i+1}" aria-pressed="${ci[key]===i+1}">${t}</button>`).join(""); $(el).onclick=e=>{const b=e.target.closest("button"); if(!b) return; ci[key]=+b.dataset.v; picks(el,arr,key);}; }
-function renderTags(){ $("#ciTags").innerHTML = TAGS.map(t=>`<button type="button" class="chip${ci.tags.includes(t)?"":" sand"}" style="border:0;min-height:36px" data-t="${t}" aria-pressed="${ci.tags.includes(t)}">${t}</button>`).join(""); }
-$("#ciTags").onclick = e => { const b=e.target.closest("button"); if(!b) return; const t=b.dataset.t; ci.tags = ci.tags.includes(t)?ci.tags.filter(x=>x!==t):ci.tags.concat(t); renderTags(); };
+function picks(el,arr,key){ $(el).innerHTML = arr.map((t,i)=>`<button type="button" data-v="${i+1}" aria-pressed="${ci[key]===i+1}">${t}</button>`).join(""); $(el).onclick=e=>{const b=e.target.closest("button"); if(!b) return; ci[key]=+b.dataset.v; picks(el,arr,key); $(el).querySelector(`[data-v="${b.dataset.v}"]`).focus();}; }
+function renderTags(){ $("#ciTags").innerHTML = TAGS.map(t=>`<button type="button" class="chip${ci.tags.includes(t)?"":" sand"}" style="border:0;min-height:44px;padding:4px 14px" data-t="${t}" aria-pressed="${ci.tags.includes(t)}">${t}</button>`).join(""); }
+$("#ciTags").onclick = e => { const b=e.target.closest("button"); if(!b) return; const t=b.dataset.t; ci.tags = ci.tags.includes(t)?ci.tags.filter(x=>x!==t):ci.tags.concat(t); renderTags(); $("#ciTags").querySelector(`[data-t="${t}"]`).focus(); };
 function renderCheckin(){
   const c = day(todayKey()).checkin || {};
   ci = {energy:c.energy||0, mood:c.mood||0, tags:c.tags||[]};
@@ -522,14 +555,14 @@ function renderCheckin(){
   const wk = S.weekly[todayKey()] || {};
   $("#wWaist").value=wk.waist??""; $("#wWeight").value=wk.weight??""; $("#wHrv").value=wk.hrv??""; $("#wRhr").value=wk.rhr??"";
   const rows = Object.keys(S.weekly).sort().reverse().slice(0,8);
-  $("#wHistory").innerHTML = rows.length ? `<table class="t"><tr><th>Date</th><th>Waist</th><th>Weight</th><th>HRV</th><th>RHR</th></tr>${rows.map(r=>{const m=S.weekly[r];return `<tr><td>${r.slice(5)}</td><td>${m.waist??"–"}</td><td>${m.weight??"–"}</td><td>${m.hrv??"–"}</td><td>${m.rhr??"–"}</td></tr>`}).join("")}</table>` : "";
+  $("#wHistory").innerHTML = rows.length ? `<table class="t"><tr><th>Date</th><th>Waist</th><th>Weight</th><th>HRV</th><th>RHR</th></tr>${rows.map(r=>{const m=S.weekly[r];return `<tr><td>${esc(r)}</td><td>${esc(m.waist??"–")}</td><td>${esc(m.weight??"–")}</td><td>${esc(m.hrv??"–")}</td><td>${esc(m.rhr??"–")}</td></tr>`}).join("")}</table>` : "";
 }
 $("#ciStress").oninput = e => { $("#ciStressVal").textContent = e.target.value; e.target.setAttribute("aria-valuetext", e.target.value+(e.target.value<=3?", calm":e.target.value<=6?", moderate":", high")); };
 const num = v => v===""||v==null ? null : +v;
 $("#ciSave").onclick = () => {
   const d = day(todayKey());
   d.checkin = {stress:+$("#ciStress").value, energy:ci.energy||null, mood:ci.mood||null, sleep:num($("#ciSleep").value), steps:num($("#ciSteps").value), tags:ci.tags, note:$("#ciNote").value.trim()};
-  if (d.checkin.steps>=8000) d.done.steps = true;
+  if (d.checkin.steps >= (weekOf(todayKey())>=5 ? 10000 : 8000)) d.done.steps = true;
   save(); toast(d.checkin.stress>=8 ? "Saved. Rough day. Try a 1-minute reset." : "Saved. Nice work showing up."); show("today");
 };
 $("#wSave").onclick = () => {
@@ -544,9 +577,10 @@ $("#segDaily").onclick=()=>setMode("daily"); $("#segWeekly").onclick=()=>setMode
 const PSS = ["been upset because of something that happened unexpectedly?","felt that you were unable to control the important things in your life?","felt nervous and stressed?","felt confident about your ability to handle your personal problems?","felt that things were going your way?","found that you could not cope with all the things that you had to do?","been able to control irritations in your life?","felt that you were on top of things?","been angered because of things that happened that were outside of your control?","felt difficulties were piling up so high that you could not overcome them?"];
 const PSS_REV = [3,4,6,7];
 let pssA = [];
-function openPSS(){ pssA = Array(10).fill(null); drawPSS(); $("#pss").classList.add("on"); }
+function openPSS(){ pssA = Array(10).fill(null); drawPSS(); $("#pss").classList.add("on"); $("#pssList button").focus(); }
+document.addEventListener("keydown", e => { if (e.key==="Escape" && $("#pss").classList.contains("on")) $("#pss").classList.remove("on"); });
 function drawPSS(){ $("#pssList").innerHTML = PSS.map((q,i)=>`<div class="pss-q"><div>${i+1}. …${q}</div><div class="picks" style="margin-top:8px" data-q="${i}">${[0,1,2,3,4].map(v=>`<button type="button" data-v="${v}" aria-pressed="${pssA[i]===v}">${v}</button>`).join("")}</div></div>`).join(""); }
-$("#pssList").onclick = e => { const b=e.target.closest("button"); if(!b) return; pssA[+b.parentNode.dataset.q]=+b.dataset.v; drawPSS(); };
+$("#pssList").onclick = e => { const b=e.target.closest("button"); if(!b) return; const q=b.parentNode.dataset.q; pssA[+q]=+b.dataset.v; drawPSS(); $(`#pssList [data-q="${q}"] [data-v="${b.dataset.v}"]`).focus(); };
 $("#pssOpen").onclick = openPSS; $("#pssClose").onclick = () => $("#pss").classList.remove("on");
 $("#pssSave").onclick = () => {
   if (pssA.some(v=>v==null)) return toast("Answer all 10 questions.");
@@ -605,46 +639,47 @@ function lineChart(svg, pts, {lowerBetter=true, unit=""}={}){
   if (pts.length<2){ svg.innerHTML=`<text x="${W/2}" y="${H/2}" text-anchor="middle" fill="var(--muted)" font-size="13">Log at least 2 entries to see a trend</text>`; return; }
   const xs=pts.map(p=>parseKey(p[0]).getTime()), ys=pts.map(p=>p[1]);
   let lo=Math.min(...ys), hi=Math.max(...ys); if(lo===hi){lo-=1;hi+=1;} const pad_=(hi-lo)*.15; lo-=pad_; hi+=pad_;
-  const x=t=>P+(W-P-8)*(t-xs[0])/((xs.at(-1)-xs[0])||1), y=v=>8+(H-P-8)*(1-(v-lo)/(hi-lo));
+  const x=t=>P+(W-P-8)*(t-xs[0])/((last(xs)-xs[0])||1), y=v=>8+(H-P-8)*(1-(v-lo)/(hi-lo));
   const grid=[lo+(hi-lo)*.25,lo+(hi-lo)*.75].map(g=>`<line x1="${P}" x2="${W-8}" y1="${y(g)}" y2="${y(g)}" stroke="var(--border)"/><text x="${P-4}" y="${y(g)+4}" text-anchor="end" font-size="10" fill="var(--muted)">${g.toFixed(g<20?1:0)}</text>`).join("");
   const d=pts.map((p,i)=>(i?"L":"M")+x(xs[i]).toFixed(1)+" "+y(ys[i]).toFixed(1)).join("");
-  const good = lowerBetter ? ys.at(-1)<=ys[0] : ys.at(-1)>=ys[0];
+  const good = lowerBetter ? last(ys)<=ys[0] : last(ys)>=ys[0];
   const col = good?"var(--primary)":"var(--warning)";
   svg.innerHTML = grid+`<path d="${d}" fill="none" stroke="${col}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>`+
-    pts.map((p,i)=>`<circle cx="${x(xs[i])}" cy="${y(ys[i])}" r="${i===pts.length-1?4:2.2}" fill="${col}"><title>${p[0]}: ${p[1]}${unit}</title></circle>`).join("")+
-    `<text x="${P}" y="${H-6}" font-size="10" fill="var(--muted)">${pts[0][0].slice(5)}</text><text x="${W-8}" y="${H-6}" text-anchor="end" font-size="10" fill="var(--muted)">${pts.at(-1)[0].slice(5)}</text>`;
+    pts.map((p,i)=>`<circle cx="${x(xs[i])}" cy="${y(ys[i])}" r="${i===pts.length-1?4:2.2}" fill="${col}"><title>${esc(p[0])}: ${esc(p[1])}${unit}</title></circle>`).join("")+
+    `<text x="${P}" y="${H-6}" font-size="10" fill="var(--muted)">${pts[0][0].slice(5)}</text><text x="${W-8}" y="${H-6}" text-anchor="end" font-size="10" fill="var(--muted)">${last(pts)[0].slice(5)}</text>`;
 }
 function spark(title, pts, unit, lowerBetter){
   let delta="", chip="sand";
-  if (pts.length>=2){ const dv=pts.at(-1)[1]-pts[0][1]; const good = lowerBetter? dv<=0 : dv>=0; chip = good?"":"amber"; delta=`${dv>0?"▲":"▼"} ${Math.abs(dv).toFixed(1)}${unit} since start`; }
+  if (pts.length>=2){ const dv=last(pts)[1]-pts[0][1]; const good = lowerBetter? dv<=0 : dv>=0; chip = good?"":"amber"; delta = Math.abs(dv)<0.05 ? "= no change yet" : `${dv>0?"▲":"▼"} ${Math.abs(dv).toFixed(1)}${unit} since start`; }
   const W=140,H=40; let path="";
   if (pts.length>=2){ const ys=pts.map(p=>p[1]); let lo=Math.min(...ys),hi=Math.max(...ys); if(lo===hi){lo--;hi++;} path=ys.map((v,i)=>(i?"L":"M")+(4+(W-8)*i/(ys.length-1)).toFixed(1)+" "+(4+(H-8)*(1-(v-lo)/(hi-lo))).toFixed(1)).join(""); }
-  return `<div class="card" style="margin:0"><div class="small muted">${title}</div><div class="bigval">${pts.length?pts.at(-1)[1]:"–"}<span class="small muted">${pts.length?unit:""}</span></div><svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><path d="${path}" fill="none" stroke="var(--primary)" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>${delta?`<span class="chip ${chip}">${delta}</span>`:'<span class="small muted">Not enough data yet</span>'}</div>`;
+  return `<div class="card" style="margin:0"><div class="small muted">${title}</div><div class="bigval">${pts.length?last(pts)[1]:"–"}<span class="small muted">${pts.length?unit:""}</span></div><svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><path d="${path}" fill="none" stroke="var(--primary)" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>${delta?`<span class="chip ${chip}">${delta}</span>`:'<span class="small muted">Not enough data yet</span>'}</div>`;
 }
+const last = a => a[a.length-1];
 function avg(a){ return a.length ? a.reduce((x,y)=>x+y,0)/a.length : null; }
 function renderProgress(){
   const waist = series(m=>m.waist, S.weekly), weight = series(m=>m.weight, S.weekly), hrv = series(m=>m.hrv, S.weekly), rhr = series(m=>m.rhr, S.weekly);
   const stress = series(d=>d.checkin&&d.checkin.stress, S.days), sleep = series(d=>d.checkin&&d.checkin.sleep, S.days);
   $("#sparkGrid").innerHTML = spark("Waist",waist," cm",true)+spark("Weight",weight," kg",true)+spark("HRV",hrv," ms",false)+spark("Resting HR",rhr," bpm",true);
   lineChart($("#chWaist"),waist,{unit:" cm"}); lineChart($("#chStress"),stress); lineChart($("#chSleep"),sleep,{lowerBetter:false,unit:" h"});
-  const h=S.settings.height; $("#whtr").textContent = h&&waist.length ? `Waist-to-height ${(waist.at(-1)[1]/h).toFixed(2)} · goal under 0.50` : "Add height in Settings";
+  const h=S.settings.height; $("#whtr").textContent = h&&waist.length ? `Waist-to-height ${(last(waist)[1]/h).toFixed(2)} · goal under 0.50` : "Add height in Settings";
   // heat: 12 cols x 7 rows
   if (S.settings.start){
     const st=parseKey(S.settings.start), cells=[];
-    for(let r=0;r<7;r++) for(let c=0;c<12;c++){ const k=keyOf(addDays(st,c*7+r)); const p = S.days[k] ? scoreFor(k).habitPct : 0; cells.push(`<i title="${k}" style="${p?`background:var(--primary);opacity:${(.15+p*.85).toFixed(2)}`:""}"></i>`); }
+    for(let r=0;r<7;r++) for(let c=0;c<12;c++){ const k=keyOf(addDays(st,c*7+r)); const p = S.days[k] ? scoreFor(k).habitPct : 0; cells.push(`<i title="${k}" style="${p?`background:var(--primary);opacity:${(.15+p*.85).toFixed(2)};`:""}${k===todayKey()?"outline:2px solid var(--accent);outline-offset:1px":""}"></i>`); }
     $("#heat").innerHTML = cells.join("");
   }
   // insights
   const ins=[];
   const rows = Object.keys(S.days).filter(k=>S.days[k].checkin).map(k=>({k, st:S.days[k].checkin.stress, sl:S.days[k].checkin.sleep, hp:scoreFor(k).habitPct}));
   const goodSleep = rows.filter(r=>r.sl>=7), badSleep = rows.filter(r=>r.sl!=null&&r.sl<7);
-  if (goodSleep.length>=4 && badSleep.length>=3){ const d=avg(badSleep.map(r=>r.st))-avg(goodSleep.map(r=>r.st)); ins.push(`Stress was <b>${Math.abs(d).toFixed(1)} points ${d>=0?"lower":"higher"}</b> on days with 7+ hours of sleep (n=${rows.length}).`); }
+  if (goodSleep.length>=4 && badSleep.length>=3){ const d=avg(badSleep.map(r=>r.st))-avg(goodSleep.map(r=>r.st)); ins.push(`Stress was <b>${Math.abs(d).toFixed(1)} points ${d>=0?"lower":"higher"}</b> on days with 7+ hours of sleep (n=${goodSleep.length+badSleep.length} days).`); }
   const hiH = rows.filter(r=>r.hp>=.7), loH = rows.filter(r=>r.hp<.5);
   if (hiH.length>=4 && loH.length>=3){ const d=avg(loH.map(r=>r.st))-avg(hiH.map(r=>r.st)); ins.push(`On days you did 70%+ of the plan, stress averaged <b>${Math.abs(d).toFixed(1)} ${d>=0?"lower":"higher"}</b>.`); }
-  if (waist.length>=2){ const d=waist[0][1]-waist.at(-1)[1]; ins.push(d>0?`<b>${d.toFixed(1)} cm</b> off your waist since your first measurement. Fat loss of about 0.5–1 cm a week is a great pace.`:`Waist hasn't dropped yet. That's normal in weeks 1–3. Keep protein, steps and sleep steady.`); }
+  if (waist.length>=2){ const d=waist[0][1]-last(waist)[1]; ins.push(d>0?`<b>${d.toFixed(1)} cm</b> off your waist since your first measurement. Fat loss of about 0.5–1 cm a week is a great pace.`:(weekOf(todayKey())<=3 ? `Waist hasn't dropped yet. That's normal in weeks 1–3. Keep protein, steps and sleep steady.` : `Waist hasn't dropped yet. Check sleep, alcohol, steps and portion sizes; if it's still flat by week 8, talk to your doctor.`)); }
   $("#insights").innerHTML = ins.length ? ins.map(t=>`<div class="card soft">💡 ${t}</div>`).join("") : `<div class="card soft">💡 Insights appear after about a week of check-ins. They compare your own good and bad days.</div>`;
   const p = Object.keys(S.pss).sort();
-  $("#pssHist").innerHTML = p.length ? p.map(k=>`${k}: <b>${S.pss[k]}</b>/40`).join(" · ")+`<div class="muted" style="margin-top:6px">0–13 low · 14–26 moderate · 27–40 high. A drop of 3–5 points is meaningful.</div>` : "No scores yet. Take it on day 1, then at weeks 4, 8 and 12.";
+  $("#pssHist").innerHTML = p.length ? p.map(k=>`${esc(k)}: <b>${esc(S.pss[k])}</b>/40`).join(" · ")+`<div class="muted" style="margin-top:6px">0–13 low · 14–26 moderate · 27–40 high. A drop of 3–5 points is meaningful.</div>` : "No scores yet. Take it on day 1, then at weeks 4, 8 and 12.";
 }
 
 /* ---------- PLAN ---------- */
@@ -654,12 +689,12 @@ function renderPlan(){
   $("#phaseCard").innerHTML = `<div class="eyebrow">Phase ${ph.n} · Weeks ${ph.weeks[0]}–${ph.weeks[1]}</div><h2 style="margin:4px 0">${ph.name}</h2><p style="margin:4px 0 8px">${ph.goal}</p><ul class="tight">${ph.focus.map(f=>`<li>${f}</li>`).join("")}</ul><p class="small" style="margin-bottom:0"><b>New this phase:</b> ${ph.new}</p>`;
   $("#weeks").innerHTML = WEEKLY_FOCUS.map((f,i)=>{ const n=i+1, cls=n<w?"past":n===w?"now":"future"; const p=PHASES.find(p=>n>=p.weeks[0]&&n<=p.weeks[1]); return `<div class="week ${cls}"><span class="node"></span><div><div class="small muted">Week ${n} · ${p.name}</div><div>${f}</div></div></div>`; }).join("");
   const flags = S.settings.flags||{};
-  const suppRows = SUPPS.map(s=>{ const bad=s.avoid.filter(a=>flags[a]); return `<tr><td><b>${s.label}</b> <span class="tag">T${s.tier}</span><div class="small muted">${s.sub}</div>${bad.length?`<div class="small" style="color:var(--warning)">⚠ Skipped: clashes with your safety answers</div>`:""}</td></tr>`; }).join("");
+  const suppRows = SUPPS.map(s=>{ const bad=!suppSafe(s); return `<tr><td><b>${s.label}</b> <span class="tag">T${s.tier}</span><div class="small muted">${s.sub}</div>${bad?`<div class="small" style="color:var(--warning)">⚠ Skipped: clashes with your safety answers</div>`:""}</td></tr>`; }).join("");
   $("#planDocs").innerHTML = `
   <details open><summary>Supplements (tiered)</summary>
     <p class="small">Supplements are the smallest lever: at best about 1–3 cm of waist over 12 weeks. Sleep, a calorie deficit, protein and training do far more. Buy only USP or NSF-tested brands. Tier 2 starts at week 5, one product every 1–2 weeks, and only after clearance.</p>
     <table class="t">${suppRows}</table>
-    <p class="small"><b>Tier 3 (doctor only):</b> berberine 500 mg 2–3× daily with meals, only for insulin resistance (it causes low blood sugar with diabetes drugs and interacts with many medications). Myo-inositol 2 g twice daily for PCOS. Melatonin 0.5–1 mg short-term. Prescription GLP-1 drugs or metformin work far better than any supplement for large amounts of visceral fat.</p>
+    <p class="small"><b>Tier 3: doctor only.</b> Some products (for example berberine, inositol or melatonin) and prescription options can interact with medications or affect blood sugar and hormones. Whether any of them suit you is a medical decision to discuss with your doctor. Ebb does not suggest doses for these.</p>
     <p class="small"><b>Skip:</b> green tea extract (liver injury), CLA, apple cider vinegar (the main trial was retracted), chromium, NMN/NR, resveratrol, garcinia, raspberry ketones, "cortisol blocker" blends, DHEA/7-keto, adrenal glandulars, synephrine, yohimbine.</p>
   </details>
   <details><summary>Eat more / eat less</summary>
@@ -671,7 +706,7 @@ function renderPlan(){
   </details>
   <details><summary>Weekly training template</summary>
     <table class="t"><tr><td>Mon</td><td>Strength A</td></tr><tr><td>Tue</td><td>Zone 2, 40–50 min</td></tr><tr><td>Wed</td><td>Strength B</td></tr><tr><td>Thu</td><td>Intervals (from week 3) or Zone 2</td></tr><tr><td>Fri</td><td>Strength C (from week 5) or Zone 2, + yoga</td></tr><tr><td>Sat</td><td>Long Zone 2 hike, 60–90 min</td></tr><tr><td>Sun</td><td>Rest</td></tr></table>
-    <p class="small">Aerobic exercise and intervals cut visceral fat most; strength training keeps muscle. Overtraining raises cortisol. Swap any hard day for Zone 2 when HRV is low, resting HR is up 5+ bpm, or you slept badly. Weeks 4 and 8 are lighter.</p>
+    <p class="small">Aerobic exercise and intervals cut visceral fat most; strength training keeps muscle. Too much hard training without recovery backfires. Swap any hard day for Zone 2 when HRV is low, resting HR is up 5+ bpm, or you slept badly. Weeks 4 and 8 are lighter.</p>
   </details>
   <details><summary>Alternative therapies, graded</summary>
     <table class="t">
@@ -690,8 +725,8 @@ function renderPlan(){
     <p class="small"><b>Ignore:</b> Gerson coffee enemas and juice-only regimens. Gary Brecka's MTHFR gene testing and methylated-B upsell, plus methylene blue. Off-label rapamycin, metformin or peptides for "longevity". NMN or resveratrol for fat loss. Multi-day water fasts. "Adrenal fatigue" panels. Bryan Johnson's 100-pill stack.</p>
     <p class="small muted">Full write-ups with sources are in the project's research folder.</p>
   </details>
-  <details><summary>Blood tests: baseline and week 12</summary>
-    <p class="small">Fasting, 07:00–09:00, no biotin for 72 h. Morning serum cortisol · fasting glucose + insulin (HOMA-IR) · HbA1c · lipids (± ApoB) · hs-CRP · TSH + free T4 · vitamin D (25-OH) · ferritin + CBC · comprehensive metabolic panel (liver + kidney) · B12/folate · testosterone + SHBG (women: LH/FSH if cycles are irregular) · uric acid · blood pressure. If on ashwagandha or berberine, recheck ALT at weeks 6–8.</p>
+  <details><summary>Tests to discuss with your doctor</summary>
+    <p class="small">Ask your doctor which of these make sense for you at the start and at week 12. They are usually drawn fasting, 07:00–09:00, with no biotin for 72 h. Morning serum cortisol · fasting glucose + insulin (HOMA-IR) · HbA1c · lipids (± ApoB) · hs-CRP · TSH + free T4 · vitamin D (25-OH) · ferritin + CBC · comprehensive metabolic panel (liver + kidney) · B12/folate · testosterone + SHBG (women: LH/FSH if cycles are irregular) · uric acid · blood pressure.</p>
   </details>
   <details><summary>See a doctor if…</summary>
     <ul class="tight small"><li>Purple stretch marks wider than 1 cm, easy bruising, a round red face, a fat pad between the shoulders, or weak thighs when standing up from a chair. These are possible signs of Cushing's syndrome.</li><li>New high blood pressure or diabetes, osteoporosis at a young age, irregular periods, or any steroid medication use.</li><li>Loud snoring or gasping in sleep (possible sleep apnea), or persistent low mood.</li><li>No change in waist after 8 weeks of following the plan honestly.</li></ul>
@@ -707,11 +742,11 @@ document.addEventListener("change", e => {
   if (t.id==="setTheme"){ S.settings.theme=t.value; save(); applyTheme(); }
   if (t.id==="setStart" && t.value){ S.settings.start=t.value; save(); renderAll(); }
   if (t.id==="setHeight"){ S.settings.height=num(t.value); save(); }
-  if (t.id==="setTier2"){ S.settings.tier2=t.checked; save(); renderAll(); toast(t.checked?"Tier 2 unlocks in week 5. Add one at a time.":"Tier 2 hidden."); }
+  if (t.id==="setTier2"){ S.settings.tier2=t.checked; save(); renderAll(); toast(t.checked ? (weekOf(todayKey())>=5 ? "Tier 2 shown. Add one product at a time." : "Tier 2 unlocks in week 5. Add one at a time.") : "Tier 2 hidden."); }
 });
 $("#exp").onclick = () => { const b=new Blob([JSON.stringify(S,null,1)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download="ebb-backup-"+todayKey()+".json"; a.click(); };
 $("#impBtn").onclick = () => $("#imp").click();
-$("#imp").onchange = e => { const f=e.target.files[0]; if(!f) return; f.text().then(t=>{ try{ const d=JSON.parse(t); if(!d.settings) throw 0; S=Object.assign(blank(),d); save(); applyTheme(); renderAll(); toast("Data imported."); }catch(_){ toast("That file isn't an Ebb backup."); } }); };
+$("#imp").onchange = e => { const f=e.target.files[0]; if(!f) return; e.target.value=""; f.text().then(t=>{ try{ const d=JSON.parse(t); if(!d||typeof d.settings!=="object"||!d.settings) throw 0; const n=normalize(d); if(!n.settings.start) throw 0; S=n; save(); applyTheme(); renderAll(); toast("Data imported."); }catch(_){ toast("That file isn't an Ebb backup."); } }); };
 $("#reset").onclick = () => { if(confirm("Erase all Ebb data on this device? This can't be undone.")){ S=blank(); save(); location.reload(); } };
 
 /* ---------- nav ---------- */
@@ -726,13 +761,13 @@ function renderAll(){ const cur=document.querySelector("nav.tabs [aria-selected=
 
 /* ---------- onboarding ---------- */
 function onboard(){
-  $("#obStart").value = todayKey(); $("#obFlags").innerHTML = flagsHTML("ob"); $("#onboard").classList.add("on");
+  $("#obStart").value = todayKey(); $("#obFlags").innerHTML = flagsHTML("ob"); $("#onboard").classList.add("on"); $("#obStart").focus();
   $("#obGo").onclick = () => {
     S.settings.start = $("#obStart").value || todayKey();
     S.settings.height = num($("#obHeight").value); S.settings.sex=$("#obSex").value; S.settings.wake=$("#obWake").value||"06:30";
     document.querySelectorAll("#obFlags [data-flag]").forEach(c=>S.settings.flags[c.dataset.flag]=c.checked);
     const wa=num($("#obWaist").value), we=num($("#obWeight").value);
-    if (wa!=null||we!=null) S.weekly[S.settings.start] = {waist:wa,weight:we,hrv:null,rhr:null};
+    if (wa!=null||we!=null) S.weekly[todayKey()] = {waist:wa,weight:we,hrv:null,rhr:null};
     save(); $("#onboard").classList.remove("on"); renderAll(); toast("Day 1. Small steps, every day.");
   };
 }
@@ -740,7 +775,9 @@ function onboard(){
 applyTheme(); setMode("daily");
 if (!S.settings.start) onboard(); else renderToday();
 // refresh when returning to the app on a new day
-document.addEventListener("visibilitychange", () => { if(!document.hidden) renderAll(); });
+let lastKey = todayKey();
+document.addEventListener("visibilitychange", () => { if(!document.hidden){ lastKey=todayKey(); renderAll(); } });
+setInterval(() => { if (lastKey!==todayKey()){ lastKey=todayKey(); renderAll(); } }, 60e3);
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
 </body>

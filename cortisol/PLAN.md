@@ -1,4 +1,4 @@
-# Ebb: 12-Week Cortisol & Belly-Fat Plan
+# Ebb: 12-Week Stress-Reset & Waistline Plan
 
 **App:** https://wookiesmon.github.io/brew-timer/cortisol/ (works offline; add it to your home screen)
 **Research behind it:** [`research/`](research/)
@@ -7,7 +7,7 @@
 - [03 Lifestyle & therapies](research/03-lifestyle.md)
 - [04 Apps & design](research/04-apps-and-design.md)
 
-> Not medical advice. Get your doctor's go-ahead before starting supplements, especially if you take any medication. The app's Calm Score measures habits and how you feel; it is not a cortisol test.
+> Not medical advice. Get your doctor's go-ahead before starting supplements, especially if you take any medication. For adults 18+. The app's Calm Score measures habits and how you feel; it is not a cortisol test.
 
 ## What actually works (ranked by impact)
 1. **Sleep 7–9 h at fixed times.** Two weeks of short sleep raised visceral fat by 11% in a Mayo Clinic trial.
@@ -45,7 +45,7 @@ Swap any hard day for an easy one when HRV is low, resting HR is up 5+ bpm, or y
 
 ## The three phases
 ### Phase 1: Reset (weeks 1–4)
-- **Day 1:** measure waist and weight, take photos, do the PSS-10, and get baseline labs.
+- **Day 1:** measure waist and weight, take photos, do the PSS-10, and ask your doctor about baseline blood tests.
 - Build the daily rhythm above.
 - Tier 1 supplements only.
 - 12 h eating window.
@@ -56,12 +56,12 @@ Swap any hard day for an easy one when HRV is low, resting HR is up 5+ bpm, or y
 - 10–11 h eating window.
 - Sauna 2–3× a week if your heart is healthy.
 - If cleared, add Tier 2 supplements one every 1–2 weeks.
-- Recheck ALT and TSH at weeks 6–8 if you're on ashwagandha.
+- On ashwagandha? Ask your doctor whether liver or thyroid checks make sense.
 
 ### Phase 3: Settle (weeks 9–12)
 - 200–300 min of cardio a week, intervals up to 2× a week, strength 3× a week.
 - Stop ashwagandha by week 12.
-- **Week 12:** repeat labs, PSS-10, photos and measurements.
+- **Week 12:** repeat PSS-10, photos and measurements; ask your doctor about repeat blood tests.
 - Plan maintenance: keep about 80% of the habits.
 
 ## Checkpoints & 12-week targets
@@ -86,19 +86,19 @@ Checkpoints fall on days 1, 28, 56 and 84. The app reminds you.
 - **Creatine:** 5 g a day (optional).
 
 ### Tier 2: week 5+, only if cleared
-- **Ashwagandha KSM-66:** 300 mg twice a day for 8 weeks at most. Check ALT and TSH.
+- **Ashwagandha KSM-66:** 300 mg twice a day for 8 weeks at most. Ask your doctor about liver/thyroid checks.
 - **Glycine:** 3 g before bed.
 - **Probiotic:** *L. helveticus* R0052 + *B. longum* R0175.
 - **Saffron:** 14 mg twice a day. Not with SSRIs or SNRIs.
 
 ### Tier 3: only through your doctor
-Berberine, myo-inositol, melatonin, GLP-1 drugs or metformin.
+Some products and prescription options can interact with medications or affect blood sugar and hormones. Whether any suit you is a medical decision for your doctor; this plan gives no doses for them.
 
 ### Skip
 Green tea extract, CLA, apple cider vinegar, chromium, NMN/NR, resveratrol, garcinia, "cortisol blockers", DHEA, adrenal glandulars, coffee enemas.
 
-## Labs (baseline + week 12)
-Draw fasting, 07:00–09:00, with no biotin for 72 h beforehand.
+## Tests to discuss with your doctor (start + week 12)
+Usually drawn fasting, 07:00–09:00, with no biotin for 72 h beforehand.
 - AM cortisol
 - Fasting glucose + insulin
 - HbA1c
