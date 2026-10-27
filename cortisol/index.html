@@ -167,39 +167,28 @@ table.t th{font-size:12px;color:var(--muted);font-weight:600}
 </head>
 <body>
 
-<!-- Onboarding -->
+<!-- Onboarding / profile wizard -->
 <div class="overlay" id="onboard" role="dialog" aria-modal="true" aria-labelledby="obTitle">
-  <div class="wrap" style="padding-top:calc(24px + env(safe-area-inset-top))">
-    <div class="eyebrow">Welcome</div>
-    <h1 id="obTitle" style="margin:4px 0 8px">Ebb</h1>
-    <p class="muted">A 12-week habit plan for stress recovery and a healthier waistline. Everything stays on this device. For adults 18+.</p>
-    <div class="card warn small"><b>Not medical advice.</b> The Calm Score reflects your habits and how you feel. It is not a cortisol test. Check supplements and big diet or exercise changes with your doctor, especially if you take medication.</div>
-    <label class="f" for="obStart">Program start date</label>
-    <input type="date" id="obStart">
-    <div class="grid2">
-      <div><label class="f" for="obHeight">Height (cm)</label><input type="number" id="obHeight" inputmode="decimal" min="120" max="230" placeholder="e.g. 172"></div>
-      <div><label class="f" for="obSex">Sex</label><select id="obSex"><option value="">Prefer not to say</option><option value="m">Male</option><option value="f">Female</option></select></div>
+  <div class="wrap" style="padding-top:calc(20px + env(safe-area-inset-top))">
+    <div class="spread"><span class="eyebrow" id="obStep"></span><span class="small muted">Ebb</span></div>
+    <div class="segbar" id="obBar" aria-hidden="true" style="grid-template-columns:repeat(7,1fr)"></div>
+    <h1 id="obTitle" style="margin:16px 0 6px"></h1>
+    <p class="muted" id="obLead" style="margin-top:0"></p>
+    <div id="obBody"></div>
+    <div class="grid2" style="margin-top:22px">
+      <button class="btn line" id="obBack"></button>
+      <button class="btn" id="obNext"></button>
     </div>
-    <div class="grid2">
-      <div><label class="f" for="obWaist">Waist now (cm)</label><input type="number" id="obWaist" inputmode="decimal" min="40" max="200" placeholder="at navel"></div>
-      <div><label class="f" for="obWeight">Weight now (kg)</label><input type="number" id="obWeight" inputmode="decimal" min="30" max="300"></div>
-    </div>
-    <label class="f" for="obWake">Usual wake time</label>
-    <input type="time" id="obWake" value="06:30" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:var(--surface);min-height:44px">
-    <h3 style="margin-top:22px">Safety screen</h3>
-    <p class="small muted">Tick anything that applies. Ebb hides or flags supplements that clash with it.</p>
-    <div id="obFlags"></div>
-    <button class="btn block" id="obGo" style="margin-top:18px">Start my 12 weeks</button>
   </div>
 </div>
 
 <!-- PSS-10 overlay -->
 <div class="overlay" id="pss" role="dialog" aria-modal="true" aria-labelledby="pssTitle">
   <div class="wrap" style="padding-top:calc(16px + env(safe-area-inset-top))">
-    <div class="spread"><h2 id="pssTitle">Stress check (PSS-10)</h2><button class="btn line" id="pssClose">Close</button></div>
-    <p class="small muted">In the <b>last month</b>, how often have you… (0 never · 1 almost never · 2 sometimes · 3 fairly often · 4 very often)</p>
+    <div class="spread"><h2 id="pssTitle" data-i18n="pss_title"></h2><button class="btn line" id="pssClose" data-i18n="close"></button></div>
+    <p class="small muted" data-i18n-html="pss_lead_html"></p>
     <div id="pssList"></div>
-    <button class="btn block" id="pssSave" style="margin-top:16px">Save score</button>
+    <button class="btn block" id="pssSave" style="margin-top:16px" data-i18n="pss_save"></button>
   </div>
 </div>
 
@@ -208,17 +197,17 @@ table.t th{font-size:12px;color:var(--muted);font-weight:600}
 <!-- TODAY -->
 <section class="view on" id="v-today" aria-labelledby="tToday">
   <header class="top">
-    <div class="eyebrow" id="phaseEyebrow">Phase 1 · Reset</div>
-    <div class="spread"><h1 id="tToday">Today</h1><span class="chip" id="weekChip">Week 1 of 12</span></div>
+    <div class="eyebrow" id="phaseEyebrow"></div>
+    <div class="spread"><h1 id="tToday" data-i18n="tab_today"></h1><span class="chip" id="weekChip"></span></div>
     <div class="muted small" id="dateLine"></div>
     <div class="segbar" id="segbar" aria-hidden="true"></div>
   </header>
 
   <div class="card">
     <div class="hero">
-      <div class="ring" role="img" aria-label="Calm Score" id="ringWrap">
+      <div class="ring" role="img" id="ringWrap">
         <svg viewBox="0 0 160 160"><circle cx="80" cy="80" r="66" fill="none" stroke="var(--primary-soft)" stroke-width="14"/><circle id="ringFill" cx="80" cy="80" r="66" fill="none" stroke="var(--primary)" stroke-width="14" stroke-linecap="round" stroke-dasharray="414.7" stroke-dashoffset="414.7"/></svg>
-        <div class="val"><div class="num" id="score">0</div><div class="small muted">Calm Score</div></div>
+        <div class="val"><div class="num" id="score">0</div><div class="small muted" data-i18n="calm_score"></div></div>
       </div>
       <div class="minis" id="minis"></div>
     </div>
@@ -226,260 +215,336 @@ table.t th{font-size:12px;color:var(--muted);font-weight:600}
   </div>
 
   <div class="card soft" id="nextCard">
-    <div class="eyebrow">Next up</div>
-    <div class="spread" style="margin-top:4px"><div><b id="nextLabel"></b><div class="small muted" id="nextSub"></div></div><button class="btn" id="nextBtn">Done</button></div>
+    <div class="eyebrow" data-i18n="next_up"></div>
+    <div class="spread" style="margin-top:4px"><div><b id="nextLabel"></b><div class="small muted" id="nextSub"></div></div><button class="btn" id="nextBtn"></button></div>
   </div>
 
   <div class="card info" id="measureCard" style="display:none">
-    <div class="spread"><div><b>Weekly check-in day</b><div class="small">Waist, weight, HRV and resting HR take 1 minute.</div></div><button class="btn ghost" data-go="checkin" data-mode="weekly">Log</button></div>
+    <div class="spread"><div><b data-i18n="measure_title"></b><div class="small" data-i18n="measure_body"></div></div><button class="btn ghost" data-go="checkin" data-mode="weekly" data-i18n="log"></button></div>
   </div>
   <div class="card warn" id="checkpointCard" style="display:none"></div>
 
   <div class="card" id="checkinCard">
-    <div class="spread"><div><b>How are you, really?</b><div class="small muted" id="checkinSummary">30-second check-in</div></div><button class="btn ghost" data-go="checkin" data-mode="daily">Check in</button></div>
+    <div class="spread"><div><b data-i18n="checkin_q"></b><div class="small muted" id="checkinSummary"></div></div><button class="btn ghost" data-go="checkin" data-mode="daily" data-i18n="check_in"></button></div>
   </div>
 
   <div id="slots"></div>
-  <p class="small muted" style="margin-top:16px">Skipping something is fine. Aim for 70% on most days, not 100%.</p>
+  <p class="small muted" style="margin-top:16px" data-i18n="skip_note"></p>
 </section>
 
 <!-- CHECK-IN -->
 <section class="view" id="v-checkin" aria-labelledby="tCheck">
-  <header class="top"><div class="eyebrow">Check-in</div><h1 id="tCheck">How's your system?</h1></header>
-  <div class="seg" role="group" aria-label="Check-in type" style="margin-top:12px">
-    <button id="segDaily" aria-pressed="true">Daily</button><button id="segWeekly" aria-pressed="false">Weekly</button>
+  <header class="top"><div class="eyebrow" data-i18n="ci_eyebrow"></div><h1 id="tCheck" data-i18n="ci_title"></h1></header>
+  <div class="seg" role="group" style="margin-top:12px">
+    <button id="segDaily" aria-pressed="true" data-i18n="daily"></button><button id="segWeekly" aria-pressed="false" data-i18n="weekly"></button>
   </div>
   <div id="dailyForm" class="card">
-    <label class="f" for="ciStress">Stress <span class="muted" id="ciStressVal">5</span></label>
+    <label class="f" for="ciStress"><span data-i18n="stress"></span> <span class="muted" id="ciStressVal">5</span></label>
     <input type="range" id="ciStress" min="1" max="10" value="5" aria-describedby="stressEnds">
-    <div class="spread small muted" id="stressEnds"><span>At ease</span><span>Overwhelmed</span></div>
-    <div class="f" style="font-weight:500;margin:14px 0 6px" id="lEnergy">Energy</div><div class="picks" id="ciEnergy" role="group" aria-labelledby="lEnergy"></div>
-    <div class="f" style="font-weight:500;margin:14px 0 6px" id="lMood">Mood</div><div class="picks" id="ciMood" role="group" aria-labelledby="lMood"></div>
+    <div class="spread small muted" id="stressEnds"><span data-i18n="at_ease"></span><span data-i18n="overwhelmed"></span></div>
+    <div style="font-weight:500;margin:14px 0 6px" id="lEnergy" data-i18n="energy"></div><div class="picks" id="ciEnergy" role="group" aria-labelledby="lEnergy"></div>
+    <div style="font-weight:500;margin:14px 0 6px" id="lMood" data-i18n="mood"></div><div class="picks" id="ciMood" role="group" aria-labelledby="lMood"></div>
     <div class="grid2">
-      <div><label class="f" for="ciSleep">Sleep (hours)</label><input type="number" id="ciSleep" step="0.25" min="0" max="14" inputmode="decimal"></div>
-      <div><label class="f" for="ciSteps">Steps</label><input type="number" id="ciSteps" step="100" min="0" inputmode="numeric"></div>
+      <div><label class="f" for="ciSleep" data-i18n="sleep_h"></label><input type="number" id="ciSleep" step="0.25" min="0" max="14" inputmode="decimal"></div>
+      <div><label class="f" for="ciSteps" data-i18n="steps"></label><input type="number" id="ciSteps" step="100" min="0" inputmode="numeric"></div>
     </div>
-    <div style="font-weight:500;margin:14px 0 6px" id="lTags">What drove stress today?</div>
+    <div style="font-weight:500;margin:14px 0 6px" id="lTags" data-i18n="tags_q"></div>
     <div id="ciTags" role="group" aria-labelledby="lTags" style="display:flex;flex-wrap:wrap;gap:6px"></div>
-    <label class="f" for="ciNote">Note</label><textarea id="ciNote" rows="2" placeholder="Optional"></textarea>
-    <button class="btn block" id="ciSave" style="margin-top:16px">Save check-in</button>
+    <label class="f" for="ciNote" data-i18n="note"></label><textarea id="ciNote" rows="2" data-i18n-ph="optional"></textarea>
+    <button class="btn block" id="ciSave" style="margin-top:16px" data-i18n="save_checkin"></button>
   </div>
   <div id="weeklyForm" class="card" style="display:none">
-    <p class="small muted" style="margin-top:0">Measure the same way every week: morning, after the bathroom, before food. Waist goes halfway between your lowest rib and the top of your hip bone, at the end of a normal breath out.</p>
+    <p class="small muted" style="margin-top:0" data-i18n="measure_how"></p>
     <div class="grid2">
-      <div><label class="f" for="wWaist">Waist (cm)</label><input type="number" id="wWaist" step="0.1" inputmode="decimal"></div>
-      <div><label class="f" for="wWeight">Weight (kg)</label><input type="number" id="wWeight" step="0.1" inputmode="decimal"></div>
-      <div><label class="f" for="wHrv">HRV (ms)</label><input type="number" id="wHrv" inputmode="decimal" placeholder="optional"></div>
-      <div><label class="f" for="wRhr">Resting HR (bpm)</label><input type="number" id="wRhr" inputmode="numeric" placeholder="optional"></div>
+      <div><label class="f" for="wWaist" id="lWaist"></label><input type="number" id="wWaist" step="0.1" inputmode="decimal"></div>
+      <div><label class="f" for="wWeight" id="lWeight"></label><input type="number" id="wWeight" step="0.1" inputmode="decimal"></div>
+      <div id="hrvBox"><label class="f" for="wHrv" data-i18n="f_hrv"></label><input type="number" id="wHrv" inputmode="decimal" data-i18n-ph="optional"></div>
+      <div><label class="f" for="wRhr" data-i18n="f_rhr"></label><input type="number" id="wRhr" inputmode="numeric" data-i18n-ph="optional"></div>
     </div>
-    <button class="btn block" id="wSave" style="margin-top:16px">Save measurements</button>
-    <button class="btn ghost block" id="pssOpen" style="margin-top:10px">Take the PSS-10 stress test (do it in weeks 0, 4, 8, 12)</button>
+    <p class="small muted" id="wearHint"></p>
+    <button class="btn block" id="wSave" style="margin-top:6px" data-i18n="save_measure"></button>
+    <button class="btn ghost block" id="pssOpen" style="margin-top:10px" data-i18n="pss_btn"></button>
     <div id="wHistory" style="margin-top:14px"></div>
   </div>
 </section>
 
 <!-- BREATHE -->
 <section class="view" id="v-breathe" aria-labelledby="tBreathe">
-  <header class="top"><div class="eyebrow">Breathe</div><h1 id="tBreathe">Downshift</h1>
-  <p class="small muted" style="margin:4px 0 0">Slow breathing with long exhales is the fastest tool you have against acute stress.</p></header>
+  <header class="top"><div class="eyebrow" data-i18n="br_eyebrow"></div><h1 id="tBreathe" data-i18n="br_title"></h1>
+  <p class="small muted" style="margin:4px 0 0" data-i18n="br_lead"></p></header>
   <div class="presets" id="presets" style="margin-top:14px"></div>
   <div class="card">
-    <div class="pacer"><div class="orb" id="orb"></div><div class="cue" aria-live="polite"><b id="cue">Ready</b><span class="small muted" id="cueTime"></span></div></div>
-    <div class="seg" role="group" aria-label="Duration" id="durSeg"></div>
-    <button class="btn block" id="bStart" style="margin-top:12px">Start</button>
+    <div class="pacer"><div class="orb" id="orb"></div><div class="cue" aria-live="polite"><b id="cue"></b><span class="small muted" id="cueTime"></span></div></div>
+    <div class="seg" role="group" id="durSeg"></div>
+    <button class="btn block" id="bStart" style="margin-top:12px"></button>
   </div>
   <p class="small muted" id="bStats"></p>
 </section>
 
 <!-- PROGRESS -->
 <section class="view" id="v-progress" aria-labelledby="tProg">
-  <header class="top"><div class="eyebrow">Progress</div><h1 id="tProg">Your trend</h1></header>
+  <header class="top"><div class="eyebrow" data-i18n="pr_eyebrow"></div><h1 id="tProg" data-i18n="pr_title"></h1></header>
   <div class="grid2" id="sparkGrid" style="margin-top:12px"></div>
-  <div class="card"><div class="spread"><h3>Waist (cm)</h3><span class="chip sand" id="whtr"></span></div><svg class="chart" id="chWaist"></svg></div>
-  <div class="card"><h3>Stress, 1–10 (lower is calmer)</h3><svg class="chart" id="chStress"></svg></div>
-  <div class="card"><h3>Sleep (hours)</h3><svg class="chart" id="chSleep"></svg></div>
-  <div class="card"><h3>Habits, weeks 1–12</h3><div class="small muted">Each column is a program week; rows are its 7 days. Darker means more of the plan done; the outlined square is today.</div><div class="heat" id="heat"></div></div>
+  <div class="card"><div class="spread"><h3 id="chWaistTitle"></h3><span class="chip sand" id="whtr"></span></div><svg class="chart" id="chWaist"></svg></div>
+  <div class="card"><h3 data-i18n="ch_stress"></h3><svg class="chart" id="chStress"></svg></div>
+  <div class="card"><h3 data-i18n="ch_sleep"></h3><svg class="chart" id="chSleep"></svg></div>
+  <div class="card"><h3 data-i18n="habits_title"></h3><div class="small muted" data-i18n="habits_lead"></div><div class="heat" id="heat"></div></div>
   <div id="insights"></div>
-  <div class="card"><h3>Stress test (PSS-10)</h3><div id="pssHist" class="small"></div></div>
+  <div class="card"><h3 data-i18n="pss_hist_title"></h3><div id="pssHist" class="small"></div></div>
 </section>
 
 <!-- PLAN -->
 <section class="view" id="v-plan" aria-labelledby="tPlan">
-  <header class="top"><div class="eyebrow">The protocol</div><h1 id="tPlan">12-week plan</h1></header>
+  <header class="top"><div class="eyebrow" data-i18n="plan_eyebrow"></div><h1 id="tPlan" data-i18n="plan_title"></h1></header>
   <div id="phaseCard" class="card soft"></div>
-  <div class="card"><h3>Week by week</h3><div id="weeks"></div></div>
+  <div class="card"><h3 data-i18n="week_by_week"></h3><div id="weeks"></div></div>
   <div class="card" id="planDocs"></div>
   <div class="card">
-    <h3>Settings</h3>
-    <label class="f" for="setTheme">Theme</label>
-    <select id="setTheme"><option value="">Match system</option><option value="light">Light</option><option value="dark">Dark</option></select>
-    <label class="f" for="setStart">Start date</label><input type="date" id="setStart">
-    <label class="f" for="setHeight">Height (cm)</label><input type="number" id="setHeight" inputmode="decimal">
-    <label class="flag" style="margin-top:12px"><input type="checkbox" id="setTier2"> My doctor/pharmacist cleared Tier 2 supplements</label>
+    <h3 data-i18n="settings"></h3>
+    <button class="btn ghost block" id="editProfile" style="margin-top:12px" data-i18n="edit_profile"></button>
+    <div class="grid2">
+      <div><label class="f" for="setLang" data-i18n="language"></label><select id="setLang"></select></div>
+      <div><label class="f" for="setTheme" data-i18n="theme"></label>
+        <select id="setTheme"><option value="" data-i18n="theme_sys"></option><option value="light" data-i18n="theme_light"></option><option value="dark" data-i18n="theme_dark"></option></select></div>
+    </div>
+    <label class="f" for="setStart" data-i18n="f_start"></label><input type="date" id="setStart">
+    <label class="flag" style="margin-top:12px"><input type="checkbox" id="setTier2"> <span data-i18n="tier2_cleared"></span></label>
     <div id="setFlags"></div>
-    <div class="grid2" style="margin-top:14px"><button class="btn line" id="exp">Export data</button><button class="btn line" id="impBtn">Import data</button></div>
+    <div class="grid2" style="margin-top:14px"><button class="btn line" id="exp" data-i18n="export"></button><button class="btn line" id="impBtn" data-i18n="import"></button></div>
     <input type="file" id="imp" accept=".json,application/json" hidden>
-    <button class="btn danger block" id="reset" style="margin-top:10px">Erase everything</button>
+    <button class="btn danger block" id="reset" style="margin-top:10px" data-i18n="erase"></button>
   </div>
 </section>
 </div>
 
 <nav class="tabs" aria-label="Main"><div class="inner" role="tablist">
-  <button role="tab" data-tab="today" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>Today</button>
-  <button role="tab" data-tab="checkin" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 12l4 4 10-10"/></svg>Check-in</button>
-  <button role="tab" data-tab="breathe" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 9c3-3 6 3 9 0s6 3 9 0M3 15c3-3 6 3 9 0s6 3 9 0"/></svg>Breathe</button>
-  <button role="tab" data-tab="progress" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 19V5M4 19h16M8 15l4-4 3 3 5-6"/></svg>Progress</button>
-  <button role="tab" data-tab="plan" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3c-4 4-6 8-6 11a6 6 0 0012 0c0-3-2-7-6-11z"/></svg>Plan</button>
+  <button role="tab" data-tab="today" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg><span data-i18n="tab_today"></span></button>
+  <button role="tab" data-tab="checkin" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 12l4 4 10-10"/></svg><span data-i18n="tab_checkin"></span></button>
+  <button role="tab" data-tab="breathe" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 9c3-3 6 3 9 0s6 3 9 0M3 15c3-3 6 3 9 0s6 3 9 0"/></svg><span data-i18n="tab_breathe"></span></button>
+  <button role="tab" data-tab="progress" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 19V5M4 19h16M8 15l4-4 3 3 5-6"/></svg><span data-i18n="tab_progress"></span></button>
+  <button role="tab" data-tab="plan" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3c-4 4-6 8-6 11a6 6 0 0012 0c0-3-2-7-6-11z"/></svg><span data-i18n="tab_plan"></span></button>
 </div></nav>
 <div class="toast" id="toast" role="status"></div>
 
+<script src="i18n/en.js"></script>
+<script src="i18n/ko.js"></script>
 <script>
 "use strict";
+/* ---------- i18n ---------- */
+const I18N = window.EBB_I18N || {};
+const LANGS = ["en","ko"]; // add "es" here once i18n/es.js exists
+function detectLang(){ const n=(navigator.language||"en").toLowerCase(); return LANGS.find(l=>n.startsWith(l)) || "en"; }
+function lang(){ return (S && LANGS.includes(S.settings.lang)) ? S.settings.lang : detectLang(); }
+function locale(){ const l=lang(); if (l==="ko") return "ko-KR"; const n=navigator.language||""; return n.toLowerCase().startsWith(l) ? n : (l==="en"?"en-US":l); }
+function t(k, v){
+  let s = (I18N[lang()]||{})[k]; if (s==null) s = (I18N.en||{})[k]; if (s==null) return k;
+  return v ? s.replace(/\{(\w+)\}/g, (m,n) => n in v ? v[n] : m) : s;
+}
+function applyI18n(){
+  document.documentElement.lang = lang();
+  document.querySelectorAll("[data-i18n]").forEach(e => e.textContent = t(e.dataset.i18n));
+  document.querySelectorAll("[data-i18n-html]").forEach(e => e.innerHTML = t(e.dataset.i18nHtml));
+  document.querySelectorAll("[data-i18n-ph]").forEach(e => e.placeholder = t(e.dataset.i18nPh));
+}
+
 /* ---------- storage ---------- */
 const KEY = "ebb.v1";
-let S;
-function blank(){ return {settings:{start:null,height:null,sex:"",wake:"06:30",theme:"",tier2:false,flags:{}},days:{},weekly:{},pss:{},breath:[]}; }
-const KEY_RE = /^\d{4}-\d{2}-\d{2}$/;
+let S = null;
+const ACTS = ["none","yoga","pilates","walk","run","gym","sport","swim"];
+const WEARS = ["none","apple","galaxy","oura","garmin","fitbit","whoop","other"];
+const LUNCH = ["out","home","packed","skip"];
+const TRAIN = ["morning","lunch","evening"];
+function blankSettings(){ return {start:null, lang:"", units:"", age:null, sex:"", height:null, wake:"07:00", bed:"23:00",
+  workStart:"09:00", workEnd:"17:00", noWork:false, lunch:"home", dinner:"19:00", act:{type:"none",days:[],time:"18:30"},
+  trainTime:"evening", wearable:"none", theme:"", tier2:false, flags:{}}; }
+function blank(){ return {settings:blankSettings(), days:{}, weekly:{}, pss:{}, breath:[]}; }
+const KEY_RE = /^\d{4}-\d{2}-\d{2}$/, TIME_RE = /^\d{2}:\d{2}$/;
 const numOrNull = v => (typeof v==="number" && isFinite(v)) ? v : null;
 const obj = v => v && typeof v==="object" && !Array.isArray(v) ? v : {};
+const oneOf = (v, list, dflt) => list.includes(v) ? v : dflt;
 const TAG_LIST = ["Work","Sleep","Family","Money","Caffeine","Alcohol","Illness","Traffic"];
 // Coerce stored or imported data into the expected shape, so a hand-edited or
-// hostile backup can't break rendering or inject markup.
+// hostile backup can't break rendering or inject markup. Also migrates v1
+// data saved before the profile existed (no bedtime: keep the old 22:30).
 function normalize(d){
-  const o = Object.assign(blank(), obj(d));
-  o.settings = Object.assign(blank().settings, obj(o.settings)); o.settings.flags = obj(o.settings.flags);
-  if (o.settings.start && !KEY_RE.test(o.settings.start)) o.settings.start = null;
-  if (!/^\d{2}:\d{2}$/.test(o.settings.wake)) o.settings.wake = "06:30";
-  if (!["","light","dark"].includes(o.settings.theme)) o.settings.theme = "";
-  o.settings.height = numOrNull(o.settings.height); o.settings.tier2 = !!o.settings.tier2;
+  const o = Object.assign(blank(), obj(d)), src = obj(obj(d).settings), b = blankSettings();
+  const s = o.settings = Object.assign(b, src);
+  if (s.start && !KEY_RE.test(s.start)) s.start = null;
+  s.lang = oneOf(s.lang, LANGS.concat(""), ""); s.units = oneOf(s.units, ["","metric","imperial"], "");
+  s.sex = oneOf(s.sex, ["","m","f"], ""); s.theme = oneOf(s.theme, ["","light","dark"], "");
+  for (const f of ["wake","bed","workStart","workEnd","dinner"]) if (!TIME_RE.test(s[f])) s[f] = b[f];
+  if (src.start && !("bed" in src)) s.bed = "22:30";
+  s.age = numOrNull(s.age); s.height = numOrNull(s.height); s.tier2 = !!s.tier2; s.noWork = !!s.noWork;
+  s.lunch = oneOf(s.lunch, LUNCH, "home"); s.trainTime = oneOf(s.trainTime, TRAIN, "evening"); s.wearable = oneOf(s.wearable, WEARS, "none");
+  const a = obj(s.act); s.act = {type:oneOf(a.type, ACTS, "none"), days:Array.isArray(a.days)?[...new Set(a.days.filter(x=>Number.isInteger(x)&&x>=0&&x<=6))]:[], time:TIME_RE.test(a.time)?a.time:"18:30"};
+  const fl = {}; for (const [k,v] of Object.entries(obj(s.flags))) if (FLAG_IDS.includes(k)) fl[k] = !!v; s.flags = fl;
   const days = {};
   for (const [k,v] of Object.entries(obj(o.days))) if (KEY_RE.test(k)) {
     const c = obj(v).checkin, done = {};
-    for (const [h,b] of Object.entries(obj(obj(v).done))) if (b===true) done[h] = true;
-    days[k] = {done, checkin: c && typeof c==="object" ? {stress:numOrNull(c.stress)??5, energy:numOrNull(c.energy), mood:numOrNull(c.mood), sleep:numOrNull(c.sleep), steps:numOrNull(c.steps), tags:Array.isArray(c.tags)?c.tags.filter(t=>TAG_LIST.includes(t)):[], note:String(c.note||"")} : null};
+    for (const [h,x] of Object.entries(obj(obj(v).done))) if (x===true) done[h] = true;
+    days[k] = {done, checkin: c && typeof c==="object" ? {stress:numOrNull(c.stress)??5, energy:numOrNull(c.energy), mood:numOrNull(c.mood), sleep:numOrNull(c.sleep), steps:numOrNull(c.steps), tags:Array.isArray(c.tags)?c.tags.filter(x=>TAG_LIST.includes(x)):[], note:String(c.note||"")} : null};
   }
   o.days = days;
   const weekly = {};
   for (const [k,v] of Object.entries(obj(o.weekly))) if (KEY_RE.test(k)) { const m=obj(v); weekly[k] = {waist:numOrNull(m.waist), weight:numOrNull(m.weight), hrv:numOrNull(m.hrv), rhr:numOrNull(m.rhr)}; }
   o.weekly = weekly;
   const pss = {}; for (const [k,v] of Object.entries(obj(o.pss))) if (KEY_RE.test(k) && numOrNull(v)!=null) pss[k] = v; o.pss = pss;
-  o.breath = Array.isArray(o.breath) ? o.breath.filter(b => b && numOrNull(b.t)!=null && numOrNull(b.s)!=null) : [];
+  o.breath = Array.isArray(o.breath) ? o.breath.filter(x => x && numOrNull(x.t)!=null && numOrNull(x.s)!=null) : [];
   return o;
 }
+const FLAG_IDS = ["preg","thyroid","ssri","thinner","diabetes","liver","kidney","autoimmune","sedative","heart"];
 function load(){ try{ S = normalize(JSON.parse(localStorage.getItem(KEY))); }catch(e){ S = blank(); } }
-function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){ toast("Couldn't save. Is private browsing on?"); } }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){ toast(t("toast_save_fail")); } }
 load();
 
-/* ---------- dates ---------- */
+/* ---------- time & units ---------- */
 const pad = n => String(n).padStart(2,"0");
+const toMin = s => { const [h,m] = s.split(":").map(Number); return h*60+m; };
+const fromMin = m => { m = ((Math.round(m)%1440)+1440)%1440; return pad(Math.floor(m/60))+":"+pad(m%60); };
+function fmtTime(hhmm){ const [h,m] = hhmm.split(":").map(Number); return new Date(2000,0,1,h,m).toLocaleTimeString(locale(),{hour:"numeric",minute:"2-digit"}); }
+const fmtNum = n => Number(n).toLocaleString(locale());
+// The personal schedule every habit is timed from (minutes after midnight; bed may exceed 1440).
+function sched(){
+  const s = S.settings, wake = toMin(s.wake); let bed = toMin(s.bed); if (bed <= wake) bed += 1440;
+  const dinner = toMin(s.dinner), firstMeal = wake + 30, kitchen = bed - 180;
+  const lastMeal = Math.min(kitchen, dinner + 45);
+  return {wake, bed, sleepH:(wake+1440-bed)/60, caf:Math.max(wake+240, bed-600), dim:bed-90, mg:bed-60, kitchen,
+    lightBy:wake+60, dinner, windowH:Math.max(0,(lastMeal-firstMeal)/60), dayStart:Math.max(0, wake-180)};
+}
+const imperial = () => S.settings.units ? S.settings.units==="imperial" : lang()==="en" && /-US$/i.test(navigator.language||"en-US");
+const LEN = () => imperial() ? {u:t("u_in"), f:2.54} : {u:t("u_cm"), f:1};
+const WT = () => imperial() ? {u:t("u_lb"), f:0.45359237} : {u:t("u_kg"), f:1};
+const toDisp = (v, U) => v==null ? null : Math.round(v/U.f*10)/10;
+const fromDisp = (v, U) => v==null ? null : v*U.f;
+
+/* ---------- dates ---------- */
 const keyOf = d => d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
 const parseKey = k => { const [y,m,d] = k.split("-").map(Number); return new Date(y, m-1, d); };
-const DAY_START_H = 5; // the Night slot runs until 05:00, so the app day does too
-const todayKey = () => keyOf(new Date(Date.now() - DAY_START_H*36e5));
+// The app day starts 3 h before wake-up, so late-night habits count for the evening they belong to.
+const todayKey = () => keyOf(new Date(Date.now() - sched().dayStart*6e4));
 const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
 function dayNum(k){ if(!S.settings.start) return 1; return Math.round((parseKey(k)-parseKey(S.settings.start))/864e5)+1; }
 function weekOf(k){ return Math.min(12, Math.max(1, Math.ceil(dayNum(k)/7))); }
 function day(k){ return S.days[k] || (S.days[k] = {done:{}, checkin:null}); }
+const dowName = (i, style="short") => new Date(2026,0,4+i).toLocaleDateString(locale(),{weekday:style}); // 2026-01-04 is a Sunday
+const fmtDate = (k, o) => parseKey(k).toLocaleDateString(locale(), o);
 
-/* ---------- content ---------- */
-const FLAGS = [
-  ["preg","Pregnant, trying, or breastfeeding"],
-  ["thyroid","Thyroid disease or thyroid medication"],
-  ["ssri","Antidepressant (SSRI/SNRI), tramadol, or MAOI"],
-  ["thinner","Blood thinner (warfarin, apixaban, etc.)"],
-  ["diabetes","Diabetes medication (metformin, insulin, GLP-1…)"],
-  ["liver","Liver disease or abnormal liver tests"],
-  ["kidney","Kidney disease"],
-  ["autoimmune","Autoimmune disease or immunosuppressants"],
-  ["sedative","Sedatives / sleeping pills / benzodiazepines"],
-  ["heart","Heart disease, arrhythmia, or uncontrolled blood pressure"]
-];
-const PHASES = [
-  {n:1, name:"Reset", weeks:[1,4], goal:"Build the foundations of stress recovery: sleep, light, walking, and food quality.",
-   focus:["Same wake time every day, 7–9 h sleep window","10–20 min outdoor light within an hour of waking","8,000 steps + 10-min walk after meals","Protein at each meal (1.2–1.6 g/kg/day), 25–30 g fiber","Tier 1 supplements only","Gentle 12 h eating window, kitchen closes 3 h before bed","Strength 2×/week + Zone 2 cardio"],
-   new:"Take baseline measurements and ask your doctor about baseline blood tests. Remove sugary drinks and cut alcohol to zero or near zero. PSS-10 retest at the end of week 4."},
-  {n:2, name:"Build", weeks:[5,8], goal:"Add training volume and, if cleared, one Tier 2 supplement at a time.",
-   focus:["Strength 3×/week, Zone 2 150+ min/week","1 HIIT session/week (skip it on low-HRV or bad-sleep days)","Eating window 10–11 h","Sauna 2–3×/week if your heart is healthy","Add Tier 2 supplements one every 1–2 weeks if cleared","Week 8 is a lighter week: about 60% of normal training"],
-   new:"PSS-10 retest at the end of week 8. If you started ashwagandha, ask your doctor whether liver or thyroid checks make sense."},
-  {n:3, name:"Settle", weeks:[9,12], goal:"Lock in the routine, push cardio to 200–300 min/week, and retest.",
-   focus:["HIIT up to 2×/week if recovery allows","200–300 min/week total cardio, 8–10k steps","Keep strength 3×/week to protect muscle","Daily 5-min breathing + 1 nature session/week","End ashwagandha by week 12, then 4 weeks off","Week 12: repeat labs, PSS-10, photos, and measurements"],
-   new:"Compare with baseline. Plan your maintenance version: keep about 80% of the habits."}
-];
-const WEEKLY_FOCUS = ["Sleep and wake times. Baseline measurements and labs.","Morning light + walk after every meal.","Protein and fiber at every meal. Add the first HIIT session if sleep is good.","Lighter training week. PSS-10 retest. Phase 1 recap.",
- "3rd strength day. Optional Tier 2 #1.","Sauna or nature twice. On ashwagandha? Ask your doctor about checks.","Optional Tier 2 #2. Tighten the eating window to about 10.5 h.","Lighter week. PSS-10 retest. Phase 2 recap.",
- "Cardio up to 200+ min.","Up to 2 HIIT sessions if HRV is steady.","Dial in the habits that moved your numbers.","Retest labs, PSS-10, photos. Plan maintenance."];
-// exercise by weekday (0=Sun)
-function workout(k){
-  const w = weekOf(k), dow = parseKey(k).getDay(), light = (w===4||w===8);
-  const T = {
-    0:["Rest day","Gentle walk or stretching only"],
-    1:["Strength A","Squat · push · row · carry, 40 min"],
-    2:["Zone 2 cardio","40–50 min at a pace you can still talk"],
-    3:["Strength B","Hinge · pull · press · core, 40 min"],
-    4: (S.settings.flags||{}).heart ? ["Zone 2 cardio","40 min easy. Intervals are off because of your heart answer; ask your doctor before hard efforts"]
-       : w>=3 ? ["Intervals","4–6 × 1 min hard / 2 min easy. Swap for Zone 2 if stressed or slept badly"] : ["Zone 2 cardio","40 min easy"],
-    5: w>=5 ? ["Strength C + yoga","Full body 30 min + 15 min yoga"] : ["Zone 2 + yoga","30 min easy + 15 min yoga"],
-    6:["Long Zone 2","60–90 min hike, ideally in a forest or park"]
-  }[dow];
-  return light && dow!==0 ? [T[0]+" (light week)","About 60% of usual volume. "+T[1]] : T;
+/* ---------- training week ---------- */
+const partOf = m => m < 12*60 ? "morning" : m < 16*60 ? "lunch" : "evening";
+const ACT_KIND = {yoga:"light", pilates:"light", walk:"light", run:"cardio", swim:"cardio", sport:"cardio", gym:"str"};
+// Returns 7 entries (Sun..Sat): {id, kind, stacked} where id is a w_* workout key or "act".
+function weekPlan(w){
+  const heart = !!S.settings.flags.heart;
+  const P = [{id:"w_rest",kind:"rest"},{id:"w_strA",kind:"str"},{id:"w_z2",kind:"z2"},{id:"w_strB",kind:"str"},
+    (!heart && w>=3) ? {id:"w_int",kind:"int"} : {id:"w_z2",kind:"z2"},
+    w>=5 ? {id:"w_strC",kind:"str"} : {id:"w_z2",kind:"z2"}, {id:"w_long",kind:"long"}];
+  const a = S.settings.act, kind = ACT_KIND[a.type];
+  if (!kind || !a.days.length) return P;
+  const days = a.days, stack = kind==="light" && partOf(toMin(a.time)) !== S.settings.trainTime;
+  if (stack){ days.forEach(d => P[d] = Object.assign({}, P[d], {stacked:true})); return P; }
+  if (kind==="str") P.forEach((p,i) => { if (p.kind==="str" && !days.includes(i)) P[i] = {id:"w_z2",kind:"z2"}; });
+  for (const d of days){
+    const displaced = P[d]; P[d] = {id:"act", kind:kind==="str"?"str":"cardio"};
+    if (displaced.kind==="str" && kind!=="str"){
+      const free = [2,4,5,6,0,1,3].find(i => !days.includes(i) && ["z2","int"].includes(P[i].kind) && P[(i+6)%7].kind!=="str" && P[(i+1)%7].kind!=="str")
+                ?? [2,4,5,6,0,1,3].find(i => !days.includes(i) && ["z2","int"].includes(P[i].kind));
+      if (free!=null) P[free] = displaced;
+    }
+  }
+  if (!P.some(p=>p.kind==="rest")){ const r=[0,6,5,4,3,2,1].find(i=>!days.includes(i) && ["z2","int","long"].includes(P[i].kind)); if (r!=null) P[r] = {id:"w_rest",kind:"rest"}; }
+  return P;
 }
-// supplement definitions, filtered by flags & tier
+function workoutText(p, w){
+  if (p.id==="act") return [actName(), t(p.kind==="str" ? "w_act_str_s" : "w_act_cardio_s")];
+  let name = t(p.id), sub = t(p.id==="w_int" ? "w_int_s" : p.id+"_s");
+  if (p.id==="w_z2" && S.settings.flags.heart && w>=3 && parseKey(todayKey()).getDay()===4) sub = t("w_int_heart_s");
+  if ((w===4||w===8) && p.kind!=="rest") return [t("w_light",{name}), t("w_light_s",{s:sub})];
+  return [name, sub];
+}
+const actName = () => t("act_"+S.settings.act.type);
+
+/* ---------- supplements ---------- */
 const SUPPS = [
-  {id:"s_d3",slot:"morning",tier:1,label:"Vitamin D3 + K2",sub:"2,000 IU D3 + 100 µg K2 (MK-7), with breakfast",avoid:["thinner"]},
-  {id:"s_thea",slot:"morning",tier:1,label:"L-theanine",sub:"200 mg with coffee",avoid:[]},
-  {id:"s_crea",slot:"morning",tier:1,label:"Creatine monohydrate",sub:"5 g on any day (supports training; expect 1–2 kg water weight)",avoid:["kidney"]},
-  {id:"s_psy1",slot:"midday",tier:1,label:"Psyllium before lunch",sub:"3→5 g in a big glass of water, 2 h away from meds",avoid:[]},
-  {id:"s_psy2",slot:"evening",tier:1,label:"Psyllium before dinner",sub:"3→5 g in a big glass of water",avoid:[]},
-  {id:"s_o3",slot:"evening",tier:1,label:"Omega-3",sub:"2 g EPA+DHA with dinner",avoid:["thinner"]},
-  {id:"s_mg",slot:"night",tier:1,label:"Magnesium glycinate",sub:"200 mg elemental (300 mg from week 3), 1 h before bed",avoid:["kidney"]},
-  {id:"s_ash",slot:"morning",tier:2,label:"Ashwagandha KSM-66",sub:"300 mg breakfast + 300 mg dinner · 8 weeks max · ask your doctor about liver/thyroid checks",avoid:["preg","thyroid","liver","autoimmune","sedative","diabetes"]},
-  {id:"s_pro",slot:"morning",tier:2,label:"Probiotic",sub:"L. helveticus R0052 + B. longum R0175, 3 billion CFU",avoid:["autoimmune"]},
-  {id:"s_saf",slot:"morning",tier:2,label:"Saffron (affron)",sub:"14 mg breakfast + 14 mg dinner",avoid:["ssri","preg","thinner"]},
-  {id:"s_gly",slot:"night",tier:2,label:"Glycine",sub:"3 g before bed",avoid:["preg"]}
+  {id:"s_d3",slot:"morning",tier:1,avoid:["thinner"]},
+  {id:"s_thea",slot:"morning",tier:1,avoid:[]},
+  {id:"s_crea",slot:"morning",tier:1,avoid:["kidney"]},
+  {id:"s_psy1",slot:"midday",tier:1,avoid:[]},
+  {id:"s_psy2",slot:"evening",tier:1,avoid:[]},
+  {id:"s_o3",slot:"evening",tier:1,avoid:["thinner"]},
+  {id:"s_mg",slot:"night",tier:1,avoid:["kidney"]},
+  {id:"s_ash",slot:"morning",tier:2,avoid:["preg","thyroid","liver","autoimmune","sedative","diabetes"]},
+  {id:"s_pro",slot:"morning",tier:2,avoid:["autoimmune"]},
+  {id:"s_saf",slot:"morning",tier:2,avoid:["ssri","preg","thinner"]},
+  {id:"s_gly",slot:"night",tier:2,avoid:["preg"]}
 ];
+function suppText(s){
+  const sub = s.id==="s_crea" ? t("s_crea_s",{w: imperial() ? "2–4 "+t("u_lb") : "1–2 "+t("u_kg")})
+            : s.id==="s_mg" ? t("s_mg_s",{t:fmtTime(fromMin(sched().mg))}) : t(s.id+"_s");
+  return [t(s.id), sub];
+}
 // Safety: does this supplement clash with the user's answers? (time-independent)
 function suppSafe(s){
-  const f = S.settings.flags||{};
+  const f = S.settings.flags;
   if (s.avoid.some(a => f[a])) return false;
   if (f.preg && !["s_d3","s_psy1","s_psy2"].includes(s.id)) return false; // pregnancy: minimal, OB-approved only
   return true;
 }
-function supps(){
-  const k = todayKey(), w = weekOf(k), dn = dayNum(k);
+function supps(k){
+  const w = weekOf(k), dn = dayNum(k);
   return SUPPS.filter(s => suppSafe(s) && (s.tier!==2 || (S.settings.tier2 && w>=5 && dn<=84)));
 }
+
+/* ---------- habits ---------- */
+function latestWeight(){ const ks=Object.keys(S.weekly).sort().reverse(); for (const k of ks) if (S.weekly[k].weight!=null) return S.weekly[k].weight; return null; }
+function protein(){ const w=latestWeight(); if(!w) return null; const lo=(S.settings.age>=50?1.4:1.2); return {lo:Math.round(w*lo/5)*5, hi:Math.round(w*1.6/5)*5}; }
 function habits(k){
-  const w = workout(k), wake = S.settings.wake||"06:30";
+  const s = S.settings, c = sched(), w = weekOf(k), dow = parseKey(k).getDay(), plan = weekPlan(w)[dow];
+  const T = m => fmtTime(fromMin(m)), trainSlot = {morning:"morning", lunch:"midday", evening:"evening"}[s.trainTime];
+  const actM = toMin(s.act.time), actSlot = slotOfMin(actM);
+  const actToday = s.act.type!=="none" && s.act.days.includes(dow);
+  const dinnerM = actToday && partOf(actM)==="evening" ? Math.max(c.dinner, actM+75) : c.dinner;
+  const lunch = {out:["h_lunch_out","h_lunch_out_s"], home:["h_lunch_home","h_lunch_home_s"], packed:["h_lunch_home","h_lunch_home_s"], skip:["h_lunch_skip","h_lunch_skip_s"]}[s.lunch];
+  const [wn, ws] = workoutText(plan, w);
   const H = [
-    {id:"wake",slot:"morning",label:"Up at "+wake,sub:"Same time every day, weekends too"},
-    {id:"light",slot:"morning",label:"Outdoor light, 10–20 min",sub:"Within an hour of waking. No sunglasses."},
-    {id:"breath_am",slot:"morning",label:"5-min breathing",sub:"Cyclic sighing or 5.5 breaths/min",go:"breathe"},
-    {id:"pbreak",slot:"morning",label:"Protein breakfast (30 g+)",sub:"Eggs, Greek yogurt, tofu, fish"},
-    {id:"walk_l",slot:"midday",label:"10-min walk after lunch",sub:"Blunts the blood-sugar spike"},
-    {id:"caf",slot:"midday",label:"Last caffeine before 12:00",sub:"Protects deep sleep tonight"},
-    {id:"steps",slot:"midday",label:"8,000+ steps",sub:"10,000 from phase 2"},
-    {id:"train",slot:"evening",label:w[0],sub:w[1]},
-    {id:"dinner",slot:"evening",label:"Plate: ½ veg, ¼ protein, ¼ slow carbs",sub:"Small bowl of japgokbap, not a big bowl of white rice"},
-    {id:"walk_d",slot:"evening",label:"10-min walk after dinner",sub:""},
-    {id:"kitchen",slot:"evening",label:"Kitchen closed 3 h before bed",sub:"Eating window about 12 h (10–11 h from phase 2)"},
-    {id:"noalc",slot:"evening",label:"No alcohol today",sub:"Alcohol disrupts sleep and recovery"},
-    {id:"dim",slot:"night",label:"Dim lights + screens down",sub:"From 21:00"},
-    {id:"journal",slot:"night",label:"Brain-dump journal, 5 min",sub:"Write tomorrow's worries down so they stop looping"},
-    {id:"bed",slot:"night",label:"Lights out by 22:30",sub:"Cool, dark, quiet room"}
+    {id:"wake",slot:"morning",label:t("h_wake",{t:T(c.wake)}),sub:t("h_wake_s")},
+    {id:"light",slot:"morning",label:t("h_light"),sub:t("h_light_s",{t:T(c.lightBy)})},
+    {id:"breath_am",slot:"morning",label:t("h_breath"),sub:t("h_breath_s"),go:"breathe"},
+    {id:"pbreak",slot:"morning",label:t("h_pbreak"),sub:t("h_pbreak_s")},
+    {id:"lunch",slot:"midday",label:t(lunch[0]),sub:t(lunch[1])},
+    {id:"walk_l",slot:"midday",label:t(s.lunch==="out"?"h_walk_l_out":"h_walk_l"),sub:t("h_walk_l_s")},
+    {id:"caf",slot:"midday",label:t("h_caf",{t:T(c.caf)}),sub:t("h_caf_s")},
+    {id:"steps",slot:"midday",label:t("h_steps",{n:fmtNum(w>=5?10000:8000)}),sub:t("h_steps_s")}
   ];
-  if (parseKey(k).getDay()===0) H.find(h=>h.id==="train").sub = "Gentle walk or stretching only";
-  return H.concat(supps().map(s => Object.assign({supp:true}, s)));
+  if (plan.id==="act") H.push({id:"act",slot:actSlot,label:t("h_act",{act:wn,t:T(actM)}),sub:ws});
+  else {
+    H.push({id:"train",slot:plan.kind==="rest"?"evening":trainSlot,label:wn,sub:plan.kind==="rest"?ws:t("w_when",{when:t("train_"+s.trainTime),s:ws})});
+    if (actToday) H.push({id:"act",slot:actSlot,label:t("h_act",{act:actName(),t:T(actM)}),sub:t("h_act_s")});
+  }
+  H.push(
+    {id:"dinner",slot:"evening",label:t("h_dinner",{t:T(Math.min(dinnerM, c.kitchen))}),sub:t("h_dinner_s")},
+    {id:"walk_d",slot:"evening",label:t("h_walk_d"),sub:""},
+    {id:"kitchen",slot:"evening",label:t("h_kitchen",{t:T(c.kitchen)}),sub:t("h_kitchen_s",{h:fmtNum(Math.round(c.windowH*2)/2)})},
+    {id:"noalc",slot:"evening",label:t("h_noalc"),sub:t("h_noalc_s")},
+    {id:"dim",slot:"night",label:t("h_dim"),sub:t("h_dim_s",{t:T(c.dim)})},
+    {id:"journal",slot:"night",label:t("h_journal"),sub:t("h_journal_s")},
+    {id:"bed",slot:"night",label:t("h_bed",{t:T(c.bed)}),sub:t("h_bed_s")}
+  );
+  return H.concat(supps(k).map(x => { const [label,sub]=suppText(x); return {id:x.id,slot:x.slot,tier:x.tier,supp:true,label,sub}; }));
 }
-const SLOTS = [["morning","Morning",5,11],["midday","Midday",11,16],["evening","Evening",16,21],["night","Night",21,29]];
+const SLOTS = ["morning","midday","evening","night"];
+function slotBounds(){ const c=sched(); const mEnd=Math.max(c.wake+180, 11*60), night=Math.max(17*60, c.bed-120); return {mEnd, dEnd:Math.min(16*60, night), night}; }
+function slotOfMin(m){ const c=sched(), b=slotBounds(); if (m < c.dayStart) m += 1440; return m < b.mEnd ? "morning" : m < b.dEnd ? "midday" : m < b.night ? "evening" : "night"; }
+function currentSlot(){ const n=new Date(); return slotOfMin(n.getHours()*60+n.getMinutes()); }
 
 /* ---------- helpers ---------- */
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 let toastT;
-function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("on"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("on"),2600); }
-function applyTheme(){ const t=S.settings.theme; if(t) document.documentElement.dataset.theme=t; else delete document.documentElement.dataset.theme;
-  document.querySelectorAll('meta[name="theme-color"]').forEach(m=>{ if(!m.dataset.media) m.dataset.media=m.media; m.media = t ? (m.content==="#121915")===(t==="dark") ? "all" : "not all" : m.dataset.media; }); }
-function currentSlot(){ let h=new Date().getHours(); if(h<5) h+=24; return (SLOTS.find(s=>h>=s[2]&&h<s[3])||SLOTS[0])[0]; }
+function toast(m){ const el=$("#toast"); el.textContent=m; el.classList.add("on"); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove("on"),2600); }
+function applyTheme(){ const th=S.settings.theme; if(th) document.documentElement.dataset.theme=th; else delete document.documentElement.dataset.theme;
+  document.querySelectorAll('meta[name="theme-color"]').forEach(m=>{ if(!m.dataset.media) m.dataset.media=m.media; m.media = th ? (m.content==="#121915")===(th==="dark") ? "all" : "not all" : m.dataset.media; }); }
+const PHASES = [{n:1,weeks:[1,4]},{n:2,weeks:[5,8]},{n:3,weeks:[9,12]}];
+const phaseOf = w => PHASES.find(p=>w>=p.weeks[0]&&w<=p.weeks[1]);
 
 /* ---------- score ---------- */
 function scoreFor(k){
@@ -490,118 +555,118 @@ function scoreFor(k){
   let feel = null;
   if (c){ const parts=[(10-c.stress)/9]; if(c.energy) parts.push((c.energy-1)/4); if(c.mood) parts.push((c.mood-1)/4); if(c.sleep) parts.push(Math.min(1,Math.max(0,(c.sleep-5)/2.5))); feel = parts.reduce((a,b)=>a+b,0)/parts.length; }
   const score = feel==null ? Math.round(habitPct*100*0.6) : Math.round(habitPct*60 + feel*40);
-  const cat = ids => { const sub=hs.filter(h=>ids(h)); return sub.length ? sub.filter(h=>d&&d.done[h.id]).length/sub.length : 0; };
+  const cat = ids => { const sub=hs.filter(h=>ids.includes(h.id)); return sub.length ? sub.filter(h=>d&&d.done[h.id]).length/sub.length : 0; };
   return {score, habitPct, feel,
-    sleep: cat(h=>["wake","light","dim","bed","caf","s_mg","s_gly"].includes(h.id)),
-    move: cat(h=>["walk_l","walk_d","steps","train"].includes(h.id)),
-    calm: cat(h=>["breath_am","journal","noalc","kitchen"].includes(h.id))};
+    sleep: cat(["wake","light","dim","bed","caf","s_mg","s_gly"]),
+    move: cat(["walk_l","walk_d","steps","train","act"]),
+    calm: cat(["breath_am","journal","noalc","kitchen","act"])};
 }
 function miniRing(p,label){ const c=2*Math.PI*13; return `<div class="mini"><svg viewBox="0 0 34 34"><circle cx="17" cy="17" r="13" fill="none" stroke="var(--primary-soft)" stroke-width="5"/><circle cx="17" cy="17" r="13" fill="none" stroke="var(--primary)" stroke-width="5" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${c*(1-p)}"/></svg><span><b>${label}</b> <span class="muted">${Math.round(p*100)}%</span></span></div>`; }
 
 /* ---------- TODAY ---------- */
 function renderToday(){
-  const k = todayKey(), w = weekOf(k), ph = PHASES.find(p=>w>=p.weeks[0]&&w<=p.weeks[1]), d = day(k);
-  const dn = dayNum(k);
-  $("#phaseEyebrow").textContent = dn<1 ? "Starts "+parseKey(S.settings.start).toLocaleDateString(undefined,{month:"short",day:"numeric"}) : `Phase ${ph.n} · ${ph.name}`;
-  $("#weekChip").textContent = dn<1 ? `Starts in ${1-dn} day${dn===0?"":"s"}` : dn>84 ? "Program complete" : `Week ${w} of 12 · Day ${dn}`;
-  $("#dateLine").textContent = parseKey(k).toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
+  const k = todayKey(), w = weekOf(k), ph = phaseOf(w), d = day(k), dn = dayNum(k);
+  $("#phaseEyebrow").textContent = dn<1 ? t("starts_on",{date:fmtDate(S.settings.start,{month:"short",day:"numeric"})}) : t("phase_eyebrow",{n:ph.n,name:t("ph"+ph.n)});
+  $("#weekChip").textContent = dn<1 ? (dn===0 ? t("starts_tomorrow") : t("starts_in",{n:1-dn})) : dn>84 ? t("program_done") : t("week_chip",{w,d:dn});
+  $("#dateLine").textContent = fmtDate(k,{weekday:"long",month:"long",day:"numeric"});
   $("#segbar").innerHTML = Array.from({length:12},(_,i)=>`<i class="${i+1<w?"done":i+1===w?"now":""}"></i>`).join("");
   const sc = scoreFor(k);
   $("#score").textContent = sc.score;
   $("#ringFill").style.strokeDashoffset = 414.7*(1-sc.score/100);
-  $("#ringWrap").setAttribute("aria-label","Calm Score "+sc.score+" of 100");
-  $("#minis").innerHTML = miniRing(sc.sleep,"Sleep")+miniRing(sc.move,"Move")+miniRing(sc.calm,"Calm");
+  $("#ringWrap").setAttribute("aria-label", t("calm_score_aria",{n:sc.score}));
+  $("#minis").innerHTML = miniRing(sc.sleep,t("ring_sleep"))+miniRing(sc.move,t("ring_move"))+miniRing(sc.calm,t("ring_calm"));
   const c = d.checkin;
-  $("#scoreLine").textContent = c && c.stress>=8 ? "Rough day. A 1-minute sigh session on the Breathe tab helps right now."
-    : !c ? "Habits fill 60 points. Check in to unlock the last 40."
-    : sc.score>=70 ? "Solid day. That's what moves the numbers." : sc.score>=40 ? "Steady. The evening downshift lifts it most." : "Fresh start. Pick one easy win below.";
-  $("#checkinSummary").textContent = c ? `Stress ${c.stress} · Energy ${c.energy||"–"}/5 · Slept ${c.sleep||"–"} h` : "30-second check-in";
-  // measurement day = same weekday as start
+  $("#scoreLine").textContent = c && c.stress>=8 ? t("score_rough") : !c ? t("score_nocheck")
+    : sc.score>=70 ? t("score_solid") : sc.score>=40 ? t("score_steady") : t("score_fresh");
+  $("#checkinSummary").textContent = c ? t("checkin_sum",{s:c.stress,e:c.energy||"–",h:c.sleep??"–"}) : t("checkin_sub");
   const startDow = S.settings.start ? parseKey(S.settings.start).getDay() : 0;
   $("#measureCard").style.display = (parseKey(k).getDay()===startDow && !S.weekly[k]) ? "" : "none";
-  const cp = {1:"Day 1 baseline: measure waist and weight, take progress photos, do the PSS-10, and ask your doctor about baseline blood tests.",28:"Checkpoint 1 (end of Phase 1): PSS-10 retest, photos, and a Phase 1 recap on the Progress tab.",56:"Checkpoint 2 (end of Phase 2): PSS-10, photos. If you take ashwagandha, ask your doctor whether a liver or thyroid check makes sense.",84:"Final checkpoint: repeat blood tests, PSS-10, photos and measurements, then compare with day 1."}[dn];
+  const cp = {1:"cp1",28:"cp28",56:"cp56",84:"cp84"}[dn];
   $("#checkpointCard").style.display = cp ? "" : "none";
-  if (cp) $("#checkpointCard").innerHTML = `<b>Checkpoint</b><div class="small">${cp}</div><button class="btn ghost" style="margin-top:10px" onclick="openPSS()">Take PSS-10</button>`;
-  // slots
+  if (cp) $("#checkpointCard").innerHTML = `<b>${t("checkpoint")}</b><div class="small">${t(cp)}</div><button class="btn ghost" style="margin-top:10px" onclick="openPSS()">${t("take_pss")}</button>`;
   const hs = habits(k), cur = currentSlot();
-  $("#slots").innerHTML = SLOTS.map(([id,name]) => {
+  $("#slots").innerHTML = SLOTS.map(id => {
     const list = hs.filter(h=>h.slot===id), n = list.filter(h=>d.done[h.id]).length;
-    return `<div class="slot"><div class="slot-h"><span class="eyebrow">${name} · ${n} of ${list.length}</span>${id===cur?'<span class="chip sand">now</span>':""}</div>`+
-      list.map(h=>`<button class="habit${d.done[h.id]?" done":""}" data-h="${h.id}" aria-pressed="${!!d.done[h.id]}"><span class="box"></span><span class="t"><span class="l">${esc(h.label)}${h.supp?`<span class="tag">T${h.tier}</span>`:""}</span>${h.sub?`<div class="s">${esc(h.sub)}</div>`:""}</span></button>`).join("")+`</div>`;
+    if (!list.length) return "";
+    return `<div class="slot"><div class="slot-h"><span class="eyebrow">${t("slot_head",{name:t("slot_"+id),n,total:list.length})}</span>${id===cur?`<span class="chip sand">${t("now")}</span>`:""}</div>`+
+      list.map(h=>`<button class="habit${d.done[h.id]?" done":""}" data-h="${h.id}" aria-pressed="${!!d.done[h.id]}"><span class="box"></span><span class="t"><span class="l">${esc(h.label)}${h.supp?`<span class="tag">${t("tier_tag",{n:h.tier})}</span>`:""}</span>${h.sub?`<div class="s">${esc(h.sub)}</div>`:""}</span></button>`).join("")+`</div>`;
   }).join("");
-  // next up
-  const order = SLOTS.map(s=>s[0]); const ci = order.indexOf(cur);
-  const next = hs.filter(h=>!d.done[h.id]).sort((a,b)=>{ const da=(order.indexOf(a.slot)-ci+4)%4, db=(order.indexOf(b.slot)-ci+4)%4; return da-db; })[0];
-  if (next){ $("#nextCard").style.display=""; $("#nextLabel").textContent=next.label; $("#nextSub").textContent=next.sub||""; $("#nextBtn").textContent = next.go?"Start":"Done"; $("#nextBtn").dataset.h=next.id; $("#nextBtn").dataset.go=next.go||""; }
+  const ci_ = SLOTS.indexOf(cur);
+  const next = hs.filter(h=>!d.done[h.id]).sort((a,b)=>((SLOTS.indexOf(a.slot)-ci_+4)%4)-((SLOTS.indexOf(b.slot)-ci_+4)%4))[0];
+  if (next){ $("#nextCard").style.display=""; $("#nextLabel").textContent=next.label; $("#nextSub").textContent=next.sub||""; $("#nextBtn").textContent = t(next.go?"start":"done"); $("#nextBtn").dataset.h=next.id; $("#nextBtn").dataset.go=next.go||""; }
   else $("#nextCard").style.display="none";
 }
 document.addEventListener("click", e => {
   const hb = e.target.closest(".habit"); if (hb){ const d=day(todayKey()), id=hb.dataset.h; d.done[id]=!d.done[id]; save(); renderToday(); const again=document.querySelector(`.habit[data-h="${id}"]`); if(again) again.focus(); return; }
-  const go = e.target.closest("[data-go]"); if (go){ if(go.id==="nextBtn"&&!go.dataset.go){ day(todayKey()).done[go.dataset.h]=true; save(); renderToday(); toast("Nice. One more done."); return; } if(go.dataset.go){ show(go.dataset.go); if(go.dataset.mode) setMode(go.dataset.mode); } }
+  const go = e.target.closest("[data-go]"); if (go){ if(go.id==="nextBtn"&&!go.dataset.go){ day(todayKey()).done[go.dataset.h]=true; save(); renderToday(); toast(t("toast_one_more")); return; } if(go.dataset.go){ show(go.dataset.go); if(go.dataset.mode) setMode(go.dataset.mode); } }
 });
 
 /* ---------- CHECK-IN ---------- */
-const ENERGY=["Drained","Low","OK","Good","Bright"], MOOD=["Heavy","Flat","Neutral","Good","Great"], TAGS=TAG_LIST;
 let ci = {energy:0,mood:0,tags:[]};
-function picks(el,arr,key){ $(el).innerHTML = arr.map((t,i)=>`<button type="button" data-v="${i+1}" aria-pressed="${ci[key]===i+1}">${t}</button>`).join(""); $(el).onclick=e=>{const b=e.target.closest("button"); if(!b) return; ci[key]=+b.dataset.v; picks(el,arr,key); $(el).querySelector(`[data-v="${b.dataset.v}"]`).focus();}; }
-function renderTags(){ $("#ciTags").innerHTML = TAGS.map(t=>`<button type="button" class="chip${ci.tags.includes(t)?"":" sand"}" style="border:0;min-height:44px;padding:4px 14px" data-t="${t}" aria-pressed="${ci.tags.includes(t)}">${t}</button>`).join(""); }
-$("#ciTags").onclick = e => { const b=e.target.closest("button"); if(!b) return; const t=b.dataset.t; ci.tags = ci.tags.includes(t)?ci.tags.filter(x=>x!==t):ci.tags.concat(t); renderTags(); $("#ciTags").querySelector(`[data-t="${t}"]`).focus(); };
+function picks(el,prefix,key){ $(el).innerHTML = [1,2,3,4,5].map(i=>`<button type="button" data-v="${i}" aria-pressed="${ci[key]===i}">${t(prefix+i)}</button>`).join(""); $(el).onclick=e=>{const b=e.target.closest("button"); if(!b) return; ci[key]=+b.dataset.v; picks(el,prefix,key); $(el).querySelector(`[data-v="${b.dataset.v}"]`).focus();}; }
+function renderTags(){ $("#ciTags").innerHTML = TAG_LIST.map(x=>`<button type="button" class="chip${ci.tags.includes(x)?"":" sand"}" style="border:0;min-height:44px;padding:4px 14px" data-t="${x}" aria-pressed="${ci.tags.includes(x)}">${t("tag_"+x)}</button>`).join(""); }
+$("#ciTags").onclick = e => { const b=e.target.closest("button"); if(!b) return; const x=b.dataset.t; ci.tags = ci.tags.includes(x)?ci.tags.filter(y=>y!==x):ci.tags.concat(x); renderTags(); $("#ciTags").querySelector(`[data-t="${x}"]`).focus(); };
 function renderCheckin(){
   const c = day(todayKey()).checkin || {};
   ci = {energy:c.energy||0, mood:c.mood||0, tags:c.tags||[]};
   $("#ciStress").value = c.stress||5; $("#ciStressVal").textContent = c.stress||5;
   $("#ciSleep").value = c.sleep ?? ""; $("#ciSteps").value = c.steps ?? ""; $("#ciNote").value = c.note||"";
-  picks("#ciEnergy",ENERGY,"energy"); picks("#ciMood",MOOD,"mood"); renderTags();
+  picks("#ciEnergy","energy_","energy"); picks("#ciMood","mood_","mood"); renderTags();
+  const L = LEN(), W = WT();
+  $("#lWaist").textContent = `${t("th_waist")} (${L.u})`; $("#lWeight").textContent = `${t("th_weight")} (${W.u})`;
+  const wear = S.settings.wearable;
+  $("#hrvBox").style.display = wear==="none" ? "none" : "";
+  $("#wearHint").textContent = wear==="none" ? t("rhr_hint_none") : t("hrv_hint_device",{device:t("wear_"+wear)});
   const wk = S.weekly[todayKey()] || {};
-  $("#wWaist").value=wk.waist??""; $("#wWeight").value=wk.weight??""; $("#wHrv").value=wk.hrv??""; $("#wRhr").value=wk.rhr??"";
+  $("#wWaist").value=toDisp(wk.waist,L)??""; $("#wWeight").value=toDisp(wk.weight,W)??""; $("#wHrv").value=wk.hrv??""; $("#wRhr").value=wk.rhr??"";
   const rows = Object.keys(S.weekly).sort().reverse().slice(0,8);
-  $("#wHistory").innerHTML = rows.length ? `<table class="t"><tr><th>Date</th><th>Waist</th><th>Weight</th><th>HRV</th><th>RHR</th></tr>${rows.map(r=>{const m=S.weekly[r];return `<tr><td>${esc(r)}</td><td>${esc(m.waist??"–")}</td><td>${esc(m.weight??"–")}</td><td>${esc(m.hrv??"–")}</td><td>${esc(m.rhr??"–")}</td></tr>`}).join("")}</table>` : "";
+  $("#wHistory").innerHTML = rows.length ? `<table class="t"><tr><th>${t("th_date")}</th><th>${t("th_waist")}</th><th>${t("th_weight")}</th><th>${t("th_hrv")}</th><th>${t("th_rhr")}</th></tr>${rows.map(r=>{const m=S.weekly[r];return `<tr><td>${esc(fmtDate(r,{month:"short",day:"numeric"}))}</td><td>${esc(toDisp(m.waist,L)??"–")}</td><td>${esc(toDisp(m.weight,W)??"–")}</td><td>${esc(m.hrv??"–")}</td><td>${esc(m.rhr??"–")}</td></tr>`}).join("")}</table>` : "";
 }
-$("#ciStress").oninput = e => { $("#ciStressVal").textContent = e.target.value; e.target.setAttribute("aria-valuetext", e.target.value+(e.target.value<=3?", calm":e.target.value<=6?", moderate":", high")); };
-const num = v => v===""||v==null ? null : +v;
+$("#ciStress").oninput = e => { const v=+e.target.value; $("#ciStressVal").textContent = v; e.target.setAttribute("aria-valuetext", v+", "+t(v<=3?"stress_calm":v<=6?"stress_mod":"stress_high")); };
+const num = v => v===""||v==null||isNaN(+v) ? null : +v;
 $("#ciSave").onclick = () => {
   const d = day(todayKey());
   d.checkin = {stress:+$("#ciStress").value, energy:ci.energy||null, mood:ci.mood||null, sleep:num($("#ciSleep").value), steps:num($("#ciSteps").value), tags:ci.tags, note:$("#ciNote").value.trim()};
   if (d.checkin.steps >= (weekOf(todayKey())>=5 ? 10000 : 8000)) d.done.steps = true;
-  save(); toast(d.checkin.stress>=8 ? "Saved. Rough day. Try a 1-minute reset." : "Saved. Nice work showing up."); show("today");
+  save(); toast(t(d.checkin.stress>=8 ? "toast_saved_rough" : "toast_saved")); show("today");
 };
 $("#wSave").onclick = () => {
-  const m = {waist:num($("#wWaist").value), weight:num($("#wWeight").value), hrv:num($("#wHrv").value), rhr:num($("#wRhr").value)};
-  if (Object.values(m).every(v=>v==null)) return toast("Enter at least one number.");
-  S.weekly[todayKey()] = m; save(); renderCheckin(); toast("Measurements saved.");
+  const m = {waist:fromDisp(num($("#wWaist").value),LEN()), weight:fromDisp(num($("#wWeight").value),WT()), hrv:num($("#wHrv").value), rhr:num($("#wRhr").value)};
+  if (Object.values(m).every(v=>v==null)) return toast(t("toast_enter_one"));
+  S.weekly[todayKey()] = m; save(); renderCheckin(); toast(t("toast_measured"));
 };
 function setMode(m){ $("#segDaily").setAttribute("aria-pressed",m==="daily"); $("#segWeekly").setAttribute("aria-pressed",m==="weekly"); $("#dailyForm").style.display=m==="daily"?"":"none"; $("#weeklyForm").style.display=m==="weekly"?"":"none"; }
 $("#segDaily").onclick=()=>setMode("daily"); $("#segWeekly").onclick=()=>setMode("weekly");
 
 /* ---------- PSS-10 ---------- */
-const PSS = ["been upset because of something that happened unexpectedly?","felt that you were unable to control the important things in your life?","felt nervous and stressed?","felt confident about your ability to handle your personal problems?","felt that things were going your way?","found that you could not cope with all the things that you had to do?","been able to control irritations in your life?","felt that you were on top of things?","been angered because of things that happened that were outside of your control?","felt difficulties were piling up so high that you could not overcome them?"];
 const PSS_REV = [3,4,6,7];
 let pssA = [];
 function openPSS(){ pssA = Array(10).fill(null); drawPSS(); $("#pss").classList.add("on"); $("#pssList button").focus(); }
 document.addEventListener("keydown", e => { if (e.key==="Escape" && $("#pss").classList.contains("on")) $("#pss").classList.remove("on"); });
-function drawPSS(){ $("#pssList").innerHTML = PSS.map((q,i)=>`<div class="pss-q"><div>${i+1}. …${q}</div><div class="picks" style="margin-top:8px" data-q="${i}">${[0,1,2,3,4].map(v=>`<button type="button" data-v="${v}" aria-pressed="${pssA[i]===v}">${v}</button>`).join("")}</div></div>`).join(""); }
+function drawPSS(){ $("#pssList").innerHTML = pssA.map((_,i)=>`<div class="pss-q"><div>${i+1}. …${t("pss"+(i+1))}</div><div class="picks" style="margin-top:8px" data-q="${i}">${[0,1,2,3,4].map(v=>`<button type="button" data-v="${v}" aria-pressed="${pssA[i]===v}">${v}</button>`).join("")}</div></div>`).join(""); }
 $("#pssList").onclick = e => { const b=e.target.closest("button"); if(!b) return; const q=b.parentNode.dataset.q; pssA[+q]=+b.dataset.v; drawPSS(); $(`#pssList [data-q="${q}"] [data-v="${b.dataset.v}"]`).focus(); };
 $("#pssOpen").onclick = openPSS; $("#pssClose").onclick = () => $("#pss").classList.remove("on");
 $("#pssSave").onclick = () => {
-  if (pssA.some(v=>v==null)) return toast("Answer all 10 questions.");
+  if (pssA.some(v=>v==null)) return toast(t("pss_all"));
   const score = pssA.reduce((s,v,i)=>s+(PSS_REV.includes(i)?4-v:v),0);
   S.pss[todayKey()] = score; save(); $("#pss").classList.remove("on");
-  toast(`PSS-10: ${score}/40 · ${score<=13?"low":score<=26?"moderate":"high"} stress`); renderAll();
+  toast(t("pss_result",{s:score,band:t(score<=13?"band_low":score<=26?"band_mod":"band_high")})); renderAll();
 };
 
 /* ---------- BREATHE ---------- */
 const PRESETS = [
-  {id:"sigh",name:"Quick reset",desc:"Cyclic sighing: double inhale, long exhale",steps:[["Inhale",2,1],["Top-up inhale",1,1.08],["Long exhale",6,.45]]},
-  {id:"res",name:"Resonance",desc:"5.5 breaths/min, best for HRV",steps:[["Inhale",5.5,1],["Exhale",5.5,.45]]},
-  {id:"478",name:"Sleep",desc:"4-7-8 before bed",steps:[["Inhale",4,1],["Hold",7,1],["Exhale",8,.45]]},
-  {id:"box",name:"Focus",desc:"Box breathing 4-4-4-4",steps:[["Inhale",4,1],["Hold",4,1],["Exhale",4,.45],["Hold",4,.45]]}
+  {id:"sigh",steps:[["cue_inhale",2,1],["cue_topup",1,1.08],["cue_long_exhale",6,.45]]},
+  {id:"res",steps:[["cue_inhale",5.5,1],["cue_exhale",5.5,.45]]},
+  {id:"478",steps:[["cue_inhale",4,1],["cue_hold",7,1],["cue_exhale",8,.45]]},
+  {id:"box",steps:[["cue_inhale",4,1],["cue_hold",4,1],["cue_exhale",4,.45],["cue_hold",4,.45]]}
 ];
 let bPreset = PRESETS[0], bDur = 300, bRun = null;
 function renderBreathe(){
-  $("#presets").innerHTML = PRESETS.map(p=>`<button class="preset" data-p="${p.id}" aria-pressed="${p===bPreset}"><b>${p.name}</b><span class="small muted">${p.desc}</span></button>`).join("");
-  $("#durSeg").innerHTML = [60,180,300,600].map(s=>`<button data-d="${s}" aria-pressed="${s===bDur}">${s/60} min</button>`).join("");
+  $("#presets").innerHTML = PRESETS.map(p=>`<button class="preset" data-p="${p.id}" aria-pressed="${p===bPreset}"><b>${t("p_"+p.id)}</b><span class="small muted">${t("p_"+p.id+"_d")}</span></button>`).join("");
+  $("#durSeg").innerHTML = [60,180,300,600].map(s=>`<button data-d="${s}" aria-pressed="${s===bDur}">${t("min_n",{n:s/60})}</button>`).join("");
+  if (!bRun){ $("#cue").textContent = t("ready"); $("#bStart").textContent = t("start"); }
   const wk = S.breath.filter(b=>Date.now()-b.t<7*864e5).reduce((a,b)=>a+b.s,0);
-  $("#bStats").textContent = `${Math.round(wk/60)} min of breathing this week · ${S.breath.length} sessions total`;
+  $("#bStats").textContent = t("br_stats",{m:Math.round(wk/60),n:S.breath.length});
 }
 $("#presets").onclick = e => { const b=e.target.closest("[data-p]"); if(!b||bRun) return; bPreset=PRESETS.find(p=>p.id===b.dataset.p); renderBreathe(); };
 $("#durSeg").onclick = e => { const b=e.target.closest("[data-d]"); if(!b||bRun) return; bDur=+b.dataset.d; renderBreathe(); };
@@ -609,145 +674,130 @@ const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 function stopBreath(done){
   clearTimeout(bRun?.t); clearInterval(bRun?.iv);
   const secs = bRun ? Math.round((Date.now()-bRun.start)/1000) : 0; bRun=null;
-  $("#bStart").textContent="Start"; $("#cue").textContent= done?"Well done":"Ready"; $("#cueTime").textContent="";
+  $("#cueTime").textContent="";
   const orb=$("#orb"); orb.style.transition="transform 1s"; orb.style.transform="scale(.45)";
-  if (secs>=50){ S.breath.push({t:Date.now(),s:secs,p:bPreset.id}); day(todayKey()).done.breath_am = true; save(); toast(done?"Session complete. Breathing habit ticked.":"Saved "+Math.round(secs/60)+" min."); }
-  renderBreathe();
+  if (secs>=50){ S.breath.push({t:Date.now(),s:secs,p:bPreset.id}); day(todayKey()).done.breath_am = true; save(); toast(done?t("toast_breath_done"):t("toast_breath_saved",{n:Math.round(secs/60)})); }
+  renderBreathe(); if (done) $("#cue").textContent = t("well_done");
 }
 $("#bStart").onclick = () => {
   if (bRun) return stopBreath(false);
-  bRun = {start:Date.now(), i:0}; $("#bStart").textContent="Stop";
+  bRun = {start:Date.now(), i:0}; $("#bStart").textContent=t("stop");
   const orb=$("#orb");
   const step = () => {
     if (!bRun) return;
     if (Date.now()-bRun.start >= bDur*1000) return stopBreath(true);
     const [word,sec,scale] = bPreset.steps[bRun.i % bPreset.steps.length]; bRun.i++;
-    $("#cue").textContent = word;
+    $("#cue").textContent = t(word);
     orb.style.transition = reduce ? "none" : `transform ${sec}s ease-in-out`;
     orb.style.transform = `scale(${scale})`;
     if (navigator.vibrate) try{navigator.vibrate(30);}catch(e){}
     bRun.t = setTimeout(step, sec*1000);
   };
-  bRun.iv = setInterval(()=>{ if(bRun){ const left=Math.max(0,bDur-Math.floor((Date.now()-bRun.start)/1000)); $("#cueTime").textContent=Math.floor(left/60)+":"+pad(left%60)+" left"; } },500);
+  bRun.iv = setInterval(()=>{ if(bRun){ const left=Math.max(0,bDur-Math.floor((Date.now()-bRun.start)/1000)); $("#cueTime").textContent=t("left",{t:Math.floor(left/60)+":"+pad(left%60)}); } },500);
   step();
 };
 
 /* ---------- PROGRESS ---------- */
+const last = a => a[a.length-1];
+function avg(a){ return a.length ? a.reduce((x,y)=>x+y,0)/a.length : null; }
 function series(field, src){ return Object.keys(src).sort().map(k=>[k, field(src[k])]).filter(p=>p[1]!=null&&!isNaN(p[1])); }
 function lineChart(svg, pts, {lowerBetter=true, unit=""}={}){
   const W=320,H=170,P=28; svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
-  if (pts.length<2){ svg.innerHTML=`<text x="${W/2}" y="${H/2}" text-anchor="middle" fill="var(--muted)" font-size="13">Log at least 2 entries to see a trend</text>`; return; }
+  if (pts.length<2){ svg.innerHTML=`<text x="${W/2}" y="${H/2}" text-anchor="middle" fill="var(--muted)" font-size="13">${esc(t("need2"))}</text>`; return; }
   const xs=pts.map(p=>parseKey(p[0]).getTime()), ys=pts.map(p=>p[1]);
-  let lo=Math.min(...ys), hi=Math.max(...ys); if(lo===hi){lo-=1;hi+=1;} const pad_=(hi-lo)*.15; lo-=pad_; hi+=pad_;
-  const x=t=>P+(W-P-8)*(t-xs[0])/((last(xs)-xs[0])||1), y=v=>8+(H-P-8)*(1-(v-lo)/(hi-lo));
+  let lo=Math.min(...ys), hi=Math.max(...ys); if(lo===hi){lo-=1;hi+=1;} const pd=(hi-lo)*.15; lo-=pd; hi+=pd;
+  const x=v=>P+(W-P-8)*(v-xs[0])/((last(xs)-xs[0])||1), y=v=>8+(H-P-8)*(1-(v-lo)/(hi-lo));
   const grid=[lo+(hi-lo)*.25,lo+(hi-lo)*.75].map(g=>`<line x1="${P}" x2="${W-8}" y1="${y(g)}" y2="${y(g)}" stroke="var(--border)"/><text x="${P-4}" y="${y(g)+4}" text-anchor="end" font-size="10" fill="var(--muted)">${g.toFixed(g<20?1:0)}</text>`).join("");
   const d=pts.map((p,i)=>(i?"L":"M")+x(xs[i]).toFixed(1)+" "+y(ys[i]).toFixed(1)).join("");
   const good = lowerBetter ? last(ys)<=ys[0] : last(ys)>=ys[0];
   const col = good?"var(--primary)":"var(--warning)";
+  const lab = k => esc(fmtDate(k,{month:"numeric",day:"numeric"}));
   svg.innerHTML = grid+`<path d="${d}" fill="none" stroke="${col}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>`+
-    pts.map((p,i)=>`<circle cx="${x(xs[i])}" cy="${y(ys[i])}" r="${i===pts.length-1?4:2.2}" fill="${col}"><title>${esc(p[0])}: ${esc(p[1])}${unit}</title></circle>`).join("")+
-    `<text x="${P}" y="${H-6}" font-size="10" fill="var(--muted)">${pts[0][0].slice(5)}</text><text x="${W-8}" y="${H-6}" text-anchor="end" font-size="10" fill="var(--muted)">${last(pts)[0].slice(5)}</text>`;
+    pts.map((p,i)=>`<circle cx="${x(xs[i])}" cy="${y(ys[i])}" r="${i===pts.length-1?4:2.2}" fill="${col}"><title>${esc(p[0])}: ${esc(p[1])}${esc(unit)}</title></circle>`).join("")+
+    `<text x="${P}" y="${H-6}" font-size="10" fill="var(--muted)">${lab(pts[0][0])}</text><text x="${W-8}" y="${H-6}" text-anchor="end" font-size="10" fill="var(--muted)">${lab(last(pts)[0])}</text>`;
 }
 function spark(title, pts, unit, lowerBetter){
   let delta="", chip="sand";
-  if (pts.length>=2){ const dv=last(pts)[1]-pts[0][1]; const good = lowerBetter? dv<=0 : dv>=0; chip = good?"":"amber"; delta = Math.abs(dv)<0.05 ? "= no change yet" : `${dv>0?"▲":"▼"} ${Math.abs(dv).toFixed(1)}${unit} since start`; }
+  if (pts.length>=2){ const dv=last(pts)[1]-pts[0][1]; const good = lowerBetter? dv<=0 : dv>=0; chip = good?"":"amber"; delta = Math.abs(dv)<0.05 ? t("no_change") : t("since_start",{arrow:dv>0?"▲":"▼",v:Math.abs(dv).toFixed(1)+" "+unit}); }
   const W=140,H=40; let path="";
   if (pts.length>=2){ const ys=pts.map(p=>p[1]); let lo=Math.min(...ys),hi=Math.max(...ys); if(lo===hi){lo--;hi++;} path=ys.map((v,i)=>(i?"L":"M")+(4+(W-8)*i/(ys.length-1)).toFixed(1)+" "+(4+(H-8)*(1-(v-lo)/(hi-lo))).toFixed(1)).join(""); }
-  return `<div class="card" style="margin:0"><div class="small muted">${title}</div><div class="bigval">${pts.length?last(pts)[1]:"–"}<span class="small muted">${pts.length?unit:""}</span></div><svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><path d="${path}" fill="none" stroke="var(--primary)" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>${delta?`<span class="chip ${chip}">${delta}</span>`:'<span class="small muted">Not enough data yet</span>'}</div>`;
+  return `<div class="card" style="margin:0"><div class="small muted">${title}</div><div class="bigval">${pts.length?last(pts)[1]:"–"}<span class="small muted"> ${pts.length?unit:""}</span></div><svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><path d="${path}" fill="none" stroke="var(--primary)" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>${delta?`<span class="chip ${chip}">${delta}</span>`:`<span class="small muted">${t("not_enough")}</span>`}</div>`;
 }
-const last = a => a[a.length-1];
-function avg(a){ return a.length ? a.reduce((x,y)=>x+y,0)/a.length : null; }
 function renderProgress(){
-  const waist = series(m=>m.waist, S.weekly), weight = series(m=>m.weight, S.weekly), hrv = series(m=>m.hrv, S.weekly), rhr = series(m=>m.rhr, S.weekly);
+  const L=LEN(), W=WT();
+  const waist = series(m=>toDisp(m.waist,L), S.weekly), weight = series(m=>toDisp(m.weight,W), S.weekly), hrv = series(m=>m.hrv, S.weekly), rhr = series(m=>m.rhr, S.weekly);
   const stress = series(d=>d.checkin&&d.checkin.stress, S.days), sleep = series(d=>d.checkin&&d.checkin.sleep, S.days);
-  $("#sparkGrid").innerHTML = spark("Waist",waist," cm",true)+spark("Weight",weight," kg",true)+spark("HRV",hrv," ms",false)+spark("Resting HR",rhr," bpm",true);
-  lineChart($("#chWaist"),waist,{unit:" cm"}); lineChart($("#chStress"),stress); lineChart($("#chSleep"),sleep,{lowerBetter:false,unit:" h"});
-  const h=S.settings.height; $("#whtr").textContent = h&&waist.length ? `Waist-to-height ${(last(waist)[1]/h).toFixed(2)} · goal under 0.50` : "Add height in Settings";
-  // heat: 12 cols x 7 rows
+  $("#sparkGrid").innerHTML = spark(t("sp_waist"),waist,L.u,true)+spark(t("sp_weight"),weight,W.u,true)+spark(t("sp_hrv"),hrv,"ms",false)+spark(t("sp_rhr"),rhr,"bpm",true);
+  $("#chWaistTitle").textContent = t("ch_waist",{u:L.u});
+  lineChart($("#chWaist"),waist,{unit:" "+L.u}); lineChart($("#chStress"),stress); lineChart($("#chSleep"),sleep,{lowerBetter:false,unit:" "+t("u_h")});
+  const h=S.settings.height, wcm = series(m=>m.waist, S.weekly);
+  $("#whtr").textContent = h&&wcm.length ? t("whtr",{v:(last(wcm)[1]/h).toFixed(2)}) : t("whtr_add");
   if (S.settings.start){
     const st=parseKey(S.settings.start), cells=[];
     for(let r=0;r<7;r++) for(let c=0;c<12;c++){ const k=keyOf(addDays(st,c*7+r)); const p = S.days[k] ? scoreFor(k).habitPct : 0; cells.push(`<i title="${k}" style="${p?`background:var(--primary);opacity:${(.15+p*.85).toFixed(2)};`:""}${k===todayKey()?"outline:2px solid var(--accent);outline-offset:1px":""}"></i>`); }
     $("#heat").innerHTML = cells.join("");
   }
-  // insights
-  const ins=[];
+  const ins=[], dir = d => t(d>=0?"dir_lower":"dir_higher");
   const rows = Object.keys(S.days).filter(k=>S.days[k].checkin).map(k=>({k, st:S.days[k].checkin.stress, sl:S.days[k].checkin.sleep, hp:scoreFor(k).habitPct}));
   const goodSleep = rows.filter(r=>r.sl>=7), badSleep = rows.filter(r=>r.sl!=null&&r.sl<7);
-  if (goodSleep.length>=4 && badSleep.length>=3){ const d=avg(badSleep.map(r=>r.st))-avg(goodSleep.map(r=>r.st)); ins.push(`Stress was <b>${Math.abs(d).toFixed(1)} points ${d>=0?"lower":"higher"}</b> on days with 7+ hours of sleep (n=${goodSleep.length+badSleep.length} days).`); }
+  if (goodSleep.length>=4 && badSleep.length>=3){ const d=avg(badSleep.map(r=>r.st))-avg(goodSleep.map(r=>r.st)); ins.push(t("ins_sleep_html",{d:Math.abs(d).toFixed(1),dir:dir(d),n:goodSleep.length+badSleep.length})); }
   const hiH = rows.filter(r=>r.hp>=.7), loH = rows.filter(r=>r.hp<.5);
-  if (hiH.length>=4 && loH.length>=3){ const d=avg(loH.map(r=>r.st))-avg(hiH.map(r=>r.st)); ins.push(`On days you did 70%+ of the plan, stress averaged <b>${Math.abs(d).toFixed(1)} ${d>=0?"lower":"higher"}</b>.`); }
-  if (waist.length>=2){ const d=waist[0][1]-last(waist)[1]; ins.push(d>0?`<b>${d.toFixed(1)} cm</b> off your waist since your first measurement. Fat loss of about 0.5–1 cm a week is a great pace.`:(weekOf(todayKey())<=3 ? `Waist hasn't dropped yet. That's normal in weeks 1–3. Keep protein, steps and sleep steady.` : `Waist hasn't dropped yet. Check sleep, alcohol, steps and portion sizes; if it's still flat by week 8, talk to your doctor.`)); }
-  $("#insights").innerHTML = ins.length ? ins.map(t=>`<div class="card soft">💡 ${t}</div>`).join("") : `<div class="card soft">💡 Insights appear after about a week of check-ins. They compare your own good and bad days.</div>`;
+  if (hiH.length>=4 && loH.length>=3){ const d=avg(loH.map(r=>r.st))-avg(hiH.map(r=>r.st)); ins.push(t("ins_habits_html",{d:Math.abs(d).toFixed(1),dir:dir(d)})); }
+  if (waist.length>=2){ const d=waist[0][1]-last(waist)[1]; ins.push(d>0 ? t("ins_waist_down_html",{d:d.toFixed(1)+" "+L.u, pace: imperial() ? "¼–½ "+t("u_in") : "0.5–1 "+t("u_cm")}) : esc(t(weekOf(todayKey())<=3 ? "ins_waist_early" : "ins_waist_flat"))); }
+  $("#insights").innerHTML = (ins.length ? ins : [esc(t("ins_empty"))]).map(x=>`<div class="card soft">💡 ${x}</div>`).join("");
   const p = Object.keys(S.pss).sort();
-  $("#pssHist").innerHTML = p.length ? p.map(k=>`${esc(k)}: <b>${esc(S.pss[k])}</b>/40`).join(" · ")+`<div class="muted" style="margin-top:6px">0–13 low · 14–26 moderate · 27–40 high. A drop of 3–5 points is meaningful.</div>` : "No scores yet. Take it on day 1, then at weeks 4, 8 and 12.";
+  $("#pssHist").innerHTML = p.length ? p.map(k=>`${esc(fmtDate(k,{month:"short",day:"numeric"}))}: <b>${esc(S.pss[k])}</b>/40`).join(" · ")+`<div class="muted" style="margin-top:6px">${t("pss_bands")}</div>` : esc(t("pss_none"));
 }
 
 /* ---------- PLAN ---------- */
 const G = g => `<span class="grade g${g[0]}">${g}</span>`;
 function renderPlan(){
-  const w = weekOf(todayKey()), ph = PHASES.find(p=>w>=p.weeks[0]&&w<=p.weeks[1]);
-  $("#phaseCard").innerHTML = `<div class="eyebrow">Phase ${ph.n} · Weeks ${ph.weeks[0]}–${ph.weeks[1]}</div><h2 style="margin:4px 0">${ph.name}</h2><p style="margin:4px 0 8px">${ph.goal}</p><ul class="tight">${ph.focus.map(f=>`<li>${f}</li>`).join("")}</ul><p class="small" style="margin-bottom:0"><b>New this phase:</b> ${ph.new}</p>`;
-  $("#weeks").innerHTML = WEEKLY_FOCUS.map((f,i)=>{ const n=i+1, cls=n<w?"past":n===w?"now":"future"; const p=PHASES.find(p=>n>=p.weeks[0]&&n<=p.weeks[1]); return `<div class="week ${cls}"><span class="node"></span><div><div class="small muted">Week ${n} · ${p.name}</div><div>${f}</div></div></div>`; }).join("");
-  const flags = S.settings.flags||{};
-  const suppRows = SUPPS.map(s=>{ const bad=!suppSafe(s); return `<tr><td><b>${s.label}</b> <span class="tag">T${s.tier}</span><div class="small muted">${s.sub}</div>${bad?`<div class="small" style="color:var(--warning)">⚠ Skipped: clashes with your safety answers</div>`:""}</td></tr>`; }).join("");
+  const w = weekOf(todayKey()), ph = phaseOf(w), s = S.settings;
+  $("#phaseCard").innerHTML = `<div class="eyebrow">${t("phase_card",{n:ph.n,a:ph.weeks[0],b:ph.weeks[1]})}</div><h2 style="margin:4px 0">${t("ph"+ph.n)}</h2><p style="margin:4px 0 8px">${t("ph"+ph.n+"_goal")}</p><ul class="tight">${t("ph"+ph.n+"_f").split("|").map(f=>`<li>${f}</li>`).join("")}</ul><p class="small" style="margin-bottom:0"><b>${t("new_this")}</b> ${t("ph"+ph.n+"_new")}</p>`;
+  $("#weeks").innerHTML = Array.from({length:12},(_,i)=>{ const n=i+1, cls=n<w?"past":n===w?"now":"future"; return `<div class="week ${cls}"><span class="node"></span><div><div class="small muted">${t("week_n",{n,name:t("ph"+phaseOf(n).n)})}</div><div>${t("wk"+n)}</div></div></div>`; }).join("");
+  const suppRows = SUPPS.map(x=>{ const [label,sub]=suppText(x); return `<tr><td><b>${label}</b> <span class="tag">${t("tier_tag",{n:x.tier})}</span><div class="small muted">${sub}</div>${suppSafe(x)?"":`<div class="small" style="color:var(--warning)">${t("skipped_flag")}</div>`}</td></tr>`; }).join("");
+  const wp = weekPlan(w), pr = protein();
+  const trainRows = [1,2,3,4,5,6,0].map(i=>{ const [n,sub]=workoutText(wp[i],w); const extra = wp[i].stacked ? ` + ${actName()} ${fmtTime(s.act.time)}` : ""; return `<tr><td>${dowName(i)}</td><td><b>${esc(n)}</b>${esc(extra)}<div class="small muted">${esc(sub)}</div></td></tr>`; }).join("");
+  const tests = t("doc_tests") + (s.sex==="m"&&s.age>=50 ? " "+t("doc_tests_m50") : s.sex==="f"&&s.age>=45 ? " "+t("doc_tests_f45") : "");
   $("#planDocs").innerHTML = `
-  <details open><summary>Supplements (tiered)</summary>
-    <p class="small">Supplements are the smallest lever: at best about 1–3 cm of waist over 12 weeks. Sleep, a calorie deficit, protein and training do far more. Buy only USP or NSF-tested brands. Tier 2 starts at week 5, one product every 1–2 weeks, and only after clearance.</p>
+  <details open><summary>${t("doc_train_title")}</summary>
+    <table class="t">${trainRows}</table>
+    <p class="small">${t("doc_train_note")}${s.age>=50?" "+t("doc_train_age50"):""}</p>
+  </details>
+  <details><summary>${t("doc_supp_title")}</summary>
+    <p class="small">${t("doc_supp_intro")}</p>
     <table class="t">${suppRows}</table>
-    <p class="small"><b>Tier 3: doctor only.</b> Some products (for example berberine, inositol or melatonin) and prescription options can interact with medications or affect blood sugar and hormones. Whether any of them suit you is a medical decision to discuss with your doctor. Ebb does not suggest doses for these.</p>
-    <p class="small"><b>Skip:</b> green tea extract (liver injury), CLA, apple cider vinegar (the main trial was retracted), chromium, NMN/NR, resveratrol, garcinia, raspberry ketones, "cortisol blocker" blends, DHEA/7-keto, adrenal glandulars, synephrine, yohimbine.</p>
+    <p class="small">${t("doc_tier3_html")}</p>
+    <p class="small">${t("doc_skip_html")}</p>
   </details>
-  <details><summary>Eat more / eat less</summary>
-    <p class="small"><b>Eat more:</b> protein at 1.2–1.6 g per kg of body weight a day; 25–38 g fiber (about 10 g soluble); vegetables at every meal; legumes, tofu, eggs, fatty fish (mackerel, salmon), Greek yogurt, nuts, olive oil, berries, oats, japgokbap (mixed-grain rice), green tea and boricha.</p>
-    <p class="small"><b>Korean-friendly:</b> a small dish of kimchi per meal, doenjang or cheonggukjang jjigae (eat the solids, leave most of the broth), namul, grilled fish, ssam wraps.</p>
-    <p class="small"><b>Eat less:</b> sugary drinks and juice, ultra-processed snacks, big bowls of white rice, ramyeon, tteokbokki, processed meat, salty broths (keep sodium under 2 g a day), late-night delivery food. Alcohol, especially soju and chimaek, is the biggest belly-fat and sleep disruptor.</p>
-    <p class="small"><b>Fasting:</b> keep to a gentle 10–12 h eating window. Fasts of 16 h or more raise cortisol and aren't better for visceral fat. Avoid them if you're highly stressed, have cycle problems, or have a history of disordered eating.</p>
-    <p class="small"><b>Coffee:</b> fine in the morning (the "wait 90 minutes" rule has no good evidence); have the last cup by noon.</p>
+  <details><summary>${t("doc_food_title")}</summary>
+    ${pr?`<p class="small"><b>${t("doc_protein",{lo:pr.lo,hi:pr.hi})}</b></p>`:""}
+    ${t("doc_food_html")}
   </details>
-  <details><summary>Weekly training template</summary>
-    <table class="t"><tr><td>Mon</td><td>Strength A</td></tr><tr><td>Tue</td><td>Zone 2, 40–50 min</td></tr><tr><td>Wed</td><td>Strength B</td></tr><tr><td>Thu</td><td>Intervals (from week 3) or Zone 2</td></tr><tr><td>Fri</td><td>Strength C (from week 5) or Zone 2, + yoga</td></tr><tr><td>Sat</td><td>Long Zone 2 hike, 60–90 min</td></tr><tr><td>Sun</td><td>Rest</td></tr></table>
-    <p class="small">Aerobic exercise and intervals cut visceral fat most; strength training keeps muscle. Too much hard training without recovery backfires. Swap any hard day for Zone 2 when HRV is low, resting HR is up 5+ bpm, or you slept badly. Weeks 4 and 8 are lighter.</p>
+  <details><summary>${t("doc_alt_title")}</summary>
+    <table class="t">${["A","B","B","C","C","C","D","D"].map((g,i)=>`<tr><td>${G(g)}</td><td>${t(i===7?"alt8_html":"alt"+(i+1))}</td></tr>`).join("")}</table>
   </details>
-  <details><summary>Alternative therapies, graded</summary>
-    <table class="t">
-    <tr><td>${G("A")}</td><td>Slow / resonance breathing, HRV biofeedback</td></tr>
-    <tr><td>${G("B")}</td><td>Forest bathing, yoga, music, social connection</td></tr>
-    <tr><td>${G("B")}</td><td>Sauna 2–4×/week (no alcohol; not with unstable heart disease)</td></tr>
-    <tr><td>${G("C")}</td><td>Massage, float tank, acupuncture: they feel good but have little measured cortisol effect</td></tr>
-    <tr><td>${G("C")}</td><td>Cold plunge 1–3 min for mood. It raises stress hormones acutely, so keep it away from strength days. Not with heart disease or uncontrolled blood pressure, in pregnancy, or alone in open water.</td></tr>
-    <tr><td>${G("C")}</td><td>Adaptogenic teas (tulsi, chamomile, lemon balm)</td></tr>
-    <tr><td>${G("D")}</td><td>Red-light panels, grounding mats</td></tr>
-    <tr><td>${G("D")}</td><td><b>Do not use:</b> Gerson-style juicing and coffee enemas (electrolyte problems, infections and deaths reported)</td></tr>
-    </table>
-  </details>
-  <details><summary>What the gurus agree on (and what to ignore)</summary>
-    <p class="small"><b>Consensus:</b> Sinclair, Attia, Huberman, Patrick, Hyman, Lustig, Fung, Longo and Johnson largely agree on these: 7–9 h sleep at fixed times, morning light, daily walking plus 150–300 min/week of Zone 2, strength training 2–4×/week, walking after meals, whole-food protein and fiber, cutting sugar, ultra-processed food and alcohol, and a daily calming practice. Two weeks of 4-hour nights raised visceral fat by 11% in a Mayo Clinic trial.</p>
-    <p class="small"><b>Ignore:</b> Gerson coffee enemas and juice-only regimens. Gary Brecka's MTHFR gene testing and methylated-B upsell, plus methylene blue. Off-label rapamycin, metformin or peptides for "longevity". NMN or resveratrol for fat loss. Multi-day water fasts. "Adrenal fatigue" panels. Bryan Johnson's 100-pill stack.</p>
-    <p class="small muted">Full write-ups with sources are in the project's research folder.</p>
-  </details>
-  <details><summary>Tests to discuss with your doctor</summary>
-    <p class="small">Ask your doctor which of these make sense for you at the start and at week 12. They are usually drawn fasting, 07:00–09:00, with no biotin for 72 h. Morning serum cortisol · fasting glucose + insulin (HOMA-IR) · HbA1c · lipids (± ApoB) · hs-CRP · TSH + free T4 · vitamin D (25-OH) · ferritin + CBC · comprehensive metabolic panel (liver + kidney) · B12/folate · testosterone + SHBG (women: LH/FSH if cycles are irregular) · uric acid · blood pressure.</p>
-  </details>
-  <details><summary>See a doctor if…</summary>
-    <ul class="tight small"><li>Purple stretch marks wider than 1 cm, easy bruising, a round red face, a fat pad between the shoulders, or weak thighs when standing up from a chair. These are possible signs of Cushing's syndrome.</li><li>New high blood pressure or diabetes, osteoporosis at a young age, irregular periods, or any steroid medication use.</li><li>Loud snoring or gasping in sleep (possible sleep apnea), or persistent low mood.</li><li>No change in waist after 8 weeks of following the plan honestly.</li></ul>
-    <p class="small muted">"Adrenal fatigue" isn't a recognised diagnosis. Skip saliva "adrenal" panels sold to pick supplements.</p>
-  </details>`;
-  $("#setTheme").value = S.settings.theme||""; $("#setStart").value=S.settings.start||""; $("#setHeight").value=S.settings.height??""; $("#setTier2").checked=!!S.settings.tier2;
-  $("#setFlags").innerHTML = `<div class="small muted" style="margin-top:12px">Safety screen</div>`+flagsHTML("sf");
+  <details><summary>${t("doc_gurus_title")}</summary>${t("doc_gurus_html")}</details>
+  <details><summary>${t("doc_tests_title")}</summary><p class="small">${tests}</p></details>
+  <details><summary>${t("doc_doctor_title")}</summary>${t("doc_doctor_html")}</details>`;
+  $("#setLang").innerHTML = LANGS.map(l=>`<option value="${l}" ${l===lang()?"selected":""}>${(I18N[l]||{}).lang_name||l}</option>`).join("");
+  $("#setTheme").value = s.theme; $("#setStart").value=s.start||""; $("#setTier2").checked=s.tier2;
+  $("#setFlags").innerHTML = `<div class="small muted" style="margin-top:12px">${t("safety_screen")}</div>`+flagsHTML(s.flags, s.sex);
 }
-function flagsHTML(prefix){ const f=S.settings.flags||{}; return FLAGS.map(([id,l])=>`<label class="flag"><input type="checkbox" data-flag="${id}" id="${prefix}_${id}" ${f[id]?"checked":""}> <span class="small">${l}</span></label>`).join(""); }
+function flagsHTML(f, sex){ return FLAG_IDS.filter(id => !(id==="preg" && sex==="m")).map(id=>`<label class="flag"><input type="checkbox" data-flag="${id}" ${f[id]?"checked":""}> <span class="small">${t("fl_"+id)}</span></label>`).join(""); }
 document.addEventListener("change", e => {
-  const t=e.target;
-  if (t.dataset.flag && t.closest("#setFlags")){ S.settings.flags[t.dataset.flag]=t.checked; save(); renderAll(); }
-  if (t.id==="setTheme"){ S.settings.theme=t.value; save(); applyTheme(); }
-  if (t.id==="setStart" && t.value){ S.settings.start=t.value; save(); renderAll(); }
-  if (t.id==="setHeight"){ S.settings.height=num(t.value); save(); }
-  if (t.id==="setTier2"){ S.settings.tier2=t.checked; save(); renderAll(); toast(t.checked ? (weekOf(todayKey())>=5 ? "Tier 2 shown. Add one product at a time." : "Tier 2 unlocks in week 5. Add one at a time.") : "Tier 2 hidden."); }
+  const el=e.target;
+  if (el.dataset.flag && el.closest("#setFlags")){ S.settings.flags[el.dataset.flag]=el.checked; save(); renderAll(); }
+  if (el.id==="setTheme"){ S.settings.theme=el.value; save(); applyTheme(); }
+  if (el.id==="setLang"){ S.settings.lang=el.value; save(); applyI18n(); renderAll(); }
+  if (el.id==="setStart" && el.value){ S.settings.start=el.value; save(); renderAll(); }
+  if (el.id==="setTier2"){ S.settings.tier2=el.checked; save(); renderAll(); toast(t(el.checked ? (weekOf(todayKey())>=5 ? "toast_tier2_on" : "toast_tier2_wk5") : "toast_tier2_off")); }
 });
+$("#editProfile").onclick = () => wizard(true);
 $("#exp").onclick = () => { const b=new Blob([JSON.stringify(S,null,1)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download="ebb-backup-"+todayKey()+".json"; a.click(); };
 $("#impBtn").onclick = () => $("#imp").click();
-$("#imp").onchange = e => { const f=e.target.files[0]; if(!f) return; e.target.value=""; f.text().then(t=>{ try{ const d=JSON.parse(t); if(!d||typeof d.settings!=="object"||!d.settings) throw 0; const n=normalize(d); if(!n.settings.start) throw 0; S=n; save(); applyTheme(); renderAll(); toast("Data imported."); }catch(_){ toast("That file isn't an Ebb backup."); } }); };
-$("#reset").onclick = () => { if(confirm("Erase all Ebb data on this device? This can't be undone.")){ S=blank(); save(); location.reload(); } };
+$("#imp").onchange = e => { const f=e.target.files[0]; if(!f) return; e.target.value=""; f.text().then(x=>{ try{ const d=JSON.parse(x); if(!d||typeof d.settings!=="object"||!d.settings) throw 0; const n=normalize(d); if(!n.settings.start) throw 0; S=n; save(); applyTheme(); applyI18n(); renderAll(); toast(t("toast_imported")); }catch(_){ toast(t("toast_bad_import")); } }); };
+$("#reset").onclick = () => { if(confirm(t("erase_confirm"))){ S=blank(); save(); location.reload(); } };
 
 /* ---------- nav ---------- */
 function show(tab){
@@ -759,25 +809,129 @@ function show(tab){
 document.querySelector("nav.tabs").onclick = e => { const b=e.target.closest("button"); if(b) show(b.dataset.tab); };
 function renderAll(){ const cur=document.querySelector("nav.tabs [aria-selected=true]").dataset.tab; show(cur); }
 
-/* ---------- onboarding ---------- */
-function onboard(){
-  $("#obStart").value = todayKey(); $("#obFlags").innerHTML = flagsHTML("ob"); $("#onboard").classList.add("on"); $("#obStart").focus();
-  $("#obGo").onclick = () => {
-    S.settings.start = $("#obStart").value || todayKey();
-    S.settings.height = num($("#obHeight").value); S.settings.sex=$("#obSex").value; S.settings.wake=$("#obWake").value||"06:30";
-    document.querySelectorAll("#obFlags [data-flag]").forEach(c=>S.settings.flags[c.dataset.flag]=c.checked);
-    const wa=num($("#obWaist").value), we=num($("#obWeight").value);
-    if (wa!=null||we!=null) S.weekly[todayKey()] = {waist:wa,weight:we,hrv:null,rhr:null};
-    save(); $("#onboard").classList.remove("on"); renderAll(); toast("Day 1. Small steps, every day.");
-  };
+/* ---------- onboarding / profile wizard ---------- */
+// Works on a draft copy of settings; nothing is saved until the last step.
+let W_ = null;
+const STEPS = ["welcome","you","day","move","wear","safety","plan"];
+function wizard(edit){
+  const d = JSON.parse(JSON.stringify(S.settings));
+  if (!d.lang) d.lang = detectLang();
+  if (!d.units) d.units = d.lang==="en" && /-US$/i.test(navigator.language||"en-US") ? "imperial" : "metric";
+  W_ = {edit, i:0, d, adult:edit, trainSet:edit, start:S.settings.start||todayKey(), waist:null, weight:null};
+  $("#onboard").classList.add("on"); drawStep();
 }
+const opt = (name, val, cur, label) => `<button type="button" data-o="${name}" data-v="${val}" aria-pressed="${String(cur)===String(val)}">${label}</button>`;
+const timeIn = (id, v) => `<input type="time" id="${id}" value="${v}" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:var(--surface);min-height:44px">`;
+function drawStep(){
+  const {i, d, edit} = W_, step = STEPS[i], imp = d.units==="imperial";
+  S.settings.lang = d.lang; applyI18n(); // preview the chosen language live
+  $("#obStep").textContent = t("ob_step",{n:i+1,total:STEPS.length});
+  $("#obBar").innerHTML = STEPS.map((_,j)=>`<i class="${j<i?"done":j===i?"now":""}"></i>`).join("");
+  $("#obTitle").textContent = t({welcome:"ob1_title",you:"ob2_title",day:"ob3_title",move:"ob4_title",wear:"ob5_title",safety:"ob6_title",plan:"ob7_title"}[step]);
+  $("#obLead").textContent = t({welcome:"ob1_lead",you:"ob2_lead",day:"ob3_lead",move:"ob4_lead",wear:"ob5_lead",safety:"ob6_lead",plan:"ob7_lead"}[step]);
+  $("#obBack").textContent = t("ob_back"); $("#obBack").style.visibility = i ? "" : "hidden";
+  $("#obNext").textContent = i===STEPS.length-1 ? t(edit?"ob_save":"ob_start") : t("ob_next");
+  let h = "";
+  if (step==="welcome"){
+    h = `<label class="f">${t("ob_lang")}</label><div class="picks" style="grid-template-columns:repeat(${LANGS.length},1fr)">${LANGS.map(l=>opt("lang",l,d.lang,(I18N[l]||{}).lang_name||l)).join("")}</div>
+      <div class="card warn small" style="margin-top:16px">${t("ob_disclaimer_html")}</div>
+      ${edit?"":`<label class="flag"><input type="checkbox" id="obAdult" ${W_.adult?"checked":""}> <span class="small">${t("ob_adult")}</span></label>`}`;
+  } else if (step==="you"){
+    const L = imp?{u:t("u_in"),f:2.54}:{u:t("u_cm"),f:1}, Wt = imp?{u:t("u_lb"),f:0.45359237}:{u:t("u_kg"),f:1};
+    const hIn = d.height!=null ? d.height/2.54 : null;
+    h = `<div class="grid2"><div><label class="f" for="obAge">${t("f_age")}</label><input type="number" id="obAge" inputmode="numeric" min="18" max="100" value="${d.age??""}"></div>
+      <div><label class="f">${t("f_units")}</label><div class="picks" style="grid-template-columns:1fr 1fr">${opt("units","imperial",d.units,t("units_imperial"))}${opt("units","metric",d.units,t("units_metric"))}</div></div></div>
+      <label class="f">${t("f_sex")}</label><div class="picks" style="grid-template-columns:repeat(3,1fr)">${opt("sex","m",d.sex,t("sex_m"))}${opt("sex","f",d.sex,t("sex_f"))}${opt("sex","",d.sex,t("sex_none"))}</div>
+      <label class="f">${t("f_height")}</label>
+      ${imp ? `<div class="grid2"><input type="number" id="obFt" inputmode="numeric" min="4" max="7" placeholder="${t("u_ft")}" aria-label="${t("u_ft")}" value="${hIn!=null?Math.floor(hIn/12):""}"><input type="number" id="obIn" inputmode="decimal" min="0" max="11.9" placeholder="${t("u_in")}" aria-label="${t("u_in")}" value="${hIn!=null?Math.round(hIn%12):""}"></div>`
+            : `<input type="number" id="obCm" inputmode="decimal" min="120" max="230" placeholder="${t("u_cm")}" value="${d.height!=null?Math.round(d.height):""}">`}
+      ${edit ? "" : `<div class="grid2"><div><label class="f" for="obWeight">${t("f_weight")} (${Wt.u})</label><input type="number" id="obWeight" inputmode="decimal" value="${W_.weight!=null?toDisp(W_.weight,Wt):""}"></div>
+      <div><label class="f" for="obWaist">${t("f_waist")} (${L.u})</label><input type="number" id="obWaist" inputmode="decimal" value="${W_.waist!=null?toDisp(W_.waist,L):""}"></div></div>
+      <p class="small muted">${t("waist_hint")}</p>`}`;
+  } else if (step==="day"){
+    h = `<div class="grid2"><div><label class="f" for="obWake">${t("f_wake")}</label>${timeIn("obWake",d.wake)}</div><div><label class="f" for="obBed">${t("f_bed")}</label>${timeIn("obBed",d.bed)}</div></div>
+      <label class="f">${t("f_work")}</label>
+      <div class="grid2" id="workTimes" style="${d.noWork?"opacity:.4":""}"><div>${timeIn("obWs",d.workStart)}</div><div>${timeIn("obWe",d.workEnd)}</div></div>
+      <label class="flag"><input type="checkbox" id="obNoWork" ${d.noWork?"checked":""}> <span class="small">${t("f_work_none")}</span></label>
+      <label class="f">${t("f_lunch")}</label><div class="picks" style="grid-template-columns:repeat(2,1fr)">${LUNCH.map(v=>opt("lunch",v,d.lunch,t("lunch_"+v))).join("")}</div>
+      <label class="f" for="obDinner">${t("f_dinner")}</label>${timeIn("obDinner",d.dinner)}`;
+  } else if (step==="move"){
+    if (!W_.trainSet){ d.trainTime = (!d.noWork && toMin(d.workStart) - toMin(d.wake) >= 90) ? "morning" : "evening"; W_.trainSet = true; }
+    h = `<label class="f">${t("f_act")}</label><div class="picks" style="grid-template-columns:repeat(2,1fr)">${ACTS.map(v=>opt("act",v,d.act.type,t("act_"+v))).join("")}</div>
+      ${d.act.type==="none" ? "" : `<label class="f">${t("f_act_days")}</label><div class="picks" style="grid-template-columns:repeat(7,1fr)">${[1,2,3,4,5,6,0].map(i=>`<button type="button" data-o="day" data-v="${i}" aria-pressed="${d.act.days.includes(i)}">${dowName(i,"narrow")}</button>`).join("")}</div>
+      <label class="f" for="obActT">${t("f_act_time")}</label>${timeIn("obActT",d.act.time)}`}
+      <label class="f">${t("f_train")}</label><div class="picks" style="grid-template-columns:repeat(3,1fr)">${TRAIN.map(v=>opt("train",v,d.trainTime,t("train_"+v))).join("")}</div>`;
+  } else if (step==="wear"){
+    h = `<div class="picks" style="grid-template-columns:repeat(2,1fr)">${WEARS.map(v=>opt("wear",v,d.wearable,t("wear_"+v))).join("")}</div>`;
+  } else if (step==="safety"){
+    h = flagsHTML(d.flags, d.sex).replace(/data-flag=/g, 'data-obflag=');
+  } else {
+    // Preview the schedule with the draft settings.
+    const keep = S.settings; S.settings = d; const c = sched(), T = m => fmtTime(fromMin(m));
+    const pr = (()=>{ const w = W_.weight ?? latestWeight(); if (!w) return null; const lo=(d.age>=50?1.4:1.2); return {lo:Math.round(w*lo/5)*5, hi:Math.round(w*1.6/5)*5}; })();
+    const days = d.act.days.slice().sort((a,b)=>((a+6)%7)-((b+6)%7)).map(i=>dowName(i)).join(", ");
+    const items = [
+      t("sum_sleep",{h:fmtNum(Math.round(c.sleepH*10)/10),bed:T(c.bed),wake:T(c.wake)}) + (c.sleepH<7 ? " — "+t("sum_sleep_short") : ""),
+      t("sum_caf",{t:T(c.caf)}), t("sum_kitchen",{t:T(c.kitchen)}),
+      t("sum_window",{h:fmtNum(Math.round(c.windowH*2)/2)}) + (c.windowH>12 ? " — "+t("sum_window_long") : ""),
+      t("sum_train",{when:t("train_"+d.trainTime)}),
+      d.act.type!=="none" && d.act.days.length ? t("sum_act",{act:t("act_"+d.act.type),days,t:fmtTime(d.act.time)}) : "",
+      pr ? t("sum_protein",pr) : "", d.age>=50 ? t("sum_age50") : ""
+    ].filter(Boolean);
+    S.settings = keep;
+    h = `${edit?"":`<label class="f" for="obStart">${t("f_start")}</label><input type="date" id="obStart" value="${W_.start}">`}
+      <div class="card soft"><ul class="tight">${items.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>
+      ${edit?"":`<div class="card warn small">${t("ob_disclaimer_html")}</div>`}`;
+  }
+  $("#obBody").innerHTML = h;
+  const first = $("#obBody input, #obBody button"); if (first) first.focus();
+}
+// Read the current step's inputs into the draft. Returns false to block "Next".
+function collect(){
+  const d = W_.d, step = STEPS[W_.i], v = id => { const el=document.getElementById(id); return el ? el.value : ""; };
+  if (step==="welcome" && !W_.edit){ W_.adult = $("#obAdult").checked; if (!W_.adult){ toast(t("ob_adult_req")); return false; } }
+  if (step==="you"){
+    d.age = num(v("obAge"));
+    if (d.units==="imperial"){ const ft=num(v("obFt")), inch=num(v("obIn")); d.height = ft!=null ? (ft*12+(inch||0))*2.54 : d.height; }
+    else d.height = num(v("obCm")) ?? d.height;
+    if (!W_.edit){ const L = d.units==="imperial"?2.54:1, Wf = d.units==="imperial"?0.45359237:1;
+      const wa=num(v("obWaist")), we=num(v("obWeight")); W_.waist = wa!=null?wa*L:null; W_.weight = we!=null?we*Wf:null; }
+  }
+  if (step==="day"){ for (const [id,f] of [["obWake","wake"],["obBed","bed"],["obWs","workStart"],["obWe","workEnd"],["obDinner","dinner"]]) if (TIME_RE.test(v(id))) d[f]=v(id); d.noWork = $("#obNoWork").checked; }
+  if (step==="move" && TIME_RE.test(v("obActT"))) d.act.time = v("obActT");
+  if (step==="safety") document.querySelectorAll("#obBody [data-obflag]").forEach(c => d.flags[c.dataset.obflag] = c.checked);
+  if (step==="plan" && !W_.edit) W_.start = KEY_RE.test(v("obStart")) ? v("obStart") : todayKey();
+  return true;
+}
+$("#obBody").addEventListener("click", e => {
+  const b = e.target.closest("[data-o]"); if (!b) return;
+  collect(); // keep typed values before re-rendering
+  const d = W_.d, val = b.dataset.v;
+  ({lang:()=>d.lang=val, units:()=>d.units=val, sex:()=>d.sex=val, lunch:()=>d.lunch=val, train:()=>d.trainTime=val, wear:()=>d.wearable=val,
+    act:()=>{ d.act.type=val; if (val==="none") d.act.days=[]; },
+    day:()=>{ const i=+val; d.act.days = d.act.days.includes(i) ? d.act.days.filter(x=>x!==i) : d.act.days.concat(i); }})[b.dataset.o]();
+  if (b.dataset.o==="sex" && val==="m") delete d.flags.preg;
+  drawStep();
+  const again = $(`#obBody [data-o="${b.dataset.o}"][data-v="${val}"]`); if (again) again.focus();
+});
+$("#obBody").addEventListener("change", e => { if (e.target.id==="obNoWork") $("#workTimes").style.opacity = e.target.checked ? .4 : 1; });
+$("#obBack").onclick = () => { collect(); if (W_.i>0){ W_.i--; drawStep(); } };
+$("#obNext").onclick = () => {
+  if (!collect()) return;
+  if (W_.i < STEPS.length-1){ W_.i++; drawStep(); scrollTo(0,0); return; }
+  const first = !W_.edit;
+  S.settings = Object.assign(S.settings, W_.d);
+  if (first){ S.settings.start = W_.start; if (W_.waist!=null||W_.weight!=null) S.weekly[todayKey()] = {waist:W_.waist,weight:W_.weight,hrv:null,rhr:null}; }
+  S = normalize(S); save(); $("#onboard").classList.remove("on"); applyI18n(); renderAll();
+  toast(t(first ? "toast_day1" : "toast_profile")); W_ = null;
+};
 
-applyTheme(); setMode("daily");
-if (!S.settings.start) onboard(); else renderToday();
-// refresh when returning to the app on a new day
+applyTheme(); applyI18n(); setMode("daily");
+if (!S.settings.start) wizard(false); else renderToday();
+// refresh when returning to the app, or when the app day rolls over while open
 let lastKey = todayKey();
-document.addEventListener("visibilitychange", () => { if(!document.hidden){ lastKey=todayKey(); renderAll(); } });
-setInterval(() => { if (lastKey!==todayKey()){ lastKey=todayKey(); renderAll(); } }, 60e3);
+document.addEventListener("visibilitychange", () => { if(!document.hidden && !W_){ lastKey=todayKey(); renderAll(); } });
+setInterval(() => { if (!W_ && lastKey!==todayKey()){ lastKey=todayKey(); renderAll(); } }, 60e3);
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
 </body>

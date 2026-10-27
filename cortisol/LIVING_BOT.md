@@ -30,6 +30,7 @@ A scheduled agent runs this charter once a week. It improves Ebb in small, teste
 8. **If nothing is worth changing**, push nothing and open no PR. Just end the run with a one-paragraph status.
 
 ## Hard rules
+- **Every user-facing string lives in `i18n/*.js`.** Add each new key to `en.js` and every other language file in the same PR, with matching `{placeholders}`. Never hard-code UI text in `index.html`.
 - **Never merge, never push to `main`,** never force-push, never edit `.github/workflows/`.
 - **Supplement content:**
   - Never raise a dose, add a supplement, or upgrade an evidence grade without a cited primary source.

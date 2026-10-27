@@ -126,7 +126,7 @@ The **north-star metric** is weekly active loggers: users who log on 3 or more d
 
 **Budget:** about $500–1,000 a month in months 1–3, mostly the medical advisor. About $1.5–2.8k a month in months 4–6.
 
-## 9. Next 3 decisions for the founder
-1. **Launch market first:** US/English or Korea? This decides content language, payment provider, and legal path.
-2. **Do the 84-day on-camera challenge yourself?** It's the strongest free growth engine.
-3. **Approve gated backlog items** (analytics, license-key unlock) in `../BACKLOG.md` by adding `[approved]`.
+## 9. Founder decisions (27 Oct 2026)
+1. **Launch order:** US first (English, lb/in, Stripe), then Korea (Toss/Kakao, Korean UI already built), then Spanish-speaking markets (the app is ready for `i18n/es.js`).
+2. **84-day on-camera challenge:** yes, the founder films it. See [05-84-day-film-playbook.md](05-84-day-film-playbook.md).
+3. **Still open:** approve the gated backlog items (analytics, license-key unlock) in `../BACKLOG.md` by adding `[approved]`.
