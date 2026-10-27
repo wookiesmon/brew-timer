@@ -5,10 +5,10 @@ The Living Bot takes items from the top of **Next** (see `LIVING_BOT.md`). The o
 ## Next
 1. **Spanish (es).** Add `i18n/es.js` with the same keys as `en.js` (Latin-American Spanish, wellness-only wording, Latin-friendly food examples), then add "es" to `LANGS` in `index.html` and to the service worker's `SHELL`.
 2. **K-PSS-10 wording check.** Replace the Korean PSS-10 items with the validated K-PSS-10 text, and confirm PSS-10 licensing (Mapi Trust) before the paid launch.
-2b. **"I'm stressed right now" button** on Today. It opens Breathe with the 1-minute Quick reset already selected.
-3. **Weekly recap card** on Progress, comparing this week with last week: average stress, sleep, habit %, and waist change.
-4. **Phase-completion recap** on days 28, 56 and 84: before/after numbers plus the prompt "What helped most?", saved to a note.
-5. **Edit and skip habits.** Hide habits that don't apply and add custom ones, stored as overrides in settings with a data migration.
+3. **"I'm stressed right now" button** on Today. It opens Breathe with the 1-minute Quick reset already selected.
+4. **Weekly recap card** on Progress, comparing this week with last week: average stress, sleep, habit %, and waist change.
+5. **Phase-completion recap** on days 28, 56 and 84: before/after numbers plus the prompt "What helped most?", saved to a note.
+6. **Edit and skip habits.** Hide habits that don't apply and add custom ones, stored as overrides in settings with a data migration.
 7. **CSV export** of daily check-ins and weekly measurements.
 8. **Pre/post breathing tension rating** (1–10), so each session shows its drop ("Tension 7 → 4").
 9. **Gentle milestones:** 10 breathing sessions, 30 check-ins, first 1 cm off the waist. Celebrate quietly; never show a lost streak.
