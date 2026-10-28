@@ -280,6 +280,36 @@
   toast_tier2_off: "2단계를 숨겼어요.",
   toast_day1: "1일차예요. 작은 걸음을 매일.", toast_profile: "저장했어요. 플랜 시간을 다시 맞췄어요.",
 
+  /* my supplements */
+  stack_title: "내 영양제",
+  stack_lead: "지금 먹고 있는 것을 추가하세요. Ebb가 하루 일정에 넣고, 안전 확인 답변·하루 상한 섭취량·프로그램과 겹치는지 확인해요.",
+  stack_add: "영양제 추가", stack_empty: "아직 추가한 게 없어요.", stack_search: "영양제 검색", stack_all: "전체",
+  stack_custom: "직접 추가", stack_custom_name: "이름", stack_need_name: "먼저 이름을 입력하세요.",
+  stack_dose: "하루 섭취량", stack_unit: "단위", stack_when: "먹는 시간",
+  stack_save: "저장", stack_remove: "삭제", stack_cancel: "닫기", stack_saved: "하루 일정에 저장했어요.",
+  stack_mine: "내 것", stack_skip_tag: "비추천",
+  stack_typical: "제품에 흔한 함량: {d} {u}. 내 제품 라벨의 숫자를 입력하세요.",
+  stack_ul_note: "성인 하루 상한 섭취량: {ul} {u}.",
+  stack_w_ul: "성인 하루 상한 섭취량({ul} {u})을 넘어요. 의사와 상의하세요.",
+  stack_w_flag: "안전 확인 답변과 충돌해요: {flags}. 의사나 약사와 상의하세요.",
+  stack_w_skip: "Ebb 리서치에서는 효과가 부족하거나 안전하지 않다고 봐요. 계속 먹을지 의사와 상의해 보세요.",
+  stack_w_lab: "일부 혈액검사 결과를 왜곡할 수 있어요. 검사 기관에 알리고, 채혈 전에 쉬어야 하는지 물어보세요.",
+  stack_w_pair: "{other}와(과) 함께: {msg}",
+  stack_w_dup: "이미 드시고 있어서 Ebb의 같은 항목은 숨겼어요: {name}.",
+  stack_disclaimer: "흔한 문제만 확인해요. 드시는 모든 것에 대한 약사의 검토를 대신하지 않아요.",
+
+  /* health sync */
+  sync_title: "건강 데이터 동기화", sync_never: "아직 동기화 안 됨", sync_last: "마지막 동기화: {t}",
+  sync_lead_apple: "Apple Watch 데이터는 iPhone의 건강 앱에 저장돼요. 단축어를 한 번만 만들어 두면 어젯밤 수면, 걸음 수, HRV, 안정 시 심박수, 체중을 복사하고, Ebb가 한 번의 탭으로 읽어요. 서버로는 아무것도 보내지 않아요.",
+  sync_lead_other: "{device}는 아직 웹 앱과 데이터를 공유할 수 없어요.",
+  sync_paste: "단축어에서 붙여넣기", sync_paste_short: "동기화",
+  sync_manual: "또는 복사한 텍스트를 여기에 붙여넣기", sync_apply: "가져오기",
+  sync_setup: "단축어 만들기 (한 번만, 약 10분)", sync_auto: "매일 아침 자동으로 실행하기",
+  sync_ok: "동기화 완료: {items}", sync_none: "가져올 데이터가 없어요. 먼저 단축어를 실행한 뒤 동기화를 누르세요.",
+  sync_bad: "Ebb 동기화 데이터가 아닌 것 같아요.",
+  sync_clip_denied: "클립보드를 읽지 못했어요. 대신 아래 칸에 텍스트를 붙여넣으세요.",
+  m_steps: "{n}보", m_sleep: "수면 {n}시간", m_hrv: "HRV {n} ms", m_rhr: "안정 심박 {n} bpm",
+
   /* units */
   u_cm: "cm", u_in: "in", u_kg: "kg", u_lb: "lb", u_ft: "ft", u_h: "시간"
 };

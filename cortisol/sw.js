@@ -3,7 +3,7 @@
 // BUILD_STAMP_DEV is replaced per deploy so each deploy updates the worker.
 const VERSION = "BUILD_STAMP_DEV";
 const CACHE = "ebb-" + VERSION;
-const SHELL = ["./", "./i18n/en.js", "./i18n/ko.js", "./manifest.json", "./icon.svg", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
+const SHELL = ["./", "./i18n/en.js", "./i18n/ko.js", "./i18n/catalog.en.js", "./i18n/catalog.ko.js", "./i18n/sync.en.js", "./i18n/sync.ko.js", "./data/catalog.js", "./manifest.json", "./icon.svg", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));

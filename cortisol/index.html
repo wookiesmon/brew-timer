@@ -162,6 +162,13 @@ table.t th{font-size:12px;color:var(--muted);font-weight:600}
 .pss-q .picks{grid-template-columns:repeat(5,1fr)}
 .flag{display:flex;align-items:center;gap:10px;min-height:44px;padding:4px 0}
 .flag input{width:22px;height:22px;flex:none;accent-color:var(--primary)}
+.item{display:flex;align-items:flex-start;gap:10px;width:100%;text-align:left;padding:12px;border-radius:14px;border:1px solid var(--border);background:var(--surface);margin:6px 0;min-height:56px}
+.item .t{flex:1;min-width:0}.item .s{font-size:13px;color:var(--muted)}
+.warnline{font-size:13px;color:var(--warning);margin-top:4px}.infoline{font-size:13px;color:var(--info);margin-top:4px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin:10px 0}
+.chips button{flex:none;border:0;border-radius:999px;padding:8px 14px;min-height:40px;background:var(--surface-2);color:var(--muted);font-weight:500}
+.chips button[aria-pressed="true"]{background:var(--primary-soft);color:var(--primary-strong)}
+.tag.mine{background:var(--info-soft);color:var(--info)}.tag.skip{background:var(--warning-soft);color:var(--warning)}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -189,6 +196,14 @@ table.t th{font-size:12px;color:var(--muted);font-weight:600}
     <p class="small muted" data-i18n-html="pss_lead_html"></p>
     <div id="pssList"></div>
     <button class="btn block" id="pssSave" style="margin-top:16px" data-i18n="pss_save"></button>
+  </div>
+</div>
+
+<!-- Supplement picker / editor -->
+<div class="overlay" id="stackPick" role="dialog" aria-modal="true" aria-labelledby="spTitle">
+  <div class="wrap" style="padding-top:calc(16px + env(safe-area-inset-top))">
+    <div class="spread"><h2 id="spTitle"></h2><button class="btn line" id="spClose" data-i18n="stack_cancel"></button></div>
+    <div id="spBody"></div>
   </div>
 </div>
 
@@ -228,6 +243,7 @@ table.t th{font-size:12px;color:var(--muted);font-weight:600}
     <div class="spread"><div><b data-i18n="checkin_q"></b><div class="small muted" id="checkinSummary"></div></div><button class="btn ghost" data-go="checkin" data-mode="daily" data-i18n="check_in"></button></div>
   </div>
 
+  <div id="syncQuick"></div>
   <div id="slots"></div>
   <p class="small muted" style="margin-top:16px" data-i18n="skip_note"></p>
 </section>
@@ -254,6 +270,7 @@ table.t th{font-size:12px;color:var(--muted);font-weight:600}
     <button class="btn block" id="ciSave" style="margin-top:16px" data-i18n="save_checkin"></button>
   </div>
   <div id="weeklyForm" class="card" style="display:none">
+    <div id="syncBox"></div>
     <p class="small muted" style="margin-top:0" data-i18n="measure_how"></p>
     <div class="grid2">
       <div><label class="f" for="wWaist" id="lWaist"></label><input type="number" id="wWaist" step="0.1" inputmode="decimal"></div>
@@ -297,6 +314,7 @@ table.t th{font-size:12px;color:var(--muted);font-weight:600}
 <section class="view" id="v-plan" aria-labelledby="tPlan">
   <header class="top"><div class="eyebrow" data-i18n="plan_eyebrow"></div><h1 id="tPlan" data-i18n="plan_title"></h1></header>
   <div id="phaseCard" class="card soft"></div>
+  <div id="stackCard" class="card"></div>
   <div class="card"><h3 data-i18n="week_by_week"></h3><div id="weeks"></div></div>
   <div class="card" id="planDocs"></div>
   <div class="card">
@@ -328,6 +346,11 @@ table.t th{font-size:12px;color:var(--muted);font-weight:600}
 
 <script src="i18n/en.js"></script>
 <script src="i18n/ko.js"></script>
+<script src="i18n/catalog.en.js"></script>
+<script src="i18n/catalog.ko.js"></script>
+<script src="i18n/sync.en.js"></script>
+<script src="i18n/sync.ko.js"></script>
+<script src="data/catalog.js"></script>
 <script>
 "use strict";
 /* ---------- i18n ---------- */
@@ -356,8 +379,8 @@ const LUNCH = ["out","home","packed","skip"];
 const TRAIN = ["morning","lunch","evening"];
 function blankSettings(){ return {start:null, lang:"", units:"", age:null, sex:"", height:null, wake:"07:00", bed:"23:00",
   workStart:"09:00", workEnd:"17:00", noWork:false, lunch:"home", dinner:"19:00", act:{type:"none",days:[],time:"18:30"},
-  trainTime:"evening", wearable:"none", theme:"", tier2:false, flags:{}}; }
-function blank(){ return {settings:blankSettings(), days:{}, weekly:{}, pss:{}, breath:[]}; }
+  trainTime:"evening", wearable:"none", theme:"", tier2:false, flags:{}, lastSync:null}; }
+function blank(){ return {settings:blankSettings(), days:{}, weekly:{}, pss:{}, breath:[], stack:[]}; }
 const KEY_RE = /^\d{4}-\d{2}-\d{2}$/, TIME_RE = /^\d{2}:\d{2}$/;
 const numOrNull = v => (typeof v==="number" && isFinite(v)) ? v : null;
 const obj = v => v && typeof v==="object" && !Array.isArray(v) ? v : {};
@@ -382,7 +405,8 @@ function normalize(d){
   for (const [k,v] of Object.entries(obj(o.days))) if (KEY_RE.test(k)) {
     const c = obj(v).checkin, done = {};
     for (const [h,x] of Object.entries(obj(obj(v).done))) if (x===true) done[h] = true;
-    days[k] = {done, checkin: c && typeof c==="object" ? {stress:numOrNull(c.stress)??5, energy:numOrNull(c.energy), mood:numOrNull(c.mood), sleep:numOrNull(c.sleep), steps:numOrNull(c.steps), tags:Array.isArray(c.tags)?c.tags.filter(x=>TAG_LIST.includes(x)):[], note:String(c.note||"")} : null};
+    const hl = cleanHealth(obj(v).health);
+    days[k] = {done, health: hl, checkin: c && typeof c==="object" ? {stress:numOrNull(c.stress)??5, energy:numOrNull(c.energy), mood:numOrNull(c.mood), sleep:numOrNull(c.sleep), steps:numOrNull(c.steps), tags:Array.isArray(c.tags)?c.tags.filter(x=>TAG_LIST.includes(x)):[], note:String(c.note||"")} : null};
   }
   o.days = days;
   const weekly = {};
@@ -390,7 +414,19 @@ function normalize(d){
   o.weekly = weekly;
   const pss = {}; for (const [k,v] of Object.entries(obj(o.pss))) if (KEY_RE.test(k) && numOrNull(v)!=null) pss[k] = v; o.pss = pss;
   o.breath = Array.isArray(o.breath) ? o.breath.filter(x => x && numOrNull(x.t)!=null && numOrNull(x.s)!=null) : [];
+  s.lastSync = numOrNull(s.lastSync);
+  const seen = new Set();
+  o.stack = (Array.isArray(o.stack) ? o.stack : []).map(obj).filter(x => typeof x.id==="string" && /^[a-z0-9_]{1,40}$/.test(x.id) && !seen.has(x.id) && seen.add(x.id))
+    .map(x => ({id:x.id, name: x.id.startsWith("custom_") ? String(x.name||"").slice(0,60) : "", dose:numOrNull(x.dose), unit:oneOf(x.unit, UNITS, "mg"), slot:oneOf(x.slot, ["morning","midday","evening","night"], "morning")}));
   return o;
+}
+const UNITS = ["mg","µg","IU","g","bn CFU","ml","cap"];
+// Health values from a sync, range-checked; anything odd is dropped rather than stored.
+const RANGES = {steps:[1,100000], sleep:[0.5,16], hrv:[5,300], rhr:[25,200]};
+function cleanHealth(h){
+  h = obj(h); const out = {};
+  for (const [f,[lo,hi]] of Object.entries(RANGES)){ const v = numOrNull(h[f]); if (v!=null && v>=lo && v<=hi) out[f] = Math.round(v*10)/10; }
+  return Object.keys(out).length ? out : null;
 }
 const FLAG_IDS = ["preg","thyroid","ssri","thinner","diabetes","liver","kidney","autoimmune","sedative","heart"];
 function load(){ try{ S = normalize(JSON.parse(localStorage.getItem(KEY))); }catch(e){ S = blank(); } }
@@ -489,10 +525,16 @@ function suppSafe(s){
   if (f.preg && !["s_d3","s_psy1","s_psy2"].includes(s.id)) return false; // pregnancy: minimal, OB-approved only
   return true;
 }
+const CATALOG = Array.isArray(window.EBB_CATALOG) ? window.EBB_CATALOG : [];
+const catItem = id => CATALOG.find(c => c.id===id);
+// Program items the user already covers with their own supplements.
+function replacedByStack(){ const r = new Set(); for (const x of S.stack){ const c = catItem(x.id); if (c) (c.replaces||[]).forEach(id => r.add(id)); } return r; }
 function supps(k){
-  const w = weekOf(k), dn = dayNum(k);
-  return SUPPS.filter(s => suppSafe(s) && (s.tier!==2 || (S.settings.tier2 && w>=5 && dn<=84)));
+  const w = weekOf(k), dn = dayNum(k), rep = replacedByStack();
+  return SUPPS.filter(s => suppSafe(s) && !rep.has(s.id) && (s.tier!==2 || (S.settings.tier2 && w>=5 && dn<=84)));
 }
+const stackName = x => x.id.startsWith("custom_") ? x.name : t("sc_"+x.id);
+const doseText = x => x.dose!=null ? fmtNum(x.dose)+" "+x.unit : "";
 
 /* ---------- habits ---------- */
 function latestWeight(){ const ks=Object.keys(S.weekly).sort().reverse(); for (const k of ks) if (S.weekly[k].weight!=null) return S.weekly[k].weight; return null; }
@@ -529,7 +571,8 @@ function habits(k){
     {id:"journal",slot:"night",label:t("h_journal"),sub:t("h_journal_s")},
     {id:"bed",slot:"night",label:t("h_bed",{t:T(c.bed)}),sub:t("h_bed_s")}
   );
-  return H.concat(supps(k).map(x => { const [label,sub]=suppText(x); return {id:x.id,slot:x.slot,tier:x.tier,supp:true,label,sub}; }));
+  return H.concat(supps(k).map(x => { const [label,sub]=suppText(x); return {id:x.id,slot:x.slot,tier:x.tier,supp:true,label,sub}; }),
+    S.stack.map(x => ({id:"my_"+x.id, slot:x.slot, mine:true, label:stackName(x), sub:doseText(x)})));
 }
 const SLOTS = ["morning","midday","evening","night"];
 function slotBounds(){ const c=sched(); const mEnd=Math.max(c.wake+180, 11*60), night=Math.max(17*60, c.bed-120); return {mEnd, dEnd:Math.min(16*60, night), night}; }
@@ -578,7 +621,8 @@ function renderToday(){
   const c = d.checkin;
   $("#scoreLine").textContent = c && c.stress>=8 ? t("score_rough") : !c ? t("score_nocheck")
     : sc.score>=70 ? t("score_solid") : sc.score>=40 ? t("score_steady") : t("score_fresh");
-  $("#checkinSummary").textContent = c ? t("checkin_sum",{s:c.stress,e:c.energy||"–",h:c.sleep??"–"}) : t("checkin_sub");
+  $("#checkinSummary").textContent = c ? t("checkin_sum",{s:c.stress,e:c.energy||"–",h:c.sleep ?? (d.health&&d.health.sleep) ?? "–"}) : t("checkin_sub");
+  $("#syncQuick").innerHTML = S.settings.wearable==="apple" ? `<div class="card info"><div class="spread"><div><b>${t("sync_title")}</b><div class="small">${S.settings.lastSync ? esc(t("sync_last",{t:new Date(S.settings.lastSync).toLocaleString(locale(),{weekday:"short",hour:"numeric",minute:"2-digit"})})) : esc(t("sync_never"))}</div></div><button class="btn ghost" data-sync="paste">${t("sync_paste_short")}</button></div></div>` : "";
   const startDow = S.settings.start ? parseKey(S.settings.start).getDay() : 0;
   $("#measureCard").style.display = (parseKey(k).getDay()===startDow && !S.weekly[k]) ? "" : "none";
   const cp = {1:"cp1",28:"cp28",56:"cp56",84:"cp84"}[dn];
@@ -589,7 +633,7 @@ function renderToday(){
     const list = hs.filter(h=>h.slot===id), n = list.filter(h=>d.done[h.id]).length;
     if (!list.length) return "";
     return `<div class="slot"><div class="slot-h"><span class="eyebrow">${t("slot_head",{name:t("slot_"+id),n,total:list.length})}</span>${id===cur?`<span class="chip sand">${t("now")}</span>`:""}</div>`+
-      list.map(h=>`<button class="habit${d.done[h.id]?" done":""}" data-h="${h.id}" aria-pressed="${!!d.done[h.id]}"><span class="box"></span><span class="t"><span class="l">${esc(h.label)}${h.supp?`<span class="tag">${t("tier_tag",{n:h.tier})}</span>`:""}</span>${h.sub?`<div class="s">${esc(h.sub)}</div>`:""}</span></button>`).join("")+`</div>`;
+      list.map(h=>`<button class="habit${d.done[h.id]?" done":""}" data-h="${h.id}" aria-pressed="${!!d.done[h.id]}"><span class="box"></span><span class="t"><span class="l">${esc(h.label)}${h.supp?`<span class="tag">${t("tier_tag",{n:h.tier})}</span>`:""}${h.mine?`<span class="tag mine">${t("stack_mine")}</span>`:""}</span>${h.sub?`<div class="s">${esc(h.sub)}</div>`:""}</span></button>`).join("")+`</div>`;
   }).join("");
   const ci_ = SLOTS.indexOf(cur);
   const next = hs.filter(h=>!d.done[h.id]).sort((a,b)=>((SLOTS.indexOf(a.slot)-ci_+4)%4)-((SLOTS.indexOf(b.slot)-ci_+4)%4))[0];
@@ -617,6 +661,10 @@ function renderCheckin(){
   const wear = S.settings.wearable;
   $("#hrvBox").style.display = wear==="none" ? "none" : "";
   $("#wearHint").textContent = wear==="none" ? t("rhr_hint_none") : t("hrv_hint_device",{device:t("wear_"+wear)});
+  const hl = day(todayKey()).health || {};
+  if (!c.sleep && hl.sleep) $("#ciSleep").value = hl.sleep;
+  if (!c.steps && hl.steps) $("#ciSteps").value = hl.steps;
+  $("#syncBox").innerHTML = syncBoxHTML();
   const wk = S.weekly[todayKey()] || {};
   $("#wWaist").value=toDisp(wk.waist,L)??""; $("#wWeight").value=toDisp(wk.weight,W)??""; $("#wHrv").value=wk.hrv??""; $("#wRhr").value=wk.rhr??"";
   const rows = Object.keys(S.weekly).sort().reverse().slice(0,8);
@@ -723,9 +771,11 @@ function spark(title, pts, unit, lowerBetter){
   if (pts.length>=2){ const ys=pts.map(p=>p[1]); let lo=Math.min(...ys),hi=Math.max(...ys); if(lo===hi){lo--;hi++;} path=ys.map((v,i)=>(i?"L":"M")+(4+(W-8)*i/(ys.length-1)).toFixed(1)+" "+(4+(H-8)*(1-(v-lo)/(hi-lo))).toFixed(1)).join(""); }
   return `<div class="card" style="margin:0"><div class="small muted">${title}</div><div class="bigval">${pts.length?last(pts)[1]:"–"}<span class="small muted"> ${pts.length?unit:""}</span></div><svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><path d="${path}" fill="none" stroke="var(--primary)" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>${delta?`<span class="chip ${chip}">${delta}</span>`:`<span class="small muted">${t("not_enough")}</span>`}</div>`;
 }
+// HRV/RHR come from weekly entries and daily syncs; a weekly entry wins on the same date.
+function healthSeries(f){ const m = {}; for (const [k,d] of Object.entries(S.days)) if (d.health && d.health[f]!=null) m[k]=d.health[f]; for (const [k,w] of Object.entries(S.weekly)) if (w[f]!=null) m[k]=w[f]; return Object.keys(m).sort().map(k=>[k,m[k]]); }
 function renderProgress(){
   const L=LEN(), W=WT();
-  const waist = series(m=>toDisp(m.waist,L), S.weekly), weight = series(m=>toDisp(m.weight,W), S.weekly), hrv = series(m=>m.hrv, S.weekly), rhr = series(m=>m.rhr, S.weekly);
+  const waist = series(m=>toDisp(m.waist,L), S.weekly), weight = series(m=>toDisp(m.weight,W), S.weekly), hrv = healthSeries("hrv"), rhr = healthSeries("rhr");
   const stress = series(d=>d.checkin&&d.checkin.stress, S.days), sleep = series(d=>d.checkin&&d.checkin.sleep, S.days);
   $("#sparkGrid").innerHTML = spark(t("sp_waist"),waist,L.u,true)+spark(t("sp_weight"),weight,W.u,true)+spark(t("sp_hrv"),hrv,"ms",false)+spark(t("sp_rhr"),rhr,"bpm",true);
   $("#chWaistTitle").textContent = t("ch_waist",{u:L.u});
@@ -780,6 +830,7 @@ function renderPlan(){
   <details><summary>${t("doc_gurus_title")}</summary>${t("doc_gurus_html")}</details>
   <details><summary>${t("doc_tests_title")}</summary><p class="small">${tests}</p></details>
   <details><summary>${t("doc_doctor_title")}</summary>${t("doc_doctor_html")}</details>`;
+  renderStackCard();
   $("#setLang").innerHTML = LANGS.map(l=>`<option value="${l}" ${l===lang()?"selected":""}>${(I18N[l]||{}).lang_name||l}</option>`).join("");
   $("#setTheme").value = s.theme; $("#setStart").value=s.start||""; $("#setTier2").checked=s.tier2;
   $("#setFlags").innerHTML = `<div class="small muted" style="margin-top:12px">${t("safety_screen")}</div>`+flagsHTML(s.flags, s.sex);
@@ -798,6 +849,133 @@ $("#exp").onclick = () => { const b=new Blob([JSON.stringify(S,null,1)],{type:"a
 $("#impBtn").onclick = () => $("#imp").click();
 $("#imp").onchange = e => { const f=e.target.files[0]; if(!f) return; e.target.value=""; f.text().then(x=>{ try{ const d=JSON.parse(x); if(!d||typeof d.settings!=="object"||!d.settings) throw 0; const n=normalize(d); if(!n.settings.start) throw 0; S=n; save(); applyTheme(); applyI18n(); renderAll(); toast(t("toast_imported")); }catch(_){ toast(t("toast_bad_import")); } }); };
 $("#reset").onclick = () => { if(confirm(t("erase_confirm"))){ S=blank(); save(); location.reload(); } };
+
+/* ---------- my supplements ---------- */
+// Warnings for one stack entry: upper limit, safety flags, skip list, lab interference, pairs, program overlap.
+function stackChecks(x){
+  const c = catItem(x.id), out = [];
+  if (!c) return out;
+  if (c.ul!=null && x.dose!=null && x.unit===c.unit && x.dose > c.ul) out.push(["warn", t("stack_w_ul",{ul:fmtNum(c.ul),u:c.unit})]);
+  const hit = (c.avoid||[]).filter(f => S.settings.flags[f]);
+  if (hit.length) out.push(["warn", t("stack_w_flag",{flags:hit.map(f=>t("fl_"+f)).join("; ")})]);
+  if (c.skip) out.push(["warn", t("stack_w_skip")]);
+  if (c.lab) out.push(["warn", t("stack_w_lab")]);
+  const mine = new Set(S.stack.map(y=>y.id)), prog = new Set(supps(todayKey()).map(y=>y.id));
+  const pairs = (c.warn||[]).filter(w => w.with!==x.id && (mine.has(w.with) || prog.has(w.with)));
+  for (const y of S.stack){ const cy = catItem(y.id); if (y.id!==x.id && cy) (cy.warn||[]).filter(w=>w.with===x.id).forEach(w => pairs.push({with:y.id, key:w.key})); }
+  const seen = new Set();
+  for (const w of pairs){ if (seen.has(w.with)) continue; seen.add(w.with);
+    const other = SUPPS.some(p=>p.id===w.with) ? t(w.with) : t("sc_"+w.with);
+    out.push(["warn", t("stack_w_pair",{other, msg:t(w.key)})]); }
+  const rep = (c.replaces||[]).filter(id => SUPPS.some(p=>p.id===id));
+  if (rep.length) out.push(["info", t("stack_w_dup",{name:rep.map(id=>t(id)).join(", ")})]);
+  return out;
+}
+function renderStackCard(){
+  const rows = S.stack.map((x,i) => {
+    const ch = stackChecks(x);
+    return `<button class="item" data-edit="${i}"><span class="t"><b>${esc(stackName(x))}</b>${catItem(x.id)&&catItem(x.id).skip?`<span class="tag skip">${t("stack_skip_tag")}</span>`:""}<div class="s">${esc([doseText(x), t("slot_"+x.slot)].filter(Boolean).join(" · "))}</div>${ch.map(([k,m])=>`<div class="${k==="warn"?"warnline":"infoline"}">${k==="warn"?"⚠ ":"ℹ "}${esc(m)}</div>`).join("")}</span></button>`;
+  }).join("");
+  $("#stackCard").innerHTML = `<h3>${t("stack_title")}</h3><p class="small muted" style="margin:4px 0 8px">${t("stack_lead")}</p>${rows || `<p class="small muted">${t("stack_empty")}</p>`}
+    <button class="btn ghost block" id="stackAdd" style="margin-top:8px">${t("stack_add")}</button>
+    ${S.stack.length?`<p class="small muted" style="margin-bottom:0">${t("stack_disclaimer")}</p>`:""}`;
+}
+let SP = null; // picker state: {cat, q} while browsing, or {edit:index|null, x:{...}} while editing
+function openPicker(){ SP = {cat:"all", q:""}; $("#stackPick").classList.add("on"); drawPicker(); }
+function closePicker(){ SP = null; $("#stackPick").classList.remove("on"); renderPlan(); }
+function drawPicker(){
+  if (SP.x) return drawEditor();
+  $("#spTitle").textContent = t("stack_add");
+  const cats = ["all"].concat([...new Set(CATALOG.map(c=>c.cat))]);
+  const q = SP.q.trim().toLowerCase(), have = new Set(S.stack.map(x=>x.id));
+  const list = CATALOG.filter(c => (SP.cat==="all" || c.cat===SP.cat) && (!q || (t("sc_"+c.id)+" "+((I18N.en||{})["sc_"+c.id]||"")).toLowerCase().includes(q)));
+  $("#spBody").innerHTML = `<input type="text" id="spSearch" value="${esc(SP.q)}" placeholder="${esc(t("stack_search"))}" aria-label="${esc(t("stack_search"))}" style="margin-top:12px">
+    <div class="chips" role="group">${cats.map(c=>`<button type="button" data-cat="${c}" aria-pressed="${SP.cat===c}">${esc(c==="all"?t("stack_all"):t("cat_"+c))}</button>`).join("")}</div>
+    <button class="item" data-custom="1"><span class="t"><b>＋ ${t("stack_custom")}</b></span></button>
+    ${list.map(c=>`<button class="item" data-pick="${c.id}" ${have.has(c.id)?"disabled style=\"opacity:.5\"":""}><span class="t"><b>${esc(t("sc_"+c.id))}</b> <span class="grade g${c.grade[0]}">${c.grade}</span>${c.skip?`<span class="tag skip">${t("stack_skip_tag")}</span>`:""}<div class="s">${esc(t("sc_"+c.id+"_n"))}</div></span></button>`).join("")}`;
+}
+function drawEditor(){
+  const x = SP.x, c = catItem(x.id), custom = x.id.startsWith("custom_");
+  $("#spTitle").textContent = custom ? t("stack_custom") : t("sc_"+x.id);
+  $("#spBody").innerHTML = `${c?`<p class="small muted">${esc(t("sc_"+c.id+"_n"))}</p>`:""}
+    ${custom?`<label class="f" for="spName">${t("stack_custom_name")}</label><input type="text" id="spName" maxlength="60" value="${esc(x.name)}">`:""}
+    <div class="grid2"><div><label class="f" for="spDose">${t("stack_dose")}</label><input type="number" id="spDose" inputmode="decimal" min="0" step="any" value="${x.dose??""}"></div>
+    <div><label class="f" for="spUnit">${t("stack_unit")}</label><select id="spUnit" ${c?"disabled":""}>${UNITS.map(u=>`<option ${u===x.unit?"selected":""}>${u}</option>`).join("")}</select></div></div>
+    ${c?`<p class="small muted">${esc(t("stack_typical",{d:fmtNum(c.dose),u:c.unit}))}${c.ul!=null?" "+esc(t("stack_ul_note",{ul:fmtNum(c.ul),u:c.unit})):""}</p>`:""}
+    <label class="f">${t("stack_when")}</label><div class="picks" style="grid-template-columns:repeat(4,1fr)">${SLOTS.map(sl=>`<button type="button" data-slot="${sl}" aria-pressed="${x.slot===sl}">${t("slot_"+sl)}</button>`).join("")}</div>
+    <button class="btn block" id="spSave" style="margin-top:18px">${t("stack_save")}</button>
+    ${SP.edit!=null?`<button class="btn danger block" id="spRemove" style="margin-top:10px">${t("stack_remove")}</button>`:""}`;
+}
+function readEditor(){ const x = SP.x; const n=$("#spName"); if (n) x.name = n.value.trim(); x.dose = num($("#spDose").value); x.unit = $("#spUnit").value; }
+$("#spBody").addEventListener("input", e => { if (e.target.id==="spSearch"){ SP.q = e.target.value; const pos = e.target.selectionStart; drawPicker(); const el=$("#spSearch"); el.focus(); el.setSelectionRange(pos,pos); } });
+$("#spBody").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b || !SP) return;
+  if (b.dataset.cat){ SP.cat = b.dataset.cat; drawPicker(); return; }
+  if (b.dataset.pick){ const c = catItem(b.dataset.pick); SP = {edit:null, x:{id:c.id, name:"", dose:c.dose, unit:c.unit, slot:c.slot}}; drawPicker(); return; }
+  if (b.dataset.custom){ let n=1; while (S.stack.some(x=>x.id==="custom_"+n)) n++; SP = {edit:null, x:{id:"custom_"+n, name:"", dose:null, unit:"mg", slot:"morning"}}; drawPicker(); return; }
+  if (b.dataset.slot){ readEditor(); SP.x.slot = b.dataset.slot; drawEditor(); $(`[data-slot="${b.dataset.slot}"]`).focus(); return; }
+  if (b.id==="spSave"){ readEditor(); if (SP.x.id.startsWith("custom_") && !SP.x.name) return toast(t("stack_need_name"));
+    if (SP.edit!=null) S.stack[SP.edit] = SP.x; else S.stack.push(SP.x); S = normalize(S); save(); toast(t("stack_saved")); closePicker(); return; }
+  if (b.id==="spRemove"){ const x = S.stack[SP.edit]; S.stack.splice(SP.edit,1); for (const d of Object.values(S.days)) delete d.done["my_"+x.id]; save(); closePicker(); return; }
+});
+$("#spClose").onclick = () => SP && SP.x && SP.edit==null ? (SP = {cat:"all", q:""}, drawPicker()) : closePicker();
+document.addEventListener("keydown", e => { if (e.key==="Escape" && SP) closePicker(); });
+document.addEventListener("click", e => {
+  if (e.target.closest("#stackAdd")) return openPicker();
+  const ed = e.target.closest("[data-edit]"); if (ed && ed.closest("#stackCard")){ const i=+ed.dataset.edit; SP = {edit:i, x:Object.assign({}, S.stack[i])}; $("#stackPick").classList.add("on"); drawPicker(); }
+});
+
+/* ---------- health sync (Apple Health via a Shortcut) ---------- */
+// Accepts {"ebb":1,"date":…,"steps":…} or {"ebb":1,"days":[…]}; returns the number of values stored.
+function applySync(text){
+  let d; try { d = JSON.parse(String(text).trim()); } catch(e){ return -1; }
+  if (!d || typeof d!=="object" || !("ebb" in d)) return -1;
+  const recs = Array.isArray(d.days) ? d.days.slice(0,62) : [d], got = new Set();
+  for (const r0 of recs){
+    const r = obj(r0), k = KEY_RE.test(r.date) ? r.date : todayKey(), x = day(k);
+    const hl = cleanHealth({steps:numOrNull(+r.steps), sleep:numOrNull(+r.sleep), hrv:numOrNull(+r.hrv), rhr:numOrNull(+r.rhr)});
+    if (hl){ x.health = Object.assign(x.health||{}, hl); Object.keys(hl).forEach(f=>got.add(f));
+      if (hl.steps >= (weekOf(k)>=5 ? 10000 : 8000)) x.done.steps = true; }
+    const wt = numOrNull(+r.weight), wa = numOrNull(+r.waist);
+    const kg = wt && (String(r.weightUnit).toLowerCase().startsWith("lb") ? wt*0.45359237 : wt), cm = wa && (String(r.waistUnit).toLowerCase().startsWith("in") ? wa*2.54 : wa);
+    const m = {}; if (kg>=25 && kg<=300) m.weight = kg; if (cm>=40 && cm<=200) m.waist = cm;
+    if (Object.keys(m).length){ S.weekly[k] = Object.assign({waist:null,weight:null,hrv:null,rhr:null}, S.weekly[k], m); Object.keys(m).forEach(f=>got.add(f)); }
+  }
+  if (got.size){ S.settings.lastSync = Date.now(); S = normalize(S); save(); }
+  return got.size;
+}
+function syncResult(n){
+  if (n<0) return toast(t("sync_bad"));
+  if (!n) return toast(t("sync_none"));
+  const h = (S.days[todayKey()]||{}).health || {}, parts = [];
+  if (h.sleep) parts.push(t("m_sleep",{n:fmtNum(h.sleep)})); if (h.steps) parts.push(t("m_steps",{n:fmtNum(h.steps)}));
+  if (h.hrv) parts.push(t("m_hrv",{n:h.hrv})); if (h.rhr) parts.push(t("m_rhr",{n:h.rhr}));
+  toast(t("sync_ok",{items: parts.join(" · ") || n})); renderAll();
+}
+function syncBoxHTML(){
+  const w = S.settings.wearable;
+  if (w==="none") return "";
+  if (w!=="apple") return `<div class="card info" style="margin-top:0"><b>${t("sync_title")}</b><p class="small" style="margin:6px 0 0">${esc(t("sync_lead_other",{device:t("wear_"+w)}))} ${esc(t("sync_android"))}</p></div>`;
+  return `<div class="card info" style="margin-top:0"><b>${t("sync_title")}</b><p class="small" style="margin:6px 0 10px">${t("sync_lead_apple")}</p>
+    <button class="btn block" data-sync="paste">${t("sync_paste")}</button>
+    <details style="margin-top:8px"><summary class="small">${t("sync_manual")}</summary><textarea id="syncText" rows="3" style="margin-top:6px" aria-label="${esc(t("sync_manual"))}"></textarea><button class="btn ghost block" data-sync="text" style="margin-top:8px">${t("sync_apply")}</button></details>
+    <details><summary class="small">${t("sync_setup")}</summary>${t("sync_guide_html")}</details>
+    <details><summary class="small">${t("sync_auto")}</summary>${t("sync_auto_html")}</details>
+    ${S.settings.lastSync?`<p class="small muted" style="margin-bottom:0">${esc(t("sync_last",{t:new Date(S.settings.lastSync).toLocaleString(locale(),{weekday:"short",hour:"numeric",minute:"2-digit"})}))}</p>`:""}</div>`;
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-sync]"); if (!b) return;
+  if (b.dataset.sync==="text") return syncResult(applySync($("#syncText").value));
+  if (!navigator.clipboard || !navigator.clipboard.readText){ toast(t("sync_clip_denied")); show("checkin"); setMode("weekly"); return; }
+  navigator.clipboard.readText().then(x => syncResult(applySync(x))).catch(() => { toast(t("sync_clip_denied")); show("checkin"); setMode("weekly"); const d=$("#syncBox details"); if (d) d.open = true; });
+});
+// A Shortcut can also open Ebb at #sync=<json>; the fragment never reaches any server.
+function syncFromHash(){
+  if (!location.hash.startsWith("#sync=")) return;
+  let txt = ""; try { txt = decodeURIComponent(location.hash.slice(6)); } catch(e){}
+  history.replaceState(null, "", location.pathname + location.search);
+  if (S.settings.start) syncResult(applySync(txt));
+}
 
 /* ---------- nav ---------- */
 function show(tab){
@@ -927,7 +1105,7 @@ $("#obNext").onclick = () => {
 };
 
 applyTheme(); applyI18n(); setMode("daily");
-if (!S.settings.start) wizard(false); else renderToday();
+if (!S.settings.start) wizard(false); else { renderToday(); syncFromHash(); }
 // refresh when returning to the app, or when the app day rolls over while open
 let lastKey = todayKey();
 document.addEventListener("visibilitychange", () => { if(!document.hidden && !W_){ lastKey=todayKey(); renderAll(); } });

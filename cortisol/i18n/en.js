@@ -281,6 +281,36 @@
   toast_tier2_off: "Tier 2 hidden.",
   toast_day1: "Day 1. Small steps, every day.", toast_profile: "Saved. Your plan has been re-timed.",
 
+  /* my supplements */
+  stack_title: "My supplements",
+  stack_lead: "Add what you already take. Ebb puts each one in your day and checks it against your safety answers, daily upper limits and the program.",
+  stack_add: "Add a supplement", stack_empty: "Nothing added yet.", stack_search: "Search supplements", stack_all: "All",
+  stack_custom: "Add your own", stack_custom_name: "Name", stack_need_name: "Give it a name first.",
+  stack_dose: "Amount per day", stack_unit: "Unit", stack_when: "When you take it",
+  stack_save: "Save", stack_remove: "Remove", stack_cancel: "Close", stack_saved: "Saved to your day.",
+  stack_mine: "Mine", stack_skip_tag: "Rated skip",
+  stack_typical: "Common label amount: {d} {u}. Enter what's on your bottle.",
+  stack_ul_note: "Daily upper limit for adults: {ul} {u}.",
+  stack_w_ul: "Above the daily upper limit for adults ({ul} {u}). Check with your doctor.",
+  stack_w_flag: "Clashes with your safety answers: {flags}. Ask your doctor or pharmacist.",
+  stack_w_skip: "Ebb's research rates this as not worth it or unsafe. Consider asking your doctor about stopping it.",
+  stack_w_lab: "Can distort some blood tests. Tell the lab, and ask whether to pause it before blood work.",
+  stack_w_pair: "With {other}: {msg}",
+  stack_w_dup: "You already take this, so Ebb hides its own item: {name}.",
+  stack_disclaimer: "These checks cover common issues only. They don't replace a pharmacist's review of everything you take.",
+
+  /* health sync */
+  sync_title: "Health sync", sync_never: "Not synced yet", sync_last: "Last sync: {t}",
+  sync_lead_apple: "Apple Watch data lives in Apple Health on your iPhone. A one-time Shortcut copies last night's sleep, steps, HRV, resting heart rate and weight, and Ebb reads it with one tap. Nothing goes to a server.",
+  sync_lead_other: "{device} can't share data with web apps yet.",
+  sync_paste: "Paste from Shortcut", sync_paste_short: "Sync",
+  sync_manual: "Or paste the copied text here", sync_apply: "Import",
+  sync_setup: "Set up the Shortcut (one time, about 10 minutes)", sync_auto: "Run it automatically every morning",
+  sync_ok: "Synced: {items}", sync_none: "Nothing to import. Run the Shortcut first, then tap Sync.",
+  sync_bad: "That doesn't look like Ebb sync data.",
+  sync_clip_denied: "Couldn't read the clipboard. Paste the text into the box instead.",
+  m_steps: "{n} steps", m_sleep: "{n} h sleep", m_hrv: "HRV {n} ms", m_rhr: "RHR {n} bpm",
+
   /* units */
   u_cm: "cm", u_in: "in", u_kg: "kg", u_lb: "lb", u_ft: "ft", u_h: "h"
 };
