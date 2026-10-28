@@ -1,0 +1,1125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ebb — Calm Core Program</title>
+<meta name="description" content="A private, offline 12-week stress-reset and waistline habit plan.">
+<meta name="theme-color" content="#3F6B52" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121915" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ebb">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:light;
+  --bg:#F7F4EE;--surface:#FFFDF9;--surface-2:#EFEAE0;--border:#E2DBCD;
+  --text:#1F2A24;--muted:#5C6B62;
+  --primary:#3F6B52;--primary-strong:#2F5640;--primary-soft:#DCE8DF;--on-primary:#FFFFFF;
+  --accent:#8A6A3E;--accent-soft:#F1E6D3;
+  --success:#3A7151;--success-soft:#DDEDE2;
+  --warning:#9A5B13;--warning-soft:#FBEBD0;
+  --danger:#A8452F;--danger-soft:#F6DFD7;
+  --info:#3F6582;--info-soft:#DDE7EF;
+  --shadow:0 1px 2px rgba(31,42,36,.06),0 4px 16px rgba(31,42,36,.05);
+  --serif:"Fraunces",Georgia,"Times New Roman",serif;
+  --sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){color-scheme:dark;
+    --bg:#121915;--surface:#1A231E;--surface-2:#223029;--border:#2E3D35;
+    --text:#ECE7DD;--muted:#A3B0A7;
+    --primary:#8DBA9C;--primary-strong:#A8CFB4;--primary-soft:#23382B;--on-primary:#121915;
+    --accent:#D9BE94;--accent-soft:#2E2A22;
+    --success:#7FC096;--success-soft:#1F3527;
+    --warning:#E3A857;--warning-soft:#3A2E1A;
+    --danger:#E58C74;--danger-soft:#3B241E;
+    --info:#8DB3CF;--info-soft:#1E2C37;--shadow:none;
+  }
+}
+:root[data-theme="dark"]{color-scheme:dark;
+  --bg:#121915;--surface:#1A231E;--surface-2:#223029;--border:#2E3D35;
+  --text:#ECE7DD;--muted:#A3B0A7;
+  --primary:#8DBA9C;--primary-strong:#A8CFB4;--primary-soft:#23382B;--on-primary:#121915;
+  --accent:#D9BE94;--accent-soft:#2E2A22;
+  --success:#7FC096;--success-soft:#1F3527;
+  --warning:#E3A857;--warning-soft:#3A2E1A;
+  --danger:#E58C74;--danger-soft:#3B241E;
+  --info:#8DB3CF;--info-soft:#1E2C37;--shadow:none;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%}
+body{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+.wrap{max-width:520px;margin:0 auto;padding:16px 16px 24px}
+header.top{padding-top:calc(8px + env(safe-area-inset-top))}
+h1,h2,h3{font-family:var(--serif);font-weight:600;margin:0;letter-spacing:-.01em}
+h1{font-size:28px}h2{font-size:21px}h3{font-size:17px}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.muted{color:var(--muted)}.small{font-size:13px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:16px 18px;margin:12px 0;box-shadow:var(--shadow)}
+.card.soft{background:var(--accent-soft);border-color:transparent;box-shadow:none}
+.card.info{background:var(--info-soft);border-color:transparent;box-shadow:none}
+.card.warn{background:var(--warning-soft);border-color:transparent;box-shadow:none}
+.row{display:flex;align-items:center;gap:12px}
+.spread{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.btn{border:0;border-radius:12px;padding:12px 18px;min-height:44px;background:var(--primary);color:var(--on-primary);font-weight:600}
+.btn.ghost{background:var(--primary-soft);color:var(--primary-strong)}
+.btn.line{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn.danger{background:var(--danger-soft);color:var(--danger)}
+.btn.block{width:100%}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:var(--primary-soft);color:var(--primary-strong);font-size:13px;font-weight:500}
+.chip.sand{background:var(--accent-soft);color:var(--accent)}
+.chip.amber{background:var(--warning-soft);color:var(--warning)}
+.chip.blue{background:var(--info-soft);color:var(--info)}
+/* tabs */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--border);display:flex;justify-content:center;padding:6px 6px calc(6px + env(safe-area-inset-bottom));z-index:20}
+nav.tabs .inner{display:flex;width:100%;max-width:520px}
+nav.tabs button{flex:1;background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;font-size:11.5px;color:var(--muted);min-height:52px;border-radius:14px}
+nav.tabs button svg{width:24px;height:24px}
+nav.tabs button[aria-selected="true"]{color:var(--primary-strong);background:var(--primary-soft);font-weight:600}
+section.view{display:none}section.view.on{display:block}
+/* phase bar */
+.segbar{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;margin-top:10px}
+.segbar i{height:6px;border-radius:3px;background:var(--surface-2)}
+.segbar i.done{background:var(--primary-soft)}.segbar i.now{background:var(--primary)}
+/* ring */
+.hero{display:flex;align-items:center;gap:18px}
+.ring{position:relative;width:150px;height:150px;flex:none}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .val{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring .num{font-family:var(--serif);font-size:44px;font-weight:600;line-height:1}
+.ring circle{transition:stroke-dashoffset .4s ease-out}
+.minis{display:flex;flex-direction:column;gap:10px;flex:1}
+.mini{display:flex;align-items:center;gap:10px;font-size:14px}
+.mini svg{width:34px;height:34px;transform:rotate(-90deg);flex:none}
+/* habits */
+.slot{margin-top:18px}
+.slot-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.habit{display:flex;align-items:center;gap:12px;min-height:56px;padding:8px 12px;border-radius:14px;background:var(--surface);border:1px solid var(--border);margin:6px 0;width:100%;text-align:left}
+.habit .box{width:28px;height:28px;border-radius:8px;border:2px solid var(--border);flex:none;display:grid;place-items:center;transition:.2s}
+.habit.done{background:var(--primary-soft);border-color:transparent}
+.habit.done .box{background:var(--primary);border-color:var(--primary)}
+.habit.done .box::after{content:"";width:12px;height:7px;border:2.5px solid var(--on-primary);border-top:0;border-right:0;transform:rotate(-45deg) translate(1px,-2px)}
+.habit .t{flex:1;min-width:0}
+.habit .l{font-weight:500}
+.habit .s{font-size:13px;color:var(--muted)}
+.tag{font-size:11px;padding:2px 7px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-weight:600;margin-left:6px;vertical-align:1px}
+/* forms */
+label.f{display:block;margin:14px 0 6px;font-weight:500}
+input[type=number],input[type=date],input[type=text],select,textarea{width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:var(--surface);min-height:44px}
+input[type=range]{width:100%;height:32px;accent-color:var(--primary)}
+.seg{display:flex;gap:6px;background:var(--surface-2);padding:4px;border-radius:14px}
+.seg button{flex:1;border:0;background:none;border-radius:10px;min-height:44px;font-weight:500;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
+.picks{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.picks button{border:1px solid var(--border);background:var(--surface);border-radius:12px;min-height:48px;font-size:12.5px;padding:4px 2px}
+.picks button[aria-pressed="true"]{background:var(--primary-soft);border-color:var(--primary);color:var(--primary-strong);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bigval{font-family:var(--serif);font-size:30px;font-weight:600}
+/* charts */
+.spark{width:100%;height:56px;display:block}
+.chart{width:100%;height:170px;display:block}
+.heat{display:grid;grid-template-columns:repeat(12,1fr);gap:4px;margin-top:8px}
+.heat i{aspect-ratio:1;border-radius:4px;background:var(--surface-2)}
+/* breathe */
+.pacer{position:relative;height:280px;display:grid;place-items:center}
+.pacer .orb{width:220px;height:220px;border-radius:50%;background:radial-gradient(circle at 40% 35%,var(--primary-soft),var(--primary));transform:scale(.45);opacity:.9}
+.pacer .cue{position:absolute;text-align:center}
+.pacer .cue b{display:block;font-family:var(--serif);font-size:26px;color:var(--text)}
+.presets{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.preset{text-align:left;border:1px solid var(--border);background:var(--surface);border-radius:16px;padding:12px;min-height:84px}
+.preset[aria-pressed="true"]{border-color:var(--primary);background:var(--primary-soft)}
+.preset b{display:block;font-family:var(--serif);font-size:16px}
+/* plan */
+details{border-top:1px solid var(--border);padding:10px 0}
+details:first-of-type{border-top:0}
+summary{cursor:pointer;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center;min-height:44px}
+summary::after{content:"+";color:var(--muted);font-size:20px}
+details[open] summary::after{content:"–"}
+ul.tight{margin:6px 0;padding-left:20px}ul.tight li{margin:4px 0}
+table.t{width:100%;border-collapse:collapse;font-size:14px}
+table.t td,table.t th{padding:7px 4px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
+table.t th{font-size:12px;color:var(--muted);font-weight:600}
+.grade{display:inline-block;min-width:24px;text-align:center;font-weight:700;border-radius:6px;padding:0 5px;font-size:12px}
+.gA{background:var(--success-soft);color:var(--success)}.gB{background:var(--primary-soft);color:var(--primary-strong)}
+.gC{background:var(--accent-soft);color:var(--accent)}.gD{background:var(--danger-soft);color:var(--danger)}
+.week{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.week .node{width:14px;height:14px;border-radius:50%;border:2px solid var(--border);margin-top:4px;flex:none}
+.week.past .node{border-color:var(--primary)}.week.now .node{background:var(--primary);border-color:var(--primary)}
+.week.future{opacity:.7}
+/* sheet & toast */
+.toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:12px;opacity:0;transition:.25s;pointer-events:none;z-index:40;font-size:14px;max-width:90vw}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.overlay{position:fixed;inset:0;background:var(--bg);z-index:50;overflow:auto;display:none}
+.overlay.on{display:block}
+.pss-q{padding:12px 0;border-bottom:1px solid var(--border)}
+.pss-q .picks{grid-template-columns:repeat(5,1fr)}
+.flag{display:flex;align-items:center;gap:10px;min-height:44px;padding:4px 0}
+.flag input{width:22px;height:22px;flex:none;accent-color:var(--primary)}
+.item{display:flex;align-items:flex-start;gap:10px;width:100%;text-align:left;padding:12px;border-radius:14px;border:1px solid var(--border);background:var(--surface);margin:6px 0;min-height:56px}
+.item .t{flex:1;min-width:0}.item .s{font-size:13px;color:var(--muted)}
+.warnline{font-size:13px;color:var(--warning);margin-top:4px}.infoline{font-size:13px;color:var(--info);margin-top:4px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin:10px 0}
+.chips button{flex:none;border:0;border-radius:999px;padding:8px 14px;min-height:40px;background:var(--surface-2);color:var(--muted);font-weight:500}
+.chips button[aria-pressed="true"]{background:var(--primary-soft);color:var(--primary-strong)}
+.tag.mine{background:var(--info-soft);color:var(--info)}.tag.skip{background:var(--warning-soft);color:var(--warning)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<!-- Onboarding / profile wizard -->
+<div class="overlay" id="onboard" role="dialog" aria-modal="true" aria-labelledby="obTitle">
+  <div class="wrap" style="padding-top:calc(20px + env(safe-area-inset-top))">
+    <div class="spread"><span class="eyebrow" id="obStep"></span><span class="small muted">Ebb</span></div>
+    <div class="segbar" id="obBar" aria-hidden="true" style="grid-template-columns:repeat(7,1fr)"></div>
+    <h1 id="obTitle" style="margin:16px 0 6px"></h1>
+    <p class="muted" id="obLead" style="margin-top:0"></p>
+    <div id="obBody"></div>
+    <div class="grid2" style="margin-top:22px">
+      <button class="btn line" id="obBack"></button>
+      <button class="btn" id="obNext"></button>
+    </div>
+  </div>
+</div>
+
+<!-- PSS-10 overlay -->
+<div class="overlay" id="pss" role="dialog" aria-modal="true" aria-labelledby="pssTitle">
+  <div class="wrap" style="padding-top:calc(16px + env(safe-area-inset-top))">
+    <div class="spread"><h2 id="pssTitle" data-i18n="pss_title"></h2><button class="btn line" id="pssClose" data-i18n="close"></button></div>
+    <p class="small muted" data-i18n-html="pss_lead_html"></p>
+    <div id="pssList"></div>
+    <button class="btn block" id="pssSave" style="margin-top:16px" data-i18n="pss_save"></button>
+  </div>
+</div>
+
+<!-- Supplement picker / editor -->
+<div class="overlay" id="stackPick" role="dialog" aria-modal="true" aria-labelledby="spTitle">
+  <div class="wrap" style="padding-top:calc(16px + env(safe-area-inset-top))">
+    <div class="spread"><h2 id="spTitle"></h2><button class="btn line" id="spClose" data-i18n="stack_cancel"></button></div>
+    <div id="spBody"></div>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- TODAY -->
+<section class="view on" id="v-today" aria-labelledby="tToday">
+  <header class="top">
+    <div class="eyebrow" id="phaseEyebrow"></div>
+    <div class="spread"><h1 id="tToday" data-i18n="tab_today"></h1><span class="chip" id="weekChip"></span></div>
+    <div class="muted small" id="dateLine"></div>
+    <div class="segbar" id="segbar" aria-hidden="true"></div>
+  </header>
+
+  <div class="card">
+    <div class="hero">
+      <div class="ring" role="img" id="ringWrap">
+        <svg viewBox="0 0 160 160"><circle cx="80" cy="80" r="66" fill="none" stroke="var(--primary-soft)" stroke-width="14"/><circle id="ringFill" cx="80" cy="80" r="66" fill="none" stroke="var(--primary)" stroke-width="14" stroke-linecap="round" stroke-dasharray="414.7" stroke-dashoffset="414.7"/></svg>
+        <div class="val"><div class="num" id="score">0</div><div class="small muted" data-i18n="calm_score"></div></div>
+      </div>
+      <div class="minis" id="minis"></div>
+    </div>
+    <p class="small muted" id="scoreLine" style="margin:12px 0 0"></p>
+  </div>
+
+  <div class="card soft" id="nextCard">
+    <div class="eyebrow" data-i18n="next_up"></div>
+    <div class="spread" style="margin-top:4px"><div><b id="nextLabel"></b><div class="small muted" id="nextSub"></div></div><button class="btn" id="nextBtn"></button></div>
+  </div>
+
+  <div class="card info" id="measureCard" style="display:none">
+    <div class="spread"><div><b data-i18n="measure_title"></b><div class="small" data-i18n="measure_body"></div></div><button class="btn ghost" data-go="checkin" data-mode="weekly" data-i18n="log"></button></div>
+  </div>
+  <div class="card warn" id="checkpointCard" style="display:none"></div>
+
+  <div class="card" id="checkinCard">
+    <div class="spread"><div><b data-i18n="checkin_q"></b><div class="small muted" id="checkinSummary"></div></div><button class="btn ghost" data-go="checkin" data-mode="daily" data-i18n="check_in"></button></div>
+  </div>
+
+  <div id="syncQuick"></div>
+  <div id="slots"></div>
+  <p class="small muted" style="margin-top:16px" data-i18n="skip_note"></p>
+</section>
+
+<!-- CHECK-IN -->
+<section class="view" id="v-checkin" aria-labelledby="tCheck">
+  <header class="top"><div class="eyebrow" data-i18n="ci_eyebrow"></div><h1 id="tCheck" data-i18n="ci_title"></h1></header>
+  <div class="seg" role="group" style="margin-top:12px">
+    <button id="segDaily" aria-pressed="true" data-i18n="daily"></button><button id="segWeekly" aria-pressed="false" data-i18n="weekly"></button>
+  </div>
+  <div id="dailyForm" class="card">
+    <label class="f" for="ciStress"><span data-i18n="stress"></span> <span class="muted" id="ciStressVal">5</span></label>
+    <input type="range" id="ciStress" min="1" max="10" value="5" aria-describedby="stressEnds">
+    <div class="spread small muted" id="stressEnds"><span data-i18n="at_ease"></span><span data-i18n="overwhelmed"></span></div>
+    <div style="font-weight:500;margin:14px 0 6px" id="lEnergy" data-i18n="energy"></div><div class="picks" id="ciEnergy" role="group" aria-labelledby="lEnergy"></div>
+    <div style="font-weight:500;margin:14px 0 6px" id="lMood" data-i18n="mood"></div><div class="picks" id="ciMood" role="group" aria-labelledby="lMood"></div>
+    <div class="grid2">
+      <div><label class="f" for="ciSleep" data-i18n="sleep_h"></label><input type="number" id="ciSleep" step="0.25" min="0" max="14" inputmode="decimal"></div>
+      <div><label class="f" for="ciSteps" data-i18n="steps"></label><input type="number" id="ciSteps" step="100" min="0" inputmode="numeric"></div>
+    </div>
+    <div style="font-weight:500;margin:14px 0 6px" id="lTags" data-i18n="tags_q"></div>
+    <div id="ciTags" role="group" aria-labelledby="lTags" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+    <label class="f" for="ciNote" data-i18n="note"></label><textarea id="ciNote" rows="2" data-i18n-ph="optional"></textarea>
+    <button class="btn block" id="ciSave" style="margin-top:16px" data-i18n="save_checkin"></button>
+  </div>
+  <div id="weeklyForm" class="card" style="display:none">
+    <div id="syncBox"></div>
+    <p class="small muted" style="margin-top:0" data-i18n="measure_how"></p>
+    <div class="grid2">
+      <div><label class="f" for="wWaist" id="lWaist"></label><input type="number" id="wWaist" step="0.1" inputmode="decimal"></div>
+      <div><label class="f" for="wWeight" id="lWeight"></label><input type="number" id="wWeight" step="0.1" inputmode="decimal"></div>
+      <div id="hrvBox"><label class="f" for="wHrv" data-i18n="f_hrv"></label><input type="number" id="wHrv" inputmode="decimal" data-i18n-ph="optional"></div>
+      <div><label class="f" for="wRhr" data-i18n="f_rhr"></label><input type="number" id="wRhr" inputmode="numeric" data-i18n-ph="optional"></div>
+    </div>
+    <p class="small muted" id="wearHint"></p>
+    <button class="btn block" id="wSave" style="margin-top:6px" data-i18n="save_measure"></button>
+    <button class="btn ghost block" id="pssOpen" style="margin-top:10px" data-i18n="pss_btn"></button>
+    <div id="wHistory" style="margin-top:14px"></div>
+  </div>
+</section>
+
+<!-- BREATHE -->
+<section class="view" id="v-breathe" aria-labelledby="tBreathe">
+  <header class="top"><div class="eyebrow" data-i18n="br_eyebrow"></div><h1 id="tBreathe" data-i18n="br_title"></h1>
+  <p class="small muted" style="margin:4px 0 0" data-i18n="br_lead"></p></header>
+  <div class="presets" id="presets" style="margin-top:14px"></div>
+  <div class="card">
+    <div class="pacer"><div class="orb" id="orb"></div><div class="cue" aria-live="polite"><b id="cue"></b><span class="small muted" id="cueTime"></span></div></div>
+    <div class="seg" role="group" id="durSeg"></div>
+    <button class="btn block" id="bStart" style="margin-top:12px"></button>
+  </div>
+  <p class="small muted" id="bStats"></p>
+</section>
+
+<!-- PROGRESS -->
+<section class="view" id="v-progress" aria-labelledby="tProg">
+  <header class="top"><div class="eyebrow" data-i18n="pr_eyebrow"></div><h1 id="tProg" data-i18n="pr_title"></h1></header>
+  <div class="grid2" id="sparkGrid" style="margin-top:12px"></div>
+  <div class="card"><div class="spread"><h3 id="chWaistTitle"></h3><span class="chip sand" id="whtr"></span></div><svg class="chart" id="chWaist"></svg></div>
+  <div class="card"><h3 data-i18n="ch_stress"></h3><svg class="chart" id="chStress"></svg></div>
+  <div class="card"><h3 data-i18n="ch_sleep"></h3><svg class="chart" id="chSleep"></svg></div>
+  <div class="card"><h3 data-i18n="habits_title"></h3><div class="small muted" data-i18n="habits_lead"></div><div class="heat" id="heat"></div></div>
+  <div id="insights"></div>
+  <div class="card"><h3 data-i18n="pss_hist_title"></h3><div id="pssHist" class="small"></div></div>
+</section>
+
+<!-- PLAN -->
+<section class="view" id="v-plan" aria-labelledby="tPlan">
+  <header class="top"><div class="eyebrow" data-i18n="plan_eyebrow"></div><h1 id="tPlan" data-i18n="plan_title"></h1></header>
+  <div id="phaseCard" class="card soft"></div>
+  <div id="stackCard" class="card"></div>
+  <div class="card"><h3 data-i18n="week_by_week"></h3><div id="weeks"></div></div>
+  <div class="card" id="planDocs"></div>
+  <div class="card">
+    <h3 data-i18n="settings"></h3>
+    <button class="btn ghost block" id="editProfile" style="margin-top:12px" data-i18n="edit_profile"></button>
+    <div class="grid2">
+      <div><label class="f" for="setLang" data-i18n="language"></label><select id="setLang"></select></div>
+      <div><label class="f" for="setTheme" data-i18n="theme"></label>
+        <select id="setTheme"><option value="" data-i18n="theme_sys"></option><option value="light" data-i18n="theme_light"></option><option value="dark" data-i18n="theme_dark"></option></select></div>
+    </div>
+    <label class="f" for="setStart" data-i18n="f_start"></label><input type="date" id="setStart">
+    <label class="flag" style="margin-top:12px"><input type="checkbox" id="setTier2"> <span data-i18n="tier2_cleared"></span></label>
+    <div id="setFlags"></div>
+    <div class="grid2" style="margin-top:14px"><button class="btn line" id="exp" data-i18n="export"></button><button class="btn line" id="impBtn" data-i18n="import"></button></div>
+    <input type="file" id="imp" accept=".json,application/json" hidden>
+    <button class="btn danger block" id="reset" style="margin-top:10px" data-i18n="erase"></button>
+  </div>
+</section>
+</div>
+
+<nav class="tabs" aria-label="Main"><div class="inner" role="tablist">
+  <button role="tab" data-tab="today" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg><span data-i18n="tab_today"></span></button>
+  <button role="tab" data-tab="checkin" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 12l4 4 10-10"/></svg><span data-i18n="tab_checkin"></span></button>
+  <button role="tab" data-tab="breathe" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 9c3-3 6 3 9 0s6 3 9 0M3 15c3-3 6 3 9 0s6 3 9 0"/></svg><span data-i18n="tab_breathe"></span></button>
+  <button role="tab" data-tab="progress" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 19V5M4 19h16M8 15l4-4 3 3 5-6"/></svg><span data-i18n="tab_progress"></span></button>
+  <button role="tab" data-tab="plan" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3c-4 4-6 8-6 11a6 6 0 0012 0c0-3-2-7-6-11z"/></svg><span data-i18n="tab_plan"></span></button>
+</div></nav>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="i18n/en.js"></script>
+<script src="i18n/ko.js"></script>
+<script src="i18n/catalog.en.js"></script>
+<script src="i18n/catalog.ko.js"></script>
+<script src="i18n/sync.en.js"></script>
+<script src="i18n/sync.ko.js"></script>
+<script src="data/catalog.js"></script>
+<script>
+"use strict";
+/* ---------- i18n ---------- */
+const I18N = window.EBB_I18N || {};
+const LANGS = ["en","ko"]; // add "es" here once i18n/es.js exists
+function detectLang(){ const n=(navigator.language||"en").toLowerCase(); return LANGS.find(l=>n.startsWith(l)) || "en"; }
+function lang(){ return (S && LANGS.includes(S.settings.lang)) ? S.settings.lang : detectLang(); }
+function locale(){ const l=lang(); if (l==="ko") return "ko-KR"; const n=navigator.language||""; return n.toLowerCase().startsWith(l) ? n : (l==="en"?"en-US":l); }
+function t(k, v){
+  let s = (I18N[lang()]||{})[k]; if (s==null) s = (I18N.en||{})[k]; if (s==null) return k;
+  return v ? s.replace(/\{(\w+)\}/g, (m,n) => n in v ? v[n] : m) : s;
+}
+function applyI18n(){
+  document.documentElement.lang = lang();
+  document.querySelectorAll("[data-i18n]").forEach(e => e.textContent = t(e.dataset.i18n));
+  document.querySelectorAll("[data-i18n-html]").forEach(e => e.innerHTML = t(e.dataset.i18nHtml));
+  document.querySelectorAll("[data-i18n-ph]").forEach(e => e.placeholder = t(e.dataset.i18nPh));
+}
+
+/* ---------- storage ---------- */
+const KEY = "ebb.v1";
+let S = null;
+const ACTS = ["none","yoga","pilates","walk","run","gym","sport","swim"];
+const WEARS = ["none","apple","galaxy","oura","garmin","fitbit","whoop","other"];
+const LUNCH = ["out","home","packed","skip"];
+const TRAIN = ["morning","lunch","evening"];
+function blankSettings(){ return {start:null, lang:"", units:"", age:null, sex:"", height:null, wake:"07:00", bed:"23:00",
+  workStart:"09:00", workEnd:"17:00", noWork:false, lunch:"home", dinner:"19:00", act:{type:"none",days:[],time:"18:30"},
+  trainTime:"evening", wearable:"none", theme:"", tier2:false, flags:{}, lastSync:null}; }
+function blank(){ return {settings:blankSettings(), days:{}, weekly:{}, pss:{}, breath:[], stack:[]}; }
+const KEY_RE = /^\d{4}-\d{2}-\d{2}$/, TIME_RE = /^\d{2}:\d{2}$/;
+const numOrNull = v => (typeof v==="number" && isFinite(v)) ? v : null;
+const obj = v => v && typeof v==="object" && !Array.isArray(v) ? v : {};
+const oneOf = (v, list, dflt) => list.includes(v) ? v : dflt;
+const TAG_LIST = ["Work","Sleep","Family","Money","Caffeine","Alcohol","Illness","Traffic"];
+// Coerce stored or imported data into the expected shape, so a hand-edited or
+// hostile backup can't break rendering or inject markup. Also migrates v1
+// data saved before the profile existed (no bedtime: keep the old 22:30).
+function normalize(d){
+  const o = Object.assign(blank(), obj(d)), src = obj(obj(d).settings), b = blankSettings();
+  const s = o.settings = Object.assign(b, src);
+  if (s.start && !KEY_RE.test(s.start)) s.start = null;
+  s.lang = oneOf(s.lang, LANGS.concat(""), ""); s.units = oneOf(s.units, ["","metric","imperial"], "");
+  s.sex = oneOf(s.sex, ["","m","f"], ""); s.theme = oneOf(s.theme, ["","light","dark"], "");
+  for (const f of ["wake","bed","workStart","workEnd","dinner"]) if (!TIME_RE.test(s[f])) s[f] = b[f];
+  if (src.start && !("bed" in src)) s.bed = "22:30";
+  s.age = numOrNull(s.age); s.height = numOrNull(s.height); s.tier2 = !!s.tier2; s.noWork = !!s.noWork;
+  s.lunch = oneOf(s.lunch, LUNCH, "home"); s.trainTime = oneOf(s.trainTime, TRAIN, "evening"); s.wearable = oneOf(s.wearable, WEARS, "none");
+  const a = obj(s.act); s.act = {type:oneOf(a.type, ACTS, "none"), days:Array.isArray(a.days)?[...new Set(a.days.filter(x=>Number.isInteger(x)&&x>=0&&x<=6))]:[], time:TIME_RE.test(a.time)?a.time:"18:30"};
+  const fl = {}; for (const [k,v] of Object.entries(obj(s.flags))) if (FLAG_IDS.includes(k)) fl[k] = !!v; s.flags = fl;
+  const days = {};
+  for (const [k,v] of Object.entries(obj(o.days))) if (KEY_RE.test(k)) {
+    const c = obj(v).checkin, done = {};
+    for (const [h,x] of Object.entries(obj(obj(v).done))) if (x===true) done[h] = true;
+    const hl = cleanHealth(obj(v).health);
+    days[k] = {done, health: hl, checkin: c && typeof c==="object" ? {stress:numOrNull(c.stress)??5, energy:numOrNull(c.energy), mood:numOrNull(c.mood), sleep:numOrNull(c.sleep), steps:numOrNull(c.steps), tags:Array.isArray(c.tags)?c.tags.filter(x=>TAG_LIST.includes(x)):[], note:String(c.note||"")} : null};
+  }
+  o.days = days;
+  const weekly = {};
+  for (const [k,v] of Object.entries(obj(o.weekly))) if (KEY_RE.test(k)) { const m=obj(v); weekly[k] = {waist:numOrNull(m.waist), weight:numOrNull(m.weight), hrv:numOrNull(m.hrv), rhr:numOrNull(m.rhr)}; }
+  o.weekly = weekly;
+  const pss = {}; for (const [k,v] of Object.entries(obj(o.pss))) if (KEY_RE.test(k) && numOrNull(v)!=null) pss[k] = v; o.pss = pss;
+  o.breath = Array.isArray(o.breath) ? o.breath.filter(x => x && numOrNull(x.t)!=null && numOrNull(x.s)!=null) : [];
+  s.lastSync = numOrNull(s.lastSync);
+  const seen = new Set();
+  o.stack = (Array.isArray(o.stack) ? o.stack : []).map(obj).filter(x => typeof x.id==="string" && /^[a-z0-9_]{1,40}$/.test(x.id) && !seen.has(x.id) && seen.add(x.id))
+    .map(x => ({id:x.id, name: x.id.startsWith("custom_") ? String(x.name||"").slice(0,60) : "", dose:numOrNull(x.dose), unit:oneOf(x.unit, UNITS, "mg"), slot:oneOf(x.slot, ["morning","midday","evening","night"], "morning")}));
+  return o;
+}
+const UNITS = ["mg","µg","IU","g","bn CFU","ml","cap"];
+// Health values from a sync, range-checked; anything odd is dropped rather than stored.
+const RANGES = {steps:[1,100000], sleep:[0.5,16], hrv:[5,300], rhr:[25,200]};
+function cleanHealth(h){
+  h = obj(h); const out = {};
+  for (const [f,[lo,hi]] of Object.entries(RANGES)){ const v = numOrNull(h[f]); if (v!=null && v>=lo && v<=hi) out[f] = Math.round(v*10)/10; }
+  return Object.keys(out).length ? out : null;
+}
+const FLAG_IDS = ["preg","thyroid","ssri","thinner","diabetes","liver","kidney","autoimmune","sedative","heart"];
+function load(){ try{ S = normalize(JSON.parse(localStorage.getItem(KEY))); }catch(e){ S = blank(); } }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){ toast(t("toast_save_fail")); } }
+load();
+
+/* ---------- time & units ---------- */
+const pad = n => String(n).padStart(2,"0");
+const toMin = s => { const [h,m] = s.split(":").map(Number); return h*60+m; };
+const fromMin = m => { m = ((Math.round(m)%1440)+1440)%1440; return pad(Math.floor(m/60))+":"+pad(m%60); };
+function fmtTime(hhmm){ const [h,m] = hhmm.split(":").map(Number); return new Date(2000,0,1,h,m).toLocaleTimeString(locale(),{hour:"numeric",minute:"2-digit"}); }
+const fmtNum = n => Number(n).toLocaleString(locale());
+// The personal schedule every habit is timed from (minutes after midnight; bed may exceed 1440).
+function sched(){
+  const s = S.settings, wake = toMin(s.wake); let bed = toMin(s.bed); if (bed <= wake) bed += 1440;
+  const dinner = toMin(s.dinner), firstMeal = wake + 30, kitchen = bed - 180;
+  const lastMeal = Math.min(kitchen, dinner + 45);
+  return {wake, bed, sleepH:(wake+1440-bed)/60, caf:Math.max(wake+240, bed-600), dim:bed-90, mg:bed-60, kitchen,
+    lightBy:wake+60, dinner, windowH:Math.max(0,(lastMeal-firstMeal)/60), dayStart:Math.max(0, wake-180)};
+}
+const imperial = () => S.settings.units ? S.settings.units==="imperial" : lang()==="en" && /-US$/i.test(navigator.language||"en-US");
+const LEN = () => imperial() ? {u:t("u_in"), f:2.54} : {u:t("u_cm"), f:1};
+const WT = () => imperial() ? {u:t("u_lb"), f:0.45359237} : {u:t("u_kg"), f:1};
+const toDisp = (v, U) => v==null ? null : Math.round(v/U.f*10)/10;
+const fromDisp = (v, U) => v==null ? null : v*U.f;
+
+/* ---------- dates ---------- */
+const keyOf = d => d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const parseKey = k => { const [y,m,d] = k.split("-").map(Number); return new Date(y, m-1, d); };
+// The app day starts 3 h before wake-up, so late-night habits count for the evening they belong to.
+const todayKey = () => keyOf(new Date(Date.now() - sched().dayStart*6e4));
+const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+function dayNum(k){ if(!S.settings.start) return 1; return Math.round((parseKey(k)-parseKey(S.settings.start))/864e5)+1; }
+function weekOf(k){ return Math.min(12, Math.max(1, Math.ceil(dayNum(k)/7))); }
+function day(k){ return S.days[k] || (S.days[k] = {done:{}, checkin:null}); }
+const dowName = (i, style="short") => new Date(2026,0,4+i).toLocaleDateString(locale(),{weekday:style}); // 2026-01-04 is a Sunday
+const fmtDate = (k, o) => parseKey(k).toLocaleDateString(locale(), o);
+
+/* ---------- training week ---------- */
+const partOf = m => m < 12*60 ? "morning" : m < 16*60 ? "lunch" : "evening";
+const ACT_KIND = {yoga:"light", pilates:"light", walk:"light", run:"cardio", swim:"cardio", sport:"cardio", gym:"str"};
+// Returns 7 entries (Sun..Sat): {id, kind, stacked} where id is a w_* workout key or "act".
+function weekPlan(w){
+  const heart = !!S.settings.flags.heart;
+  const P = [{id:"w_rest",kind:"rest"},{id:"w_strA",kind:"str"},{id:"w_z2",kind:"z2"},{id:"w_strB",kind:"str"},
+    (!heart && w>=3) ? {id:"w_int",kind:"int"} : {id:"w_z2",kind:"z2"},
+    w>=5 ? {id:"w_strC",kind:"str"} : {id:"w_z2",kind:"z2"}, {id:"w_long",kind:"long"}];
+  const a = S.settings.act, kind = ACT_KIND[a.type];
+  if (!kind || !a.days.length) return P;
+  const days = a.days, stack = kind==="light" && partOf(toMin(a.time)) !== S.settings.trainTime;
+  if (stack){ days.forEach(d => P[d] = Object.assign({}, P[d], {stacked:true})); return P; }
+  if (kind==="str") P.forEach((p,i) => { if (p.kind==="str" && !days.includes(i)) P[i] = {id:"w_z2",kind:"z2"}; });
+  for (const d of days){
+    const displaced = P[d]; P[d] = {id:"act", kind:kind==="str"?"str":"cardio"};
+    if (displaced.kind==="str" && kind!=="str"){
+      const free = [2,4,5,6,0,1,3].find(i => !days.includes(i) && ["z2","int"].includes(P[i].kind) && P[(i+6)%7].kind!=="str" && P[(i+1)%7].kind!=="str")
+                ?? [2,4,5,6,0,1,3].find(i => !days.includes(i) && ["z2","int"].includes(P[i].kind));
+      if (free!=null) P[free] = displaced;
+    }
+  }
+  if (!P.some(p=>p.kind==="rest")){ const r=[0,6,5,4,3,2,1].find(i=>!days.includes(i) && ["z2","int","long"].includes(P[i].kind)); if (r!=null) P[r] = {id:"w_rest",kind:"rest"}; }
+  return P;
+}
+function workoutText(p, w){
+  if (p.id==="act") return [actName(), t(p.kind==="str" ? "w_act_str_s" : "w_act_cardio_s")];
+  let name = t(p.id), sub = t(p.id==="w_int" ? "w_int_s" : p.id+"_s");
+  if (p.id==="w_z2" && S.settings.flags.heart && w>=3 && parseKey(todayKey()).getDay()===4) sub = t("w_int_heart_s");
+  if ((w===4||w===8) && p.kind!=="rest") return [t("w_light",{name}), t("w_light_s",{s:sub})];
+  return [name, sub];
+}
+const actName = () => t("act_"+S.settings.act.type);
+
+/* ---------- supplements ---------- */
+const SUPPS = [
+  {id:"s_d3",slot:"morning",tier:1,avoid:["thinner"]},
+  {id:"s_thea",slot:"morning",tier:1,avoid:[]},
+  {id:"s_crea",slot:"morning",tier:1,avoid:["kidney"]},
+  {id:"s_psy1",slot:"midday",tier:1,avoid:[]},
+  {id:"s_psy2",slot:"evening",tier:1,avoid:[]},
+  {id:"s_o3",slot:"evening",tier:1,avoid:["thinner"]},
+  {id:"s_mg",slot:"night",tier:1,avoid:["kidney"]},
+  {id:"s_ash",slot:"morning",tier:2,avoid:["preg","thyroid","liver","autoimmune","sedative","diabetes"]},
+  {id:"s_pro",slot:"morning",tier:2,avoid:["autoimmune"]},
+  {id:"s_saf",slot:"morning",tier:2,avoid:["ssri","preg","thinner"]},
+  {id:"s_gly",slot:"night",tier:2,avoid:["preg"]}
+];
+function suppText(s){
+  const sub = s.id==="s_crea" ? t("s_crea_s",{w: imperial() ? "2–4 "+t("u_lb") : "1–2 "+t("u_kg")})
+            : s.id==="s_mg" ? t("s_mg_s",{t:fmtTime(fromMin(sched().mg))}) : t(s.id+"_s");
+  return [t(s.id), sub];
+}
+// Safety: does this supplement clash with the user's answers? (time-independent)
+function suppSafe(s){
+  const f = S.settings.flags;
+  if (s.avoid.some(a => f[a])) return false;
+  if (f.preg && !["s_d3","s_psy1","s_psy2"].includes(s.id)) return false; // pregnancy: minimal, OB-approved only
+  return true;
+}
+const CATALOG = Array.isArray(window.EBB_CATALOG) ? window.EBB_CATALOG : [];
+const catItem = id => CATALOG.find(c => c.id===id);
+// Program items the user already covers with their own supplements.
+function replacedByStack(){ const r = new Set(); for (const x of S.stack){ const c = catItem(x.id); if (c) (c.replaces||[]).forEach(id => r.add(id)); } return r; }
+function supps(k){
+  const w = weekOf(k), dn = dayNum(k), rep = replacedByStack();
+  return SUPPS.filter(s => suppSafe(s) && !rep.has(s.id) && (s.tier!==2 || (S.settings.tier2 && w>=5 && dn<=84)));
+}
+const stackName = x => x.id.startsWith("custom_") ? x.name : t("sc_"+x.id);
+const doseText = x => x.dose!=null ? fmtNum(x.dose)+" "+x.unit : "";
+
+/* ---------- habits ---------- */
+function latestWeight(){ const ks=Object.keys(S.weekly).sort().reverse(); for (const k of ks) if (S.weekly[k].weight!=null) return S.weekly[k].weight; return null; }
+function protein(){ const w=latestWeight(); if(!w) return null; const lo=(S.settings.age>=50?1.4:1.2); return {lo:Math.round(w*lo/5)*5, hi:Math.round(w*1.6/5)*5}; }
+function habits(k){
+  const s = S.settings, c = sched(), w = weekOf(k), dow = parseKey(k).getDay(), plan = weekPlan(w)[dow];
+  const T = m => fmtTime(fromMin(m)), trainSlot = {morning:"morning", lunch:"midday", evening:"evening"}[s.trainTime];
+  const actM = toMin(s.act.time), actSlot = slotOfMin(actM);
+  const actToday = s.act.type!=="none" && s.act.days.includes(dow);
+  const dinnerM = actToday && partOf(actM)==="evening" ? Math.max(c.dinner, actM+75) : c.dinner;
+  const lunch = {out:["h_lunch_out","h_lunch_out_s"], home:["h_lunch_home","h_lunch_home_s"], packed:["h_lunch_home","h_lunch_home_s"], skip:["h_lunch_skip","h_lunch_skip_s"]}[s.lunch];
+  const [wn, ws] = workoutText(plan, w);
+  const H = [
+    {id:"wake",slot:"morning",label:t("h_wake",{t:T(c.wake)}),sub:t("h_wake_s")},
+    {id:"light",slot:"morning",label:t("h_light"),sub:t("h_light_s",{t:T(c.lightBy)})},
+    {id:"breath_am",slot:"morning",label:t("h_breath"),sub:t("h_breath_s"),go:"breathe"},
+    {id:"pbreak",slot:"morning",label:t("h_pbreak"),sub:t("h_pbreak_s")},
+    {id:"lunch",slot:"midday",label:t(lunch[0]),sub:t(lunch[1])},
+    {id:"walk_l",slot:"midday",label:t(s.lunch==="out"?"h_walk_l_out":"h_walk_l"),sub:t("h_walk_l_s")},
+    {id:"caf",slot:"midday",label:t("h_caf",{t:T(c.caf)}),sub:t("h_caf_s")},
+    {id:"steps",slot:"midday",label:t("h_steps",{n:fmtNum(w>=5?10000:8000)}),sub:t("h_steps_s")}
+  ];
+  if (plan.id==="act") H.push({id:"act",slot:actSlot,label:t("h_act",{act:wn,t:T(actM)}),sub:ws});
+  else {
+    H.push({id:"train",slot:plan.kind==="rest"?"evening":trainSlot,label:wn,sub:plan.kind==="rest"?ws:t("w_when",{when:t("train_"+s.trainTime),s:ws})});
+    if (actToday) H.push({id:"act",slot:actSlot,label:t("h_act",{act:actName(),t:T(actM)}),sub:t("h_act_s")});
+  }
+  H.push(
+    {id:"dinner",slot:"evening",label:t("h_dinner",{t:T(Math.min(dinnerM, c.kitchen))}),sub:t("h_dinner_s")},
+    {id:"walk_d",slot:"evening",label:t("h_walk_d"),sub:""},
+    {id:"kitchen",slot:"evening",label:t("h_kitchen",{t:T(c.kitchen)}),sub:t("h_kitchen_s",{h:fmtNum(Math.round(c.windowH*2)/2)})},
+    {id:"noalc",slot:"evening",label:t("h_noalc"),sub:t("h_noalc_s")},
+    {id:"dim",slot:"night",label:t("h_dim"),sub:t("h_dim_s",{t:T(c.dim)})},
+    {id:"journal",slot:"night",label:t("h_journal"),sub:t("h_journal_s")},
+    {id:"bed",slot:"night",label:t("h_bed",{t:T(c.bed)}),sub:t("h_bed_s")}
+  );
+  return H.concat(supps(k).map(x => { const [label,sub]=suppText(x); return {id:x.id,slot:x.slot,tier:x.tier,supp:true,label,sub}; }),
+    S.stack.map(x => ({id:"my_"+x.id, slot:x.slot, mine:true, label:stackName(x), sub:doseText(x)})));
+}
+const SLOTS = ["morning","midday","evening","night"];
+function slotBounds(){ const c=sched(); const mEnd=Math.max(c.wake+180, 11*60), night=Math.max(17*60, c.bed-120); return {mEnd, dEnd:Math.min(16*60, night), night}; }
+function slotOfMin(m){ const c=sched(), b=slotBounds(); if (m < c.dayStart) m += 1440; return m < b.mEnd ? "morning" : m < b.dEnd ? "midday" : m < b.night ? "evening" : "night"; }
+function currentSlot(){ const n=new Date(); return slotOfMin(n.getHours()*60+n.getMinutes()); }
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let toastT;
+function toast(m){ const el=$("#toast"); el.textContent=m; el.classList.add("on"); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove("on"),2600); }
+function applyTheme(){ const th=S.settings.theme; if(th) document.documentElement.dataset.theme=th; else delete document.documentElement.dataset.theme;
+  document.querySelectorAll('meta[name="theme-color"]').forEach(m=>{ if(!m.dataset.media) m.dataset.media=m.media; m.media = th ? (m.content==="#121915")===(th==="dark") ? "all" : "not all" : m.dataset.media; }); }
+const PHASES = [{n:1,weeks:[1,4]},{n:2,weeks:[5,8]},{n:3,weeks:[9,12]}];
+const phaseOf = w => PHASES.find(p=>w>=p.weeks[0]&&w<=p.weeks[1]);
+
+/* ---------- score ---------- */
+function scoreFor(k){
+  const d = S.days[k]; const hs = habits(k);
+  const done = hs.filter(h => d && d.done[h.id]).length;
+  const habitPct = hs.length ? done/hs.length : 0;
+  const c = d && d.checkin;
+  let feel = null;
+  if (c){ const parts=[(10-c.stress)/9]; if(c.energy) parts.push((c.energy-1)/4); if(c.mood) parts.push((c.mood-1)/4); if(c.sleep) parts.push(Math.min(1,Math.max(0,(c.sleep-5)/2.5))); feel = parts.reduce((a,b)=>a+b,0)/parts.length; }
+  const score = feel==null ? Math.round(habitPct*100*0.6) : Math.round(habitPct*60 + feel*40);
+  const cat = ids => { const sub=hs.filter(h=>ids.includes(h.id)); return sub.length ? sub.filter(h=>d&&d.done[h.id]).length/sub.length : 0; };
+  return {score, habitPct, feel,
+    sleep: cat(["wake","light","dim","bed","caf","s_mg","s_gly"]),
+    move: cat(["walk_l","walk_d","steps","train","act"]),
+    calm: cat(["breath_am","journal","noalc","kitchen","act"])};
+}
+function miniRing(p,label){ const c=2*Math.PI*13; return `<div class="mini"><svg viewBox="0 0 34 34"><circle cx="17" cy="17" r="13" fill="none" stroke="var(--primary-soft)" stroke-width="5"/><circle cx="17" cy="17" r="13" fill="none" stroke="var(--primary)" stroke-width="5" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${c*(1-p)}"/></svg><span><b>${label}</b> <span class="muted">${Math.round(p*100)}%</span></span></div>`; }
+
+/* ---------- TODAY ---------- */
+function renderToday(){
+  const k = todayKey(), w = weekOf(k), ph = phaseOf(w), d = day(k), dn = dayNum(k);
+  $("#phaseEyebrow").textContent = dn<1 ? t("starts_on",{date:fmtDate(S.settings.start,{month:"short",day:"numeric"})}) : t("phase_eyebrow",{n:ph.n,name:t("ph"+ph.n)});
+  $("#weekChip").textContent = dn<1 ? (dn===0 ? t("starts_tomorrow") : t("starts_in",{n:1-dn})) : dn>84 ? t("program_done") : t("week_chip",{w,d:dn});
+  $("#dateLine").textContent = fmtDate(k,{weekday:"long",month:"long",day:"numeric"});
+  $("#segbar").innerHTML = Array.from({length:12},(_,i)=>`<i class="${i+1<w?"done":i+1===w?"now":""}"></i>`).join("");
+  const sc = scoreFor(k);
+  $("#score").textContent = sc.score;
+  $("#ringFill").style.strokeDashoffset = 414.7*(1-sc.score/100);
+  $("#ringWrap").setAttribute("aria-label", t("calm_score_aria",{n:sc.score}));
+  $("#minis").innerHTML = miniRing(sc.sleep,t("ring_sleep"))+miniRing(sc.move,t("ring_move"))+miniRing(sc.calm,t("ring_calm"));
+  const c = d.checkin;
+  $("#scoreLine").textContent = c && c.stress>=8 ? t("score_rough") : !c ? t("score_nocheck")
+    : sc.score>=70 ? t("score_solid") : sc.score>=40 ? t("score_steady") : t("score_fresh");
+  $("#checkinSummary").textContent = c ? t("checkin_sum",{s:c.stress,e:c.energy||"–",h:c.sleep ?? (d.health&&d.health.sleep) ?? "–"}) : t("checkin_sub");
+  $("#syncQuick").innerHTML = S.settings.wearable==="apple" ? `<div class="card info"><div class="spread"><div><b>${t("sync_title")}</b><div class="small">${S.settings.lastSync ? esc(t("sync_last",{t:new Date(S.settings.lastSync).toLocaleString(locale(),{weekday:"short",hour:"numeric",minute:"2-digit"})})) : esc(t("sync_never"))}</div></div><button class="btn ghost" data-sync="paste">${t("sync_paste_short")}</button></div></div>` : "";
+  const startDow = S.settings.start ? parseKey(S.settings.start).getDay() : 0;
+  $("#measureCard").style.display = (parseKey(k).getDay()===startDow && !S.weekly[k]) ? "" : "none";
+  const cp = {1:"cp1",28:"cp28",56:"cp56",84:"cp84"}[dn];
+  $("#checkpointCard").style.display = cp ? "" : "none";
+  if (cp) $("#checkpointCard").innerHTML = `<b>${t("checkpoint")}</b><div class="small">${t(cp)}</div><button class="btn ghost" style="margin-top:10px" onclick="openPSS()">${t("take_pss")}</button>`;
+  const hs = habits(k), cur = currentSlot();
+  $("#slots").innerHTML = SLOTS.map(id => {
+    const list = hs.filter(h=>h.slot===id), n = list.filter(h=>d.done[h.id]).length;
+    if (!list.length) return "";
+    return `<div class="slot"><div class="slot-h"><span class="eyebrow">${t("slot_head",{name:t("slot_"+id),n,total:list.length})}</span>${id===cur?`<span class="chip sand">${t("now")}</span>`:""}</div>`+
+      list.map(h=>`<button class="habit${d.done[h.id]?" done":""}" data-h="${h.id}" aria-pressed="${!!d.done[h.id]}"><span class="box"></span><span class="t"><span class="l">${esc(h.label)}${h.supp?`<span class="tag">${t("tier_tag",{n:h.tier})}</span>`:""}${h.mine?`<span class="tag mine">${t("stack_mine")}</span>`:""}</span>${h.sub?`<div class="s">${esc(h.sub)}</div>`:""}</span></button>`).join("")+`</div>`;
+  }).join("");
+  const ci_ = SLOTS.indexOf(cur);
+  const next = hs.filter(h=>!d.done[h.id]).sort((a,b)=>((SLOTS.indexOf(a.slot)-ci_+4)%4)-((SLOTS.indexOf(b.slot)-ci_+4)%4))[0];
+  if (next){ $("#nextCard").style.display=""; $("#nextLabel").textContent=next.label; $("#nextSub").textContent=next.sub||""; $("#nextBtn").textContent = t(next.go?"start":"done"); $("#nextBtn").dataset.h=next.id; $("#nextBtn").dataset.go=next.go||""; }
+  else $("#nextCard").style.display="none";
+}
+document.addEventListener("click", e => {
+  const hb = e.target.closest(".habit"); if (hb){ const d=day(todayKey()), id=hb.dataset.h; d.done[id]=!d.done[id]; save(); renderToday(); const again=document.querySelector(`.habit[data-h="${id}"]`); if(again) again.focus(); return; }
+  const go = e.target.closest("[data-go]"); if (go){ if(go.id==="nextBtn"&&!go.dataset.go){ day(todayKey()).done[go.dataset.h]=true; save(); renderToday(); toast(t("toast_one_more")); return; } if(go.dataset.go){ show(go.dataset.go); if(go.dataset.mode) setMode(go.dataset.mode); } }
+});
+
+/* ---------- CHECK-IN ---------- */
+let ci = {energy:0,mood:0,tags:[]};
+function picks(el,prefix,key){ $(el).innerHTML = [1,2,3,4,5].map(i=>`<button type="button" data-v="${i}" aria-pressed="${ci[key]===i}">${t(prefix+i)}</button>`).join(""); $(el).onclick=e=>{const b=e.target.closest("button"); if(!b) return; ci[key]=+b.dataset.v; picks(el,prefix,key); $(el).querySelector(`[data-v="${b.dataset.v}"]`).focus();}; }
+function renderTags(){ $("#ciTags").innerHTML = TAG_LIST.map(x=>`<button type="button" class="chip${ci.tags.includes(x)?"":" sand"}" style="border:0;min-height:44px;padding:4px 14px" data-t="${x}" aria-pressed="${ci.tags.includes(x)}">${t("tag_"+x)}</button>`).join(""); }
+$("#ciTags").onclick = e => { const b=e.target.closest("button"); if(!b) return; const x=b.dataset.t; ci.tags = ci.tags.includes(x)?ci.tags.filter(y=>y!==x):ci.tags.concat(x); renderTags(); $("#ciTags").querySelector(`[data-t="${x}"]`).focus(); };
+function renderCheckin(){
+  const c = day(todayKey()).checkin || {};
+  ci = {energy:c.energy||0, mood:c.mood||0, tags:c.tags||[]};
+  $("#ciStress").value = c.stress||5; $("#ciStressVal").textContent = c.stress||5;
+  $("#ciSleep").value = c.sleep ?? ""; $("#ciSteps").value = c.steps ?? ""; $("#ciNote").value = c.note||"";
+  picks("#ciEnergy","energy_","energy"); picks("#ciMood","mood_","mood"); renderTags();
+  const L = LEN(), W = WT();
+  $("#lWaist").textContent = `${t("th_waist")} (${L.u})`; $("#lWeight").textContent = `${t("th_weight")} (${W.u})`;
+  const wear = S.settings.wearable;
+  $("#hrvBox").style.display = wear==="none" ? "none" : "";
+  $("#wearHint").textContent = wear==="none" ? t("rhr_hint_none") : t("hrv_hint_device",{device:t("wear_"+wear)});
+  const hl = day(todayKey()).health || {};
+  if (!c.sleep && hl.sleep) $("#ciSleep").value = hl.sleep;
+  if (!c.steps && hl.steps) $("#ciSteps").value = hl.steps;
+  $("#syncBox").innerHTML = syncBoxHTML();
+  const wk = S.weekly[todayKey()] || {};
+  $("#wWaist").value=toDisp(wk.waist,L)??""; $("#wWeight").value=toDisp(wk.weight,W)??""; $("#wHrv").value=wk.hrv??""; $("#wRhr").value=wk.rhr??"";
+  const rows = Object.keys(S.weekly).sort().reverse().slice(0,8);
+  $("#wHistory").innerHTML = rows.length ? `<table class="t"><tr><th>${t("th_date")}</th><th>${t("th_waist")}</th><th>${t("th_weight")}</th><th>${t("th_hrv")}</th><th>${t("th_rhr")}</th></tr>${rows.map(r=>{const m=S.weekly[r];return `<tr><td>${esc(fmtDate(r,{month:"short",day:"numeric"}))}</td><td>${esc(toDisp(m.waist,L)??"–")}</td><td>${esc(toDisp(m.weight,W)??"–")}</td><td>${esc(m.hrv??"–")}</td><td>${esc(m.rhr??"–")}</td></tr>`}).join("")}</table>` : "";
+}
+$("#ciStress").oninput = e => { const v=+e.target.value; $("#ciStressVal").textContent = v; e.target.setAttribute("aria-valuetext", v+", "+t(v<=3?"stress_calm":v<=6?"stress_mod":"stress_high")); };
+const num = v => v===""||v==null||isNaN(+v) ? null : +v;
+$("#ciSave").onclick = () => {
+  const d = day(todayKey());
+  d.checkin = {stress:+$("#ciStress").value, energy:ci.energy||null, mood:ci.mood||null, sleep:num($("#ciSleep").value), steps:num($("#ciSteps").value), tags:ci.tags, note:$("#ciNote").value.trim()};
+  if (d.checkin.steps >= (weekOf(todayKey())>=5 ? 10000 : 8000)) d.done.steps = true;
+  save(); toast(t(d.checkin.stress>=8 ? "toast_saved_rough" : "toast_saved")); show("today");
+};
+$("#wSave").onclick = () => {
+  const m = {waist:fromDisp(num($("#wWaist").value),LEN()), weight:fromDisp(num($("#wWeight").value),WT()), hrv:num($("#wHrv").value), rhr:num($("#wRhr").value)};
+  if (Object.values(m).every(v=>v==null)) return toast(t("toast_enter_one"));
+  S.weekly[todayKey()] = m; save(); renderCheckin(); toast(t("toast_measured"));
+};
+function setMode(m){ $("#segDaily").setAttribute("aria-pressed",m==="daily"); $("#segWeekly").setAttribute("aria-pressed",m==="weekly"); $("#dailyForm").style.display=m==="daily"?"":"none"; $("#weeklyForm").style.display=m==="weekly"?"":"none"; }
+$("#segDaily").onclick=()=>setMode("daily"); $("#segWeekly").onclick=()=>setMode("weekly");
+
+/* ---------- PSS-10 ---------- */
+const PSS_REV = [3,4,6,7];
+let pssA = [];
+function openPSS(){ pssA = Array(10).fill(null); drawPSS(); $("#pss").classList.add("on"); $("#pssList button").focus(); }
+document.addEventListener("keydown", e => { if (e.key==="Escape" && $("#pss").classList.contains("on")) $("#pss").classList.remove("on"); });
+function drawPSS(){ $("#pssList").innerHTML = pssA.map((_,i)=>`<div class="pss-q"><div>${i+1}. …${t("pss"+(i+1))}</div><div class="picks" style="margin-top:8px" data-q="${i}">${[0,1,2,3,4].map(v=>`<button type="button" data-v="${v}" aria-pressed="${pssA[i]===v}">${v}</button>`).join("")}</div></div>`).join(""); }
+$("#pssList").onclick = e => { const b=e.target.closest("button"); if(!b) return; const q=b.parentNode.dataset.q; pssA[+q]=+b.dataset.v; drawPSS(); $(`#pssList [data-q="${q}"] [data-v="${b.dataset.v}"]`).focus(); };
+$("#pssOpen").onclick = openPSS; $("#pssClose").onclick = () => $("#pss").classList.remove("on");
+$("#pssSave").onclick = () => {
+  if (pssA.some(v=>v==null)) return toast(t("pss_all"));
+  const score = pssA.reduce((s,v,i)=>s+(PSS_REV.includes(i)?4-v:v),0);
+  S.pss[todayKey()] = score; save(); $("#pss").classList.remove("on");
+  toast(t("pss_result",{s:score,band:t(score<=13?"band_low":score<=26?"band_mod":"band_high")})); renderAll();
+};
+
+/* ---------- BREATHE ---------- */
+const PRESETS = [
+  {id:"sigh",steps:[["cue_inhale",2,1],["cue_topup",1,1.08],["cue_long_exhale",6,.45]]},
+  {id:"res",steps:[["cue_inhale",5.5,1],["cue_exhale",5.5,.45]]},
+  {id:"478",steps:[["cue_inhale",4,1],["cue_hold",7,1],["cue_exhale",8,.45]]},
+  {id:"box",steps:[["cue_inhale",4,1],["cue_hold",4,1],["cue_exhale",4,.45],["cue_hold",4,.45]]}
+];
+let bPreset = PRESETS[0], bDur = 300, bRun = null;
+function renderBreathe(){
+  $("#presets").innerHTML = PRESETS.map(p=>`<button class="preset" data-p="${p.id}" aria-pressed="${p===bPreset}"><b>${t("p_"+p.id)}</b><span class="small muted">${t("p_"+p.id+"_d")}</span></button>`).join("");
+  $("#durSeg").innerHTML = [60,180,300,600].map(s=>`<button data-d="${s}" aria-pressed="${s===bDur}">${t("min_n",{n:s/60})}</button>`).join("");
+  if (!bRun){ $("#cue").textContent = t("ready"); $("#bStart").textContent = t("start"); }
+  const wk = S.breath.filter(b=>Date.now()-b.t<7*864e5).reduce((a,b)=>a+b.s,0);
+  $("#bStats").textContent = t("br_stats",{m:Math.round(wk/60),n:S.breath.length});
+}
+$("#presets").onclick = e => { const b=e.target.closest("[data-p]"); if(!b||bRun) return; bPreset=PRESETS.find(p=>p.id===b.dataset.p); renderBreathe(); };
+$("#durSeg").onclick = e => { const b=e.target.closest("[data-d]"); if(!b||bRun) return; bDur=+b.dataset.d; renderBreathe(); };
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+function stopBreath(done){
+  clearTimeout(bRun?.t); clearInterval(bRun?.iv);
+  const secs = bRun ? Math.round((Date.now()-bRun.start)/1000) : 0; bRun=null;
+  $("#cueTime").textContent="";
+  const orb=$("#orb"); orb.style.transition="transform 1s"; orb.style.transform="scale(.45)";
+  if (secs>=50){ S.breath.push({t:Date.now(),s:secs,p:bPreset.id}); day(todayKey()).done.breath_am = true; save(); toast(done?t("toast_breath_done"):t("toast_breath_saved",{n:Math.round(secs/60)})); }
+  renderBreathe(); if (done) $("#cue").textContent = t("well_done");
+}
+$("#bStart").onclick = () => {
+  if (bRun) return stopBreath(false);
+  bRun = {start:Date.now(), i:0}; $("#bStart").textContent=t("stop");
+  const orb=$("#orb");
+  const step = () => {
+    if (!bRun) return;
+    if (Date.now()-bRun.start >= bDur*1000) return stopBreath(true);
+    const [word,sec,scale] = bPreset.steps[bRun.i % bPreset.steps.length]; bRun.i++;
+    $("#cue").textContent = t(word);
+    orb.style.transition = reduce ? "none" : `transform ${sec}s ease-in-out`;
+    orb.style.transform = `scale(${scale})`;
+    if (navigator.vibrate) try{navigator.vibrate(30);}catch(e){}
+    bRun.t = setTimeout(step, sec*1000);
+  };
+  bRun.iv = setInterval(()=>{ if(bRun){ const left=Math.max(0,bDur-Math.floor((Date.now()-bRun.start)/1000)); $("#cueTime").textContent=t("left",{t:Math.floor(left/60)+":"+pad(left%60)}); } },500);
+  step();
+};
+
+/* ---------- PROGRESS ---------- */
+const last = a => a[a.length-1];
+function avg(a){ return a.length ? a.reduce((x,y)=>x+y,0)/a.length : null; }
+function series(field, src){ return Object.keys(src).sort().map(k=>[k, field(src[k])]).filter(p=>p[1]!=null&&!isNaN(p[1])); }
+function lineChart(svg, pts, {lowerBetter=true, unit=""}={}){
+  const W=320,H=170,P=28; svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  if (pts.length<2){ svg.innerHTML=`<text x="${W/2}" y="${H/2}" text-anchor="middle" fill="var(--muted)" font-size="13">${esc(t("need2"))}</text>`; return; }
+  const xs=pts.map(p=>parseKey(p[0]).getTime()), ys=pts.map(p=>p[1]);
+  let lo=Math.min(...ys), hi=Math.max(...ys); if(lo===hi){lo-=1;hi+=1;} const pd=(hi-lo)*.15; lo-=pd; hi+=pd;
+  const x=v=>P+(W-P-8)*(v-xs[0])/((last(xs)-xs[0])||1), y=v=>8+(H-P-8)*(1-(v-lo)/(hi-lo));
+  const grid=[lo+(hi-lo)*.25,lo+(hi-lo)*.75].map(g=>`<line x1="${P}" x2="${W-8}" y1="${y(g)}" y2="${y(g)}" stroke="var(--border)"/><text x="${P-4}" y="${y(g)+4}" text-anchor="end" font-size="10" fill="var(--muted)">${g.toFixed(g<20?1:0)}</text>`).join("");
+  const d=pts.map((p,i)=>(i?"L":"M")+x(xs[i]).toFixed(1)+" "+y(ys[i]).toFixed(1)).join("");
+  const good = lowerBetter ? last(ys)<=ys[0] : last(ys)>=ys[0];
+  const col = good?"var(--primary)":"var(--warning)";
+  const lab = k => esc(fmtDate(k,{month:"numeric",day:"numeric"}));
+  svg.innerHTML = grid+`<path d="${d}" fill="none" stroke="${col}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>`+
+    pts.map((p,i)=>`<circle cx="${x(xs[i])}" cy="${y(ys[i])}" r="${i===pts.length-1?4:2.2}" fill="${col}"><title>${esc(p[0])}: ${esc(p[1])}${esc(unit)}</title></circle>`).join("")+
+    `<text x="${P}" y="${H-6}" font-size="10" fill="var(--muted)">${lab(pts[0][0])}</text><text x="${W-8}" y="${H-6}" text-anchor="end" font-size="10" fill="var(--muted)">${lab(last(pts)[0])}</text>`;
+}
+function spark(title, pts, unit, lowerBetter){
+  let delta="", chip="sand";
+  if (pts.length>=2){ const dv=last(pts)[1]-pts[0][1]; const good = lowerBetter? dv<=0 : dv>=0; chip = good?"":"amber"; delta = Math.abs(dv)<0.05 ? t("no_change") : t("since_start",{arrow:dv>0?"▲":"▼",v:Math.abs(dv).toFixed(1)+" "+unit}); }
+  const W=140,H=40; let path="";
+  if (pts.length>=2){ const ys=pts.map(p=>p[1]); let lo=Math.min(...ys),hi=Math.max(...ys); if(lo===hi){lo--;hi++;} path=ys.map((v,i)=>(i?"L":"M")+(4+(W-8)*i/(ys.length-1)).toFixed(1)+" "+(4+(H-8)*(1-(v-lo)/(hi-lo))).toFixed(1)).join(""); }
+  return `<div class="card" style="margin:0"><div class="small muted">${title}</div><div class="bigval">${pts.length?last(pts)[1]:"–"}<span class="small muted"> ${pts.length?unit:""}</span></div><svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><path d="${path}" fill="none" stroke="var(--primary)" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>${delta?`<span class="chip ${chip}">${delta}</span>`:`<span class="small muted">${t("not_enough")}</span>`}</div>`;
+}
+// HRV/RHR come from weekly entries and daily syncs; a weekly entry wins on the same date.
+function healthSeries(f){ const m = {}; for (const [k,d] of Object.entries(S.days)) if (d.health && d.health[f]!=null) m[k]=d.health[f]; for (const [k,w] of Object.entries(S.weekly)) if (w[f]!=null) m[k]=w[f]; return Object.keys(m).sort().map(k=>[k,m[k]]); }
+function renderProgress(){
+  const L=LEN(), W=WT();
+  const waist = series(m=>toDisp(m.waist,L), S.weekly), weight = series(m=>toDisp(m.weight,W), S.weekly), hrv = healthSeries("hrv"), rhr = healthSeries("rhr");
+  const stress = series(d=>d.checkin&&d.checkin.stress, S.days), sleep = series(d=>d.checkin&&d.checkin.sleep, S.days);
+  $("#sparkGrid").innerHTML = spark(t("sp_waist"),waist,L.u,true)+spark(t("sp_weight"),weight,W.u,true)+spark(t("sp_hrv"),hrv,"ms",false)+spark(t("sp_rhr"),rhr,"bpm",true);
+  $("#chWaistTitle").textContent = t("ch_waist",{u:L.u});
+  lineChart($("#chWaist"),waist,{unit:" "+L.u}); lineChart($("#chStress"),stress); lineChart($("#chSleep"),sleep,{lowerBetter:false,unit:" "+t("u_h")});
+  const h=S.settings.height, wcm = series(m=>m.waist, S.weekly);
+  $("#whtr").textContent = h&&wcm.length ? t("whtr",{v:(last(wcm)[1]/h).toFixed(2)}) : t("whtr_add");
+  if (S.settings.start){
+    const st=parseKey(S.settings.start), cells=[];
+    for(let r=0;r<7;r++) for(let c=0;c<12;c++){ const k=keyOf(addDays(st,c*7+r)); const p = S.days[k] ? scoreFor(k).habitPct : 0; cells.push(`<i title="${k}" style="${p?`background:var(--primary);opacity:${(.15+p*.85).toFixed(2)};`:""}${k===todayKey()?"outline:2px solid var(--accent);outline-offset:1px":""}"></i>`); }
+    $("#heat").innerHTML = cells.join("");
+  }
+  const ins=[], dir = d => t(d>=0?"dir_lower":"dir_higher");
+  const rows = Object.keys(S.days).filter(k=>S.days[k].checkin).map(k=>({k, st:S.days[k].checkin.stress, sl:S.days[k].checkin.sleep, hp:scoreFor(k).habitPct}));
+  const goodSleep = rows.filter(r=>r.sl>=7), badSleep = rows.filter(r=>r.sl!=null&&r.sl<7);
+  if (goodSleep.length>=4 && badSleep.length>=3){ const d=avg(badSleep.map(r=>r.st))-avg(goodSleep.map(r=>r.st)); ins.push(t("ins_sleep_html",{d:Math.abs(d).toFixed(1),dir:dir(d),n:goodSleep.length+badSleep.length})); }
+  const hiH = rows.filter(r=>r.hp>=.7), loH = rows.filter(r=>r.hp<.5);
+  if (hiH.length>=4 && loH.length>=3){ const d=avg(loH.map(r=>r.st))-avg(hiH.map(r=>r.st)); ins.push(t("ins_habits_html",{d:Math.abs(d).toFixed(1),dir:dir(d)})); }
+  if (waist.length>=2){ const d=waist[0][1]-last(waist)[1]; ins.push(d>0 ? t("ins_waist_down_html",{d:d.toFixed(1)+" "+L.u, pace: imperial() ? "¼–½ "+t("u_in") : "0.5–1 "+t("u_cm")}) : esc(t(weekOf(todayKey())<=3 ? "ins_waist_early" : "ins_waist_flat"))); }
+  $("#insights").innerHTML = (ins.length ? ins : [esc(t("ins_empty"))]).map(x=>`<div class="card soft">💡 ${x}</div>`).join("");
+  const p = Object.keys(S.pss).sort();
+  $("#pssHist").innerHTML = p.length ? p.map(k=>`${esc(fmtDate(k,{month:"short",day:"numeric"}))}: <b>${esc(S.pss[k])}</b>/40`).join(" · ")+`<div class="muted" style="margin-top:6px">${t("pss_bands")}</div>` : esc(t("pss_none"));
+}
+
+/* ---------- PLAN ---------- */
+const G = g => `<span class="grade g${g[0]}">${g}</span>`;
+function renderPlan(){
+  const w = weekOf(todayKey()), ph = phaseOf(w), s = S.settings;
+  $("#phaseCard").innerHTML = `<div class="eyebrow">${t("phase_card",{n:ph.n,a:ph.weeks[0],b:ph.weeks[1]})}</div><h2 style="margin:4px 0">${t("ph"+ph.n)}</h2><p style="margin:4px 0 8px">${t("ph"+ph.n+"_goal")}</p><ul class="tight">${t("ph"+ph.n+"_f").split("|").map(f=>`<li>${f}</li>`).join("")}</ul><p class="small" style="margin-bottom:0"><b>${t("new_this")}</b> ${t("ph"+ph.n+"_new")}</p>`;
+  $("#weeks").innerHTML = Array.from({length:12},(_,i)=>{ const n=i+1, cls=n<w?"past":n===w?"now":"future"; return `<div class="week ${cls}"><span class="node"></span><div><div class="small muted">${t("week_n",{n,name:t("ph"+phaseOf(n).n)})}</div><div>${t("wk"+n)}</div></div></div>`; }).join("");
+  const suppRows = SUPPS.map(x=>{ const [label,sub]=suppText(x); return `<tr><td><b>${label}</b> <span class="tag">${t("tier_tag",{n:x.tier})}</span><div class="small muted">${sub}</div>${suppSafe(x)?"":`<div class="small" style="color:var(--warning)">${t("skipped_flag")}</div>`}</td></tr>`; }).join("");
+  const wp = weekPlan(w), pr = protein();
+  const trainRows = [1,2,3,4,5,6,0].map(i=>{ const [n,sub]=workoutText(wp[i],w); const extra = wp[i].stacked ? ` + ${actName()} ${fmtTime(s.act.time)}` : ""; return `<tr><td>${dowName(i)}</td><td><b>${esc(n)}</b>${esc(extra)}<div class="small muted">${esc(sub)}</div></td></tr>`; }).join("");
+  const tests = t("doc_tests") + (s.sex==="m"&&s.age>=50 ? " "+t("doc_tests_m50") : s.sex==="f"&&s.age>=45 ? " "+t("doc_tests_f45") : "");
+  $("#planDocs").innerHTML = `
+  <details open><summary>${t("doc_train_title")}</summary>
+    <table class="t">${trainRows}</table>
+    <p class="small">${t("doc_train_note")}${s.age>=50?" "+t("doc_train_age50"):""}</p>
+  </details>
+  <details><summary>${t("doc_supp_title")}</summary>
+    <p class="small">${t("doc_supp_intro")}</p>
+    <table class="t">${suppRows}</table>
+    <p class="small">${t("doc_tier3_html")}</p>
+    <p class="small">${t("doc_skip_html")}</p>
+  </details>
+  <details><summary>${t("doc_food_title")}</summary>
+    ${pr?`<p class="small"><b>${t("doc_protein",{lo:pr.lo,hi:pr.hi})}</b></p>`:""}
+    ${t("doc_food_html")}
+  </details>
+  <details><summary>${t("doc_alt_title")}</summary>
+    <table class="t">${["A","B","B","C","C","C","D","D"].map((g,i)=>`<tr><td>${G(g)}</td><td>${t(i===7?"alt8_html":"alt"+(i+1))}</td></tr>`).join("")}</table>
+  </details>
+  <details><summary>${t("doc_gurus_title")}</summary>${t("doc_gurus_html")}</details>
+  <details><summary>${t("doc_tests_title")}</summary><p class="small">${tests}</p></details>
+  <details><summary>${t("doc_doctor_title")}</summary>${t("doc_doctor_html")}</details>`;
+  renderStackCard();
+  $("#setLang").innerHTML = LANGS.map(l=>`<option value="${l}" ${l===lang()?"selected":""}>${(I18N[l]||{}).lang_name||l}</option>`).join("");
+  $("#setTheme").value = s.theme; $("#setStart").value=s.start||""; $("#setTier2").checked=s.tier2;
+  $("#setFlags").innerHTML = `<div class="small muted" style="margin-top:12px">${t("safety_screen")}</div>`+flagsHTML(s.flags, s.sex);
+}
+function flagsHTML(f, sex){ return FLAG_IDS.filter(id => !(id==="preg" && sex==="m")).map(id=>`<label class="flag"><input type="checkbox" data-flag="${id}" ${f[id]?"checked":""}> <span class="small">${t("fl_"+id)}</span></label>`).join(""); }
+document.addEventListener("change", e => {
+  const el=e.target;
+  if (el.dataset.flag && el.closest("#setFlags")){ S.settings.flags[el.dataset.flag]=el.checked; save(); renderAll(); }
+  if (el.id==="setTheme"){ S.settings.theme=el.value; save(); applyTheme(); }
+  if (el.id==="setLang"){ S.settings.lang=el.value; save(); applyI18n(); renderAll(); }
+  if (el.id==="setStart" && el.value){ S.settings.start=el.value; save(); renderAll(); }
+  if (el.id==="setTier2"){ S.settings.tier2=el.checked; save(); renderAll(); toast(t(el.checked ? (weekOf(todayKey())>=5 ? "toast_tier2_on" : "toast_tier2_wk5") : "toast_tier2_off")); }
+});
+$("#editProfile").onclick = () => wizard(true);
+$("#exp").onclick = () => { const b=new Blob([JSON.stringify(S,null,1)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download="ebb-backup-"+todayKey()+".json"; a.click(); };
+$("#impBtn").onclick = () => $("#imp").click();
+$("#imp").onchange = e => { const f=e.target.files[0]; if(!f) return; e.target.value=""; f.text().then(x=>{ try{ const d=JSON.parse(x); if(!d||typeof d.settings!=="object"||!d.settings) throw 0; const n=normalize(d); if(!n.settings.start) throw 0; S=n; save(); applyTheme(); applyI18n(); renderAll(); toast(t("toast_imported")); }catch(_){ toast(t("toast_bad_import")); } }); };
+$("#reset").onclick = () => { if(confirm(t("erase_confirm"))){ S=blank(); save(); location.reload(); } };
+
+/* ---------- my supplements ---------- */
+// Warnings for one stack entry: upper limit, safety flags, skip list, lab interference, pairs, program overlap.
+function stackChecks(x){
+  const c = catItem(x.id), out = [];
+  if (!c) return out;
+  if (c.ul!=null && x.dose!=null && x.unit===c.unit && x.dose > c.ul) out.push(["warn", t("stack_w_ul",{ul:fmtNum(c.ul),u:c.unit})]);
+  const hit = (c.avoid||[]).filter(f => S.settings.flags[f]);
+  if (hit.length) out.push(["warn", t("stack_w_flag",{flags:hit.map(f=>t("fl_"+f)).join("; ")})]);
+  if (c.skip) out.push(["warn", t("stack_w_skip")]);
+  if (c.lab) out.push(["warn", t("stack_w_lab")]);
+  const mine = new Set(S.stack.map(y=>y.id)), prog = new Set(supps(todayKey()).map(y=>y.id));
+  const pairs = (c.warn||[]).filter(w => w.with!==x.id && (mine.has(w.with) || prog.has(w.with)));
+  for (const y of S.stack){ const cy = catItem(y.id); if (y.id!==x.id && cy) (cy.warn||[]).filter(w=>w.with===x.id).forEach(w => pairs.push({with:y.id, key:w.key})); }
+  const seen = new Set();
+  for (const w of pairs){ if (seen.has(w.with)) continue; seen.add(w.with);
+    const other = SUPPS.some(p=>p.id===w.with) ? t(w.with) : t("sc_"+w.with);
+    out.push(["warn", t("stack_w_pair",{other, msg:t(w.key)})]); }
+  const rep = (c.replaces||[]).filter(id => SUPPS.some(p=>p.id===id));
+  if (rep.length) out.push(["info", t("stack_w_dup",{name:rep.map(id=>t(id)).join(", ")})]);
+  return out;
+}
+function renderStackCard(){
+  const rows = S.stack.map((x,i) => {
+    const ch = stackChecks(x);
+    return `<button class="item" data-edit="${i}"><span class="t"><b>${esc(stackName(x))}</b>${catItem(x.id)&&catItem(x.id).skip?`<span class="tag skip">${t("stack_skip_tag")}</span>`:""}<div class="s">${esc([doseText(x), t("slot_"+x.slot)].filter(Boolean).join(" · "))}</div>${ch.map(([k,m])=>`<div class="${k==="warn"?"warnline":"infoline"}">${k==="warn"?"⚠ ":"ℹ "}${esc(m)}</div>`).join("")}</span></button>`;
+  }).join("");
+  $("#stackCard").innerHTML = `<h3>${t("stack_title")}</h3><p class="small muted" style="margin:4px 0 8px">${t("stack_lead")}</p>${rows || `<p class="small muted">${t("stack_empty")}</p>`}
+    <button class="btn ghost block" id="stackAdd" style="margin-top:8px">${t("stack_add")}</button>
+    ${S.stack.length?`<p class="small muted" style="margin-bottom:0">${t("stack_disclaimer")}</p>`:""}`;
+}
+let SP = null; // picker state: {cat, q} while browsing, or {edit:index|null, x:{...}} while editing
+function openPicker(){ SP = {cat:"all", q:""}; $("#stackPick").classList.add("on"); drawPicker(); }
+function closePicker(){ SP = null; $("#stackPick").classList.remove("on"); renderPlan(); }
+function drawPicker(){
+  if (SP.x) return drawEditor();
+  $("#spTitle").textContent = t("stack_add");
+  const cats = ["all"].concat([...new Set(CATALOG.map(c=>c.cat))]);
+  const q = SP.q.trim().toLowerCase(), have = new Set(S.stack.map(x=>x.id));
+  const list = CATALOG.filter(c => (SP.cat==="all" || c.cat===SP.cat) && (!q || (t("sc_"+c.id)+" "+((I18N.en||{})["sc_"+c.id]||"")).toLowerCase().includes(q)));
+  $("#spBody").innerHTML = `<input type="text" id="spSearch" value="${esc(SP.q)}" placeholder="${esc(t("stack_search"))}" aria-label="${esc(t("stack_search"))}" style="margin-top:12px">
+    <div class="chips" role="group">${cats.map(c=>`<button type="button" data-cat="${c}" aria-pressed="${SP.cat===c}">${esc(c==="all"?t("stack_all"):t("cat_"+c))}</button>`).join("")}</div>
+    <button class="item" data-custom="1"><span class="t"><b>＋ ${t("stack_custom")}</b></span></button>
+    ${list.map(c=>`<button class="item" data-pick="${c.id}" ${have.has(c.id)?"disabled style=\"opacity:.5\"":""}><span class="t"><b>${esc(t("sc_"+c.id))}</b> <span class="grade g${c.grade[0]}">${c.grade}</span>${c.skip?`<span class="tag skip">${t("stack_skip_tag")}</span>`:""}<div class="s">${esc(t("sc_"+c.id+"_n"))}</div></span></button>`).join("")}`;
+}
+function drawEditor(){
+  const x = SP.x, c = catItem(x.id), custom = x.id.startsWith("custom_");
+  $("#spTitle").textContent = custom ? t("stack_custom") : t("sc_"+x.id);
+  $("#spBody").innerHTML = `${c?`<p class="small muted">${esc(t("sc_"+c.id+"_n"))}</p>`:""}
+    ${custom?`<label class="f" for="spName">${t("stack_custom_name")}</label><input type="text" id="spName" maxlength="60" value="${esc(x.name)}">`:""}
+    <div class="grid2"><div><label class="f" for="spDose">${t("stack_dose")}</label><input type="number" id="spDose" inputmode="decimal" min="0" step="any" value="${x.dose??""}"></div>
+    <div><label class="f" for="spUnit">${t("stack_unit")}</label><select id="spUnit" ${c&&c.dose!=null?"disabled":""}>${UNITS.map(u=>`<option ${u===x.unit?"selected":""}>${u}</option>`).join("")}</select></div></div>
+    ${c&&c.dose!=null?`<p class="small muted">${esc(t("stack_typical",{d:fmtNum(c.dose),u:c.unit}))}${c.ul!=null?" "+esc(t("stack_ul_note",{ul:fmtNum(c.ul),u:c.unit})):""}</p>`:""}
+    <label class="f">${t("stack_when")}</label><div class="picks" style="grid-template-columns:repeat(4,1fr)">${SLOTS.map(sl=>`<button type="button" data-slot="${sl}" aria-pressed="${x.slot===sl}">${t("slot_"+sl)}</button>`).join("")}</div>
+    <button class="btn block" id="spSave" style="margin-top:18px">${t("stack_save")}</button>
+    ${SP.edit!=null?`<button class="btn danger block" id="spRemove" style="margin-top:10px">${t("stack_remove")}</button>`:""}`;
+}
+function readEditor(){ const x = SP.x; const n=$("#spName"); if (n) x.name = n.value.trim(); x.dose = num($("#spDose").value); x.unit = $("#spUnit").value; }
+$("#spBody").addEventListener("input", e => { if (e.target.id==="spSearch"){ SP.q = e.target.value; const pos = e.target.selectionStart; drawPicker(); const el=$("#spSearch"); el.focus(); el.setSelectionRange(pos,pos); } });
+$("#spBody").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b || !SP) return;
+  if (b.dataset.cat){ SP.cat = b.dataset.cat; drawPicker(); return; }
+  if (b.dataset.pick){ const c = catItem(b.dataset.pick); SP = {edit:null, x:{id:c.id, name:"", dose:c.dose, unit:c.dose==null?"cap":c.unit, slot:c.slot}}; drawPicker(); return; }
+  if (b.dataset.custom){ let n=1; while (S.stack.some(x=>x.id==="custom_"+n)) n++; SP = {edit:null, x:{id:"custom_"+n, name:"", dose:null, unit:"mg", slot:"morning"}}; drawPicker(); return; }
+  if (b.dataset.slot){ readEditor(); SP.x.slot = b.dataset.slot; drawEditor(); $(`[data-slot="${b.dataset.slot}"]`).focus(); return; }
+  if (b.id==="spSave"){ readEditor(); if (SP.x.id.startsWith("custom_") && !SP.x.name) return toast(t("stack_need_name"));
+    if (SP.edit!=null) S.stack[SP.edit] = SP.x; else S.stack.push(SP.x); S = normalize(S); save(); toast(t("stack_saved")); closePicker(); return; }
+  if (b.id==="spRemove"){ const x = S.stack[SP.edit]; S.stack.splice(SP.edit,1); for (const d of Object.values(S.days)) delete d.done["my_"+x.id]; save(); closePicker(); return; }
+});
+$("#spClose").onclick = () => SP && SP.x && SP.edit==null ? (SP = {cat:"all", q:""}, drawPicker()) : closePicker();
+document.addEventListener("keydown", e => { if (e.key==="Escape" && SP) closePicker(); });
+document.addEventListener("click", e => {
+  if (e.target.closest("#stackAdd")) return openPicker();
+  const ed = e.target.closest("[data-edit]"); if (ed && ed.closest("#stackCard")){ const i=+ed.dataset.edit; SP = {edit:i, x:Object.assign({}, S.stack[i])}; $("#stackPick").classList.add("on"); drawPicker(); }
+});
+
+/* ---------- health sync (Apple Health via a Shortcut) ---------- */
+// Shortcuts formats numbers by the phone's region: "8,123" (thousands) or "7,2" (decimal comma).
+function syncNum(v){
+  if (typeof v==="number") return isFinite(v) ? v : null;
+  let x = String(v==null?"":v).trim().replace(/\s/g,"");
+  if (!x) return null;
+  x = /^\d{1,3}([.,]\d{3})+$/.test(x) && !/^\d+[.,]\d{1,2}$/.test(x) ? x.replace(/[.,]/g,"") : x.replace(",",".");
+  const n = parseFloat(x); return isFinite(n) ? n : null;
+}
+let lastSyncDay = null;
+// Accepts {"ebb":1,"date":…,"steps":…} or {"ebb":1,"days":[…]}; returns the number of values stored.
+function applySync(text){
+  let d; try { d = JSON.parse(String(text).trim()); } catch(e){ return -1; }
+  if (!d || typeof d!=="object" || !("ebb" in d)) return -1;
+  const recs = Array.isArray(d.days) ? d.days.slice(0,62) : [d], got = new Set();
+  for (const r0 of recs){
+    const r = obj(r0), k = KEY_RE.test(r.date) ? r.date : todayKey(), x = day(k);
+    const hl = cleanHealth({steps:syncNum(r.steps), sleep:syncNum(r.sleep), hrv:syncNum(r.hrv), rhr:syncNum(r.rhr)}); lastSyncDay = k;
+    if (hl){ x.health = Object.assign(x.health||{}, hl); Object.keys(hl).forEach(f=>got.add(f));
+      if (hl.steps >= (weekOf(k)>=5 ? 10000 : 8000)) x.done.steps = true; }
+    const wt = syncNum(r.weight), wa = syncNum(r.waist);
+    const kg = wt && (String(r.weightUnit).toLowerCase().startsWith("lb") ? wt*0.45359237 : wt), cm = wa && (String(r.waistUnit).toLowerCase().startsWith("in") ? wa*2.54 : wa);
+    const m = {}; if (kg>=25 && kg<=300) m.weight = kg; if (cm>=40 && cm<=200) m.waist = cm;
+    if (Object.keys(m).length){ S.weekly[k] = Object.assign({waist:null,weight:null,hrv:null,rhr:null}, S.weekly[k], m); Object.keys(m).forEach(f=>got.add(f)); }
+  }
+  if (got.size){ S.settings.lastSync = Date.now(); S = normalize(S); save(); }
+  return got.size;
+}
+function syncResult(n){
+  if (n<0) return toast(t("sync_bad"));
+  if (!n) return toast(t("sync_none"));
+  const h = (S.days[lastSyncDay||todayKey()]||{}).health || {}, parts = [];
+  if (h.sleep) parts.push(t("m_sleep",{n:fmtNum(h.sleep)})); if (h.steps) parts.push(t("m_steps",{n:fmtNum(h.steps)}));
+  if (h.hrv) parts.push(t("m_hrv",{n:h.hrv})); if (h.rhr) parts.push(t("m_rhr",{n:h.rhr}));
+  toast(t("sync_ok",{items: parts.join(" · ") || n})); renderAll();
+}
+function syncBoxHTML(){
+  const w = S.settings.wearable;
+  if (w==="none") return "";
+  if (w!=="apple") return `<div class="card info" style="margin-top:0"><b>${t("sync_title")}</b><p class="small" style="margin:6px 0 0">${esc(t("sync_lead_other",{device:t("wear_"+w)}))} ${esc(t("sync_android"))}</p></div>`;
+  return `<div class="card info" style="margin-top:0"><b>${t("sync_title")}</b><p class="small" style="margin:6px 0 10px">${t("sync_lead_apple")}</p>
+    <button class="btn block" data-sync="paste">${t("sync_paste")}</button>
+    <details style="margin-top:8px"><summary class="small">${t("sync_manual")}</summary><textarea id="syncText" rows="3" style="margin-top:6px" aria-label="${esc(t("sync_manual"))}"></textarea><button class="btn ghost block" data-sync="text" style="margin-top:8px">${t("sync_apply")}</button></details>
+    <details><summary class="small">${t("sync_setup")}</summary>${t("sync_guide_html")}</details>
+    <details><summary class="small">${t("sync_auto")}</summary>${t("sync_auto_html")}</details>
+    ${S.settings.lastSync?`<p class="small muted" style="margin-bottom:0">${esc(t("sync_last",{t:new Date(S.settings.lastSync).toLocaleString(locale(),{weekday:"short",hour:"numeric",minute:"2-digit"})}))}</p>`:""}</div>`;
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-sync]"); if (!b) return;
+  if (b.dataset.sync==="text") return syncResult(applySync($("#syncText").value));
+  if (!navigator.clipboard || !navigator.clipboard.readText){ toast(t("sync_clip_denied")); show("checkin"); setMode("weekly"); return; }
+  navigator.clipboard.readText().then(x => syncResult(applySync(x))).catch(() => { toast(t("sync_clip_denied")); show("checkin"); setMode("weekly"); const d=$("#syncBox details"); if (d) d.open = true; });
+});
+// A Shortcut can also open Ebb at #sync=<json>; the fragment never reaches any server.
+function syncFromHash(){
+  if (!location.hash.startsWith("#sync=")) return;
+  let txt = ""; try { txt = decodeURIComponent(location.hash.slice(6)); } catch(e){}
+  history.replaceState(null, "", location.pathname + location.search);
+  if (S.settings.start) syncResult(applySync(txt));
+}
+
+/* ---------- nav ---------- */
+function show(tab){
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected", b.dataset.tab===tab));
+  document.querySelectorAll("section.view").forEach(v=>v.classList.toggle("on", v.id==="v-"+tab));
+  ({today:renderToday, checkin:renderCheckin, breathe:renderBreathe, progress:renderProgress, plan:renderPlan})[tab]();
+  scrollTo(0,0);
+}
+document.querySelector("nav.tabs").onclick = e => { const b=e.target.closest("button"); if(b) show(b.dataset.tab); };
+function renderAll(){ const cur=document.querySelector("nav.tabs [aria-selected=true]").dataset.tab; show(cur); }
+
+/* ---------- onboarding / profile wizard ---------- */
+// Works on a draft copy of settings; nothing is saved until the last step.
+let W_ = null;
+const STEPS = ["welcome","you","day","move","wear","safety","plan"];
+function wizard(edit){
+  const d = JSON.parse(JSON.stringify(S.settings));
+  if (!d.lang) d.lang = detectLang();
+  if (!d.units) d.units = d.lang==="en" && /-US$/i.test(navigator.language||"en-US") ? "imperial" : "metric";
+  W_ = {edit, i:0, d, adult:edit, trainSet:edit, start:S.settings.start||todayKey(), waist:null, weight:null};
+  $("#onboard").classList.add("on"); drawStep();
+}
+const opt = (name, val, cur, label) => `<button type="button" data-o="${name}" data-v="${val}" aria-pressed="${String(cur)===String(val)}">${label}</button>`;
+const timeIn = (id, v) => `<input type="time" id="${id}" value="${v}" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:var(--surface);min-height:44px">`;
+function drawStep(){
+  const {i, d, edit} = W_, step = STEPS[i], imp = d.units==="imperial";
+  S.settings.lang = d.lang; applyI18n(); // preview the chosen language live
+  $("#obStep").textContent = t("ob_step",{n:i+1,total:STEPS.length});
+  $("#obBar").innerHTML = STEPS.map((_,j)=>`<i class="${j<i?"done":j===i?"now":""}"></i>`).join("");
+  $("#obTitle").textContent = t({welcome:"ob1_title",you:"ob2_title",day:"ob3_title",move:"ob4_title",wear:"ob5_title",safety:"ob6_title",plan:"ob7_title"}[step]);
+  $("#obLead").textContent = t({welcome:"ob1_lead",you:"ob2_lead",day:"ob3_lead",move:"ob4_lead",wear:"ob5_lead",safety:"ob6_lead",plan:"ob7_lead"}[step]);
+  $("#obBack").textContent = t("ob_back"); $("#obBack").style.visibility = i ? "" : "hidden";
+  $("#obNext").textContent = i===STEPS.length-1 ? t(edit?"ob_save":"ob_start") : t("ob_next");
+  let h = "";
+  if (step==="welcome"){
+    h = `<label class="f">${t("ob_lang")}</label><div class="picks" style="grid-template-columns:repeat(${LANGS.length},1fr)">${LANGS.map(l=>opt("lang",l,d.lang,(I18N[l]||{}).lang_name||l)).join("")}</div>
+      <div class="card warn small" style="margin-top:16px">${t("ob_disclaimer_html")}</div>
+      ${edit?"":`<label class="flag"><input type="checkbox" id="obAdult" ${W_.adult?"checked":""}> <span class="small">${t("ob_adult")}</span></label>`}`;
+  } else if (step==="you"){
+    const L = imp?{u:t("u_in"),f:2.54}:{u:t("u_cm"),f:1}, Wt = imp?{u:t("u_lb"),f:0.45359237}:{u:t("u_kg"),f:1};
+    const hIn = d.height!=null ? d.height/2.54 : null;
+    h = `<div class="grid2"><div><label class="f" for="obAge">${t("f_age")}</label><input type="number" id="obAge" inputmode="numeric" min="18" max="100" value="${d.age??""}"></div>
+      <div><label class="f">${t("f_units")}</label><div class="picks" style="grid-template-columns:1fr 1fr">${opt("units","imperial",d.units,t("units_imperial"))}${opt("units","metric",d.units,t("units_metric"))}</div></div></div>
+      <label class="f">${t("f_sex")}</label><div class="picks" style="grid-template-columns:repeat(3,1fr)">${opt("sex","m",d.sex,t("sex_m"))}${opt("sex","f",d.sex,t("sex_f"))}${opt("sex","",d.sex,t("sex_none"))}</div>
+      <label class="f">${t("f_height")}</label>
+      ${imp ? `<div class="grid2"><input type="number" id="obFt" inputmode="numeric" min="4" max="7" placeholder="${t("u_ft")}" aria-label="${t("u_ft")}" value="${hIn!=null?Math.floor(hIn/12):""}"><input type="number" id="obIn" inputmode="decimal" min="0" max="11.9" placeholder="${t("u_in")}" aria-label="${t("u_in")}" value="${hIn!=null?Math.round(hIn%12):""}"></div>`
+            : `<input type="number" id="obCm" inputmode="decimal" min="120" max="230" placeholder="${t("u_cm")}" value="${d.height!=null?Math.round(d.height):""}">`}
+      ${edit ? "" : `<div class="grid2"><div><label class="f" for="obWeight">${t("f_weight")} (${Wt.u})</label><input type="number" id="obWeight" inputmode="decimal" value="${W_.weight!=null?toDisp(W_.weight,Wt):""}"></div>
+      <div><label class="f" for="obWaist">${t("f_waist")} (${L.u})</label><input type="number" id="obWaist" inputmode="decimal" value="${W_.waist!=null?toDisp(W_.waist,L):""}"></div></div>
+      <p class="small muted">${t("waist_hint")}</p>`}`;
+  } else if (step==="day"){
+    h = `<div class="grid2"><div><label class="f" for="obWake">${t("f_wake")}</label>${timeIn("obWake",d.wake)}</div><div><label class="f" for="obBed">${t("f_bed")}</label>${timeIn("obBed",d.bed)}</div></div>
+      <label class="f">${t("f_work")}</label>
+      <div class="grid2" id="workTimes" style="${d.noWork?"opacity:.4":""}"><div>${timeIn("obWs",d.workStart)}</div><div>${timeIn("obWe",d.workEnd)}</div></div>
+      <label class="flag"><input type="checkbox" id="obNoWork" ${d.noWork?"checked":""}> <span class="small">${t("f_work_none")}</span></label>
+      <label class="f">${t("f_lunch")}</label><div class="picks" style="grid-template-columns:repeat(2,1fr)">${LUNCH.map(v=>opt("lunch",v,d.lunch,t("lunch_"+v))).join("")}</div>
+      <label class="f" for="obDinner">${t("f_dinner")}</label>${timeIn("obDinner",d.dinner)}`;
+  } else if (step==="move"){
+    if (!W_.trainSet){ d.trainTime = (!d.noWork && toMin(d.workStart) - toMin(d.wake) >= 90) ? "morning" : "evening"; W_.trainSet = true; }
+    h = `<label class="f">${t("f_act")}</label><div class="picks" style="grid-template-columns:repeat(2,1fr)">${ACTS.map(v=>opt("act",v,d.act.type,t("act_"+v))).join("")}</div>
+      ${d.act.type==="none" ? "" : `<label class="f">${t("f_act_days")}</label><div class="picks" style="grid-template-columns:repeat(7,1fr)">${[1,2,3,4,5,6,0].map(i=>`<button type="button" data-o="day" data-v="${i}" aria-pressed="${d.act.days.includes(i)}">${dowName(i,"narrow")}</button>`).join("")}</div>
+      <label class="f" for="obActT">${t("f_act_time")}</label>${timeIn("obActT",d.act.time)}`}
+      <label class="f">${t("f_train")}</label><div class="picks" style="grid-template-columns:repeat(3,1fr)">${TRAIN.map(v=>opt("train",v,d.trainTime,t("train_"+v))).join("")}</div>`;
+  } else if (step==="wear"){
+    h = `<div class="picks" style="grid-template-columns:repeat(2,1fr)">${WEARS.map(v=>opt("wear",v,d.wearable,t("wear_"+v))).join("")}</div>`;
+  } else if (step==="safety"){
+    h = flagsHTML(d.flags, d.sex).replace(/data-flag=/g, 'data-obflag=');
+  } else {
+    // Preview the schedule with the draft settings.
+    const keep = S.settings; S.settings = d; const c = sched(), T = m => fmtTime(fromMin(m));
+    const pr = (()=>{ const w = W_.weight ?? latestWeight(); if (!w) return null; const lo=(d.age>=50?1.4:1.2); return {lo:Math.round(w*lo/5)*5, hi:Math.round(w*1.6/5)*5}; })();
+    const days = d.act.days.slice().sort((a,b)=>((a+6)%7)-((b+6)%7)).map(i=>dowName(i)).join(", ");
+    const items = [
+      t("sum_sleep",{h:fmtNum(Math.round(c.sleepH*10)/10),bed:T(c.bed),wake:T(c.wake)}) + (c.sleepH<7 ? " — "+t("sum_sleep_short") : ""),
+      t("sum_caf",{t:T(c.caf)}), t("sum_kitchen",{t:T(c.kitchen)}),
+      t("sum_window",{h:fmtNum(Math.round(c.windowH*2)/2)}) + (c.windowH>12 ? " — "+t("sum_window_long") : ""),
+      t("sum_train",{when:t("train_"+d.trainTime)}),
+      d.act.type!=="none" && d.act.days.length ? t("sum_act",{act:t("act_"+d.act.type),days,t:fmtTime(d.act.time)}) : "",
+      pr ? t("sum_protein",pr) : "", d.age>=50 ? t("sum_age50") : ""
+    ].filter(Boolean);
+    S.settings = keep;
+    h = `${edit?"":`<label class="f" for="obStart">${t("f_start")}</label><input type="date" id="obStart" value="${W_.start}">`}
+      <div class="card soft"><ul class="tight">${items.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>
+      ${edit?"":`<div class="card warn small">${t("ob_disclaimer_html")}</div>`}`;
+  }
+  $("#obBody").innerHTML = h;
+  const first = $("#obBody input, #obBody button"); if (first) first.focus();
+}
+// Read the current step's inputs into the draft. Returns false to block "Next".
+function collect(){
+  const d = W_.d, step = STEPS[W_.i], v = id => { const el=document.getElementById(id); return el ? el.value : ""; };
+  if (step==="welcome" && !W_.edit){ W_.adult = $("#obAdult").checked; if (!W_.adult){ toast(t("ob_adult_req")); return false; } }
+  if (step==="you"){
+    d.age = num(v("obAge"));
+    if (d.units==="imperial"){ const ft=num(v("obFt")), inch=num(v("obIn")); d.height = ft!=null ? (ft*12+(inch||0))*2.54 : d.height; }
+    else d.height = num(v("obCm")) ?? d.height;
+    if (!W_.edit){ const L = d.units==="imperial"?2.54:1, Wf = d.units==="imperial"?0.45359237:1;
+      const wa=num(v("obWaist")), we=num(v("obWeight")); W_.waist = wa!=null?wa*L:null; W_.weight = we!=null?we*Wf:null; }
+  }
+  if (step==="day"){ for (const [id,f] of [["obWake","wake"],["obBed","bed"],["obWs","workStart"],["obWe","workEnd"],["obDinner","dinner"]]) if (TIME_RE.test(v(id))) d[f]=v(id); d.noWork = $("#obNoWork").checked; }
+  if (step==="move" && TIME_RE.test(v("obActT"))) d.act.time = v("obActT");
+  if (step==="safety") document.querySelectorAll("#obBody [data-obflag]").forEach(c => d.flags[c.dataset.obflag] = c.checked);
+  if (step==="plan" && !W_.edit) W_.start = KEY_RE.test(v("obStart")) ? v("obStart") : todayKey();
+  return true;
+}
+$("#obBody").addEventListener("click", e => {
+  const b = e.target.closest("[data-o]"); if (!b) return;
+  collect(); // keep typed values before re-rendering
+  const d = W_.d, val = b.dataset.v;
+  ({lang:()=>d.lang=val, units:()=>d.units=val, sex:()=>d.sex=val, lunch:()=>d.lunch=val, train:()=>d.trainTime=val, wear:()=>d.wearable=val,
+    act:()=>{ d.act.type=val; if (val==="none") d.act.days=[]; },
+    day:()=>{ const i=+val; d.act.days = d.act.days.includes(i) ? d.act.days.filter(x=>x!==i) : d.act.days.concat(i); }})[b.dataset.o]();
+  if (b.dataset.o==="sex" && val==="m") delete d.flags.preg;
+  drawStep();
+  const again = $(`#obBody [data-o="${b.dataset.o}"][data-v="${val}"]`); if (again) again.focus();
+});
+$("#obBody").addEventListener("change", e => { if (e.target.id==="obNoWork") $("#workTimes").style.opacity = e.target.checked ? .4 : 1; });
+$("#obBack").onclick = () => { collect(); if (W_.i>0){ W_.i--; drawStep(); } };
+$("#obNext").onclick = () => {
+  if (!collect()) return;
+  if (W_.i < STEPS.length-1){ W_.i++; drawStep(); scrollTo(0,0); return; }
+  const first = !W_.edit;
+  S.settings = Object.assign(S.settings, W_.d);
+  if (first){ S.settings.start = W_.start; if (W_.waist!=null||W_.weight!=null) S.weekly[todayKey()] = {waist:W_.waist,weight:W_.weight,hrv:null,rhr:null}; }
+  S = normalize(S); save(); $("#onboard").classList.remove("on"); applyI18n(); renderAll();
+  toast(t(first ? "toast_day1" : "toast_profile")); W_ = null;
+};
+
+applyTheme(); applyI18n(); setMode("daily");
+if (!S.settings.start) wizard(false); else { renderToday(); syncFromHash(); }
+// refresh when returning to the app, or when the app day rolls over while open
+let lastKey = todayKey();
+document.addEventListener("visibilitychange", () => { if(!document.hidden && !W_){ lastKey=todayKey(); renderAll(); } });
+setInterval(() => { if (!W_ && lastKey!==todayKey()){ lastKey=todayKey(); renderAll(); } }, 60e3);
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>

@@ -13,3 +13,9 @@ A bilingual (English/한국어) pour-over brew timer for iPhone and any phone br
 - Works offline: a service worker caches the app, so the timer runs with no signal (the label scanner still needs a connection)
 - Applied dial-in: after rating a brew, one tap stores the fix (grind/temp) into that setup's recipe — next brew starts from the corrected numbers, with a reset any time
 - Add to Home Screen for an app-like experience
+
+## Also here: Ebb 🌿
+
+A private, offline 12-week program to lower stress (cortisol) and shrink belly fat: a daily habit checklist with a Calm Score, check-ins, a breathing pacer, progress charts, and a phased plan with tiered supplements and a medication safety screen.
+
+**Use it:** https://wookiesmon.github.io/brew-timer/cortisol/ · plan: [`cortisol/PLAN.md`](cortisol/PLAN.md) · research: [`cortisol/research/`](cortisol/research/)
