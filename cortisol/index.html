@@ -926,6 +926,15 @@ document.addEventListener("click", e => {
 });
 
 /* ---------- health sync (Apple Health via a Shortcut) ---------- */
+// Shortcuts formats numbers by the phone's region: "8,123" (thousands) or "7,2" (decimal comma).
+function syncNum(v){
+  if (typeof v==="number") return isFinite(v) ? v : null;
+  let x = String(v==null?"":v).trim().replace(/\s/g,"");
+  if (!x) return null;
+  x = /^\d{1,3}([.,]\d{3})+$/.test(x) && !/^\d+[.,]\d{1,2}$/.test(x) ? x.replace(/[.,]/g,"") : x.replace(",",".");
+  const n = parseFloat(x); return isFinite(n) ? n : null;
+}
+let lastSyncDay = null;
 // Accepts {"ebb":1,"date":…,"steps":…} or {"ebb":1,"days":[…]}; returns the number of values stored.
 function applySync(text){
   let d; try { d = JSON.parse(String(text).trim()); } catch(e){ return -1; }
@@ -933,10 +942,10 @@ function applySync(text){
   const recs = Array.isArray(d.days) ? d.days.slice(0,62) : [d], got = new Set();
   for (const r0 of recs){
     const r = obj(r0), k = KEY_RE.test(r.date) ? r.date : todayKey(), x = day(k);
-    const hl = cleanHealth({steps:numOrNull(+r.steps), sleep:numOrNull(+r.sleep), hrv:numOrNull(+r.hrv), rhr:numOrNull(+r.rhr)});
+    const hl = cleanHealth({steps:syncNum(r.steps), sleep:syncNum(r.sleep), hrv:syncNum(r.hrv), rhr:syncNum(r.rhr)}); lastSyncDay = k;
     if (hl){ x.health = Object.assign(x.health||{}, hl); Object.keys(hl).forEach(f=>got.add(f));
       if (hl.steps >= (weekOf(k)>=5 ? 10000 : 8000)) x.done.steps = true; }
-    const wt = numOrNull(+r.weight), wa = numOrNull(+r.waist);
+    const wt = syncNum(r.weight), wa = syncNum(r.waist);
     const kg = wt && (String(r.weightUnit).toLowerCase().startsWith("lb") ? wt*0.45359237 : wt), cm = wa && (String(r.waistUnit).toLowerCase().startsWith("in") ? wa*2.54 : wa);
     const m = {}; if (kg>=25 && kg<=300) m.weight = kg; if (cm>=40 && cm<=200) m.waist = cm;
     if (Object.keys(m).length){ S.weekly[k] = Object.assign({waist:null,weight:null,hrv:null,rhr:null}, S.weekly[k], m); Object.keys(m).forEach(f=>got.add(f)); }
@@ -947,7 +956,7 @@ function applySync(text){
 function syncResult(n){
   if (n<0) return toast(t("sync_bad"));
   if (!n) return toast(t("sync_none"));
-  const h = (S.days[todayKey()]||{}).health || {}, parts = [];
+  const h = (S.days[lastSyncDay||todayKey()]||{}).health || {}, parts = [];
   if (h.sleep) parts.push(t("m_sleep",{n:fmtNum(h.sleep)})); if (h.steps) parts.push(t("m_steps",{n:fmtNum(h.steps)}));
   if (h.hrv) parts.push(t("m_hrv",{n:h.hrv})); if (h.rhr) parts.push(t("m_rhr",{n:h.rhr}));
   toast(t("sync_ok",{items: parts.join(" · ") || n})); renderAll();
