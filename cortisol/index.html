@@ -900,8 +900,8 @@ function drawEditor(){
   $("#spBody").innerHTML = `${c?`<p class="small muted">${esc(t("sc_"+c.id+"_n"))}</p>`:""}
     ${custom?`<label class="f" for="spName">${t("stack_custom_name")}</label><input type="text" id="spName" maxlength="60" value="${esc(x.name)}">`:""}
     <div class="grid2"><div><label class="f" for="spDose">${t("stack_dose")}</label><input type="number" id="spDose" inputmode="decimal" min="0" step="any" value="${x.dose??""}"></div>
-    <div><label class="f" for="spUnit">${t("stack_unit")}</label><select id="spUnit" ${c?"disabled":""}>${UNITS.map(u=>`<option ${u===x.unit?"selected":""}>${u}</option>`).join("")}</select></div></div>
-    ${c?`<p class="small muted">${esc(t("stack_typical",{d:fmtNum(c.dose),u:c.unit}))}${c.ul!=null?" "+esc(t("stack_ul_note",{ul:fmtNum(c.ul),u:c.unit})):""}</p>`:""}
+    <div><label class="f" for="spUnit">${t("stack_unit")}</label><select id="spUnit" ${c&&c.dose!=null?"disabled":""}>${UNITS.map(u=>`<option ${u===x.unit?"selected":""}>${u}</option>`).join("")}</select></div></div>
+    ${c&&c.dose!=null?`<p class="small muted">${esc(t("stack_typical",{d:fmtNum(c.dose),u:c.unit}))}${c.ul!=null?" "+esc(t("stack_ul_note",{ul:fmtNum(c.ul),u:c.unit})):""}</p>`:""}
     <label class="f">${t("stack_when")}</label><div class="picks" style="grid-template-columns:repeat(4,1fr)">${SLOTS.map(sl=>`<button type="button" data-slot="${sl}" aria-pressed="${x.slot===sl}">${t("slot_"+sl)}</button>`).join("")}</div>
     <button class="btn block" id="spSave" style="margin-top:18px">${t("stack_save")}</button>
     ${SP.edit!=null?`<button class="btn danger block" id="spRemove" style="margin-top:10px">${t("stack_remove")}</button>`:""}`;
@@ -911,7 +911,7 @@ $("#spBody").addEventListener("input", e => { if (e.target.id==="spSearch"){ SP.
 $("#spBody").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b || !SP) return;
   if (b.dataset.cat){ SP.cat = b.dataset.cat; drawPicker(); return; }
-  if (b.dataset.pick){ const c = catItem(b.dataset.pick); SP = {edit:null, x:{id:c.id, name:"", dose:c.dose, unit:c.unit, slot:c.slot}}; drawPicker(); return; }
+  if (b.dataset.pick){ const c = catItem(b.dataset.pick); SP = {edit:null, x:{id:c.id, name:"", dose:c.dose, unit:c.dose==null?"cap":c.unit, slot:c.slot}}; drawPicker(); return; }
   if (b.dataset.custom){ let n=1; while (S.stack.some(x=>x.id==="custom_"+n)) n++; SP = {edit:null, x:{id:"custom_"+n, name:"", dose:null, unit:"mg", slot:"morning"}}; drawPicker(); return; }
   if (b.dataset.slot){ readEditor(); SP.x.slot = b.dataset.slot; drawEditor(); $(`[data-slot="${b.dataset.slot}"]`).focus(); return; }
   if (b.id==="spSave"){ readEditor(); if (SP.x.id.startsWith("custom_") && !SP.x.name) return toast(t("stack_need_name"));
